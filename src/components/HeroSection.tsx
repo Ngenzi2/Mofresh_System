@@ -5,7 +5,10 @@ import HeroImage from "../assets/Hero.jpg";
 export const HeroSection = () => {
   return (
     <>
-      <section className="w-full h-300px] md:h-[600px] lg:h-[680px] relative overflow-hidden bg-green-600 flex  md:flex-row md:justify-center md:items-center px-4 sm:px-8 md:px-16 lg:px-25">
+      <section
+        id="home-section"
+        className="mt-8 ml-12 h-[300px] md:h-[600px] lg:h-[680px] relative overflow-hidden bg-green-600 flex  md:flex-row md:justify-center md:items-center px-4 sm:px-15 md:px-16 lg:px-12 rounded-4xl mx-8 sm:mx-"
+      >
         <div className="absolute inset-0 bg-black/40" />
 
         <div className="relative z-10 flex h-full items-center justify-center text-white px-4 text-size-2xl w-full sm:w-1/2">

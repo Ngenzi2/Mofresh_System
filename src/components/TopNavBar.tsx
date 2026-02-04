@@ -12,7 +12,7 @@ import { Menu } from "lucide-react";
 
 const navItems = [
   { label: "Home", to: "/" },
-  { label: "About", to: "/about" },
+  { label: "About", to: "/AboutUs" },
   { label: "Our services", to: "/OurImpact" },
   { label: "Featured Product", to: "/programs" },
 
@@ -25,7 +25,7 @@ export const TopNavBar = () => {
   return (
     <header className="sticky top-0 z-50 w-full h-[70px] sm:h-[80px] border-b bg-background">
       {/* ===== Mobile / Tablet ===== */}
-      <div className="flex md:hidden items-center justify-between px-4 sm:px-6 h-full">
+      <div className="flex md:hidden items-center justify-between px-4  h-full">
         <div className="flex items-center gap-2">
           <img
             src={Logo}
@@ -67,7 +67,7 @@ export const TopNavBar = () => {
                   SignUp
                 </Button>
                 <Button
-                  onClick={() => navigate("/login")}
+                  
                   className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base"
                 >
                   Login
@@ -84,7 +84,7 @@ export const TopNavBar = () => {
           <img
             src={Logo}
             alt="Mofresh_logo"
-            className="h-12 w-16 md:h-14 md:w-20 lg:h-16 lg:w-24 object-contain"
+            className="h-12 w-16 md:h-14 md:w-20 lg:h-16 lg:w-26 object-contain mr-60"
           />
 
           <NavigationMenuList className="flex items-center gap-6 lg:gap-8 xl:gap-10">
