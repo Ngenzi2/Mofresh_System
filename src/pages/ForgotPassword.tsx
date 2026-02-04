@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import heroImage from '@/assets/register.jpeg';
-import logo from '@/assets/Logo.jpeg';
+import logo from '@/assets/Logo.png';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');

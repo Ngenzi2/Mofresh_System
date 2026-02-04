@@ -15,7 +15,6 @@ const initialState: AuthState = {
   otpEmail: null,
 };
 
-// Dummy API calls
 const dummyApiDelay = () => new Promise((resolve) => setTimeout(resolve, 1000));
 
 export const loginUser = createAsyncThunk(
@@ -23,7 +22,6 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       await dummyApiDelay();
-      // Simulate successful login
       if (email && password) {
         return {
           user: { email, name: 'John Doe' },

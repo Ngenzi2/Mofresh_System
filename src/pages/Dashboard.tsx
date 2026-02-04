@@ -18,13 +18,13 @@ import {
   AlertCircle,
   ChevronRight,
 } from 'lucide-react';
-import logo from '@/assets/login.jpeg';
+import logo from '@/assets/login.png';
 // import dashboardImage from 'figma:asset/aff8fa06fbd407c5321da7cc590f4a1fec964181.png';
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
+  // const { user } = useAppSelector((state) => state.auth);
   const [activeNav, setActiveNav] = useState('Dashboard');
 
   const handleLogout = () => {

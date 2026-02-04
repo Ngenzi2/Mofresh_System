@@ -5,7 +5,7 @@ import { registerUser } from '@/store/authSlice';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import heroImage from '@/assets/register.jpeg';
-import logo from '@/assets/Logo.jpeg';
+import logo from '@/assets/Logo.png';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');

@@ -1,14 +1,13 @@
-import AboutUs from '@/components/AboutUs'
 import { HeroSection } from '@/components/HeroSection'
-import { TopNavBar } from '@/components/TopNavBar'
-
+import { Header } from '@/components/ui/Header'
+import { Footer } from '@/components/ui/Footer'
 
 function Home() {
   return (
     <>
-      <TopNavBar />
+      <Header />
       <HeroSection />
-      <AboutUs />
+      <Footer />
     </>
   )
 }

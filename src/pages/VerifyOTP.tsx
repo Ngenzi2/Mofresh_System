@@ -5,7 +5,7 @@ import { verifyOtp } from '@/store/authSlice';
 import { Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import heroImage from '@/assets/register.jpeg';
-import logo from '@/assets/Logo.jpeg';
+import logo from '@/assets/Logo.png';
 
 export default function VerifyOTP() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
