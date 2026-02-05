@@ -3,15 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Star, Plus, ChevronRight, Thermometer, Package, User, ShoppingBag } from "lucide-react";
 import { Button } from "./ui/button";
 
-// Import image from assets
+// hero images
 import HeroImg from "@/assets/Hero.jpg";
+import Hero1 from "@/assets/hero-1.png";
+import Hero2 from "@/assets/hero-2.png";
+import Hero3 from "@/assets/hero-3.png";
+import Hero4 from "@/assets/hero-4.png";
+
+// category images
+
+import cat1 from "@/assets/vegetables.png";
+import cat2 from "@/assets/meat.png";
+import cat3 from "@/assets/fruits.png";
+import cat4 from "@/assets/freezer.png";
+
+// product images
+
+import pro1 from "@/assets/brocoli.png";
+import pro2 from "@/assets/orange.png";
+import pro3 from "@/assets/freshmeat.png";
+import pro4 from "@/assets/banana.png";
+import pro5 from "@/assets/fish.png";
+import pro6 from "@/assets/pepper.png";
+
+// offer pictures 
+import of1 from "@/assets/10.png";
+import of2 from "@/assets/20.png";
+import of3 from "@/assets/40.png";
+import of4 from "@/assets/offer.png";
+import of5 from "@/assets/getstarted.png";
+
+//client images
+
+import cli1 from "@/assets/clients.png";
+import cli2 from "@/assets/client-1.png";
+import cli3 from "@/assets/client-2.png";
+
+
+
+
+
+
+
 
 export const HeroSection = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // 4 hero images for carousel
-  const heroImages = [HeroImg, HeroImg, HeroImg, HeroImg];
+  const heroImages = [Hero1,Hero2,Hero3,Hero4];
 
   // Auto-rotate hero carousel every 5 seconds
   useEffect(() => {
@@ -22,10 +62,10 @@ export const HeroSection = () => {
   }, [heroImages.length]);
 
   const categories = [
-    { id: 1, name: "Vegetables", image: HeroImg },
-    { id: 2, name: "Meat", image: HeroImg },
-    { id: 3, name: "Fruits", image: HeroImg },
-    { id: 4, name: "Freezing Boxes", image: HeroImg },
+    { id: 1, name: "Vegetables", image: cat1 },
+    { id: 2, name: "Meat", image: cat2 },
+    { id: 3, name: "Fruits", image: cat3 },
+    { id: 4, name: "Freezing Boxes", image: cat4},
   ];
 
   const products = [
@@ -38,7 +78,7 @@ export const HeroSection = () => {
       rating: 4,
       badge: "Popular",
       badgeColor: "bg-yellow-400",
-      image: HeroImg,
+      image: pro1,
     },
     {
       id: 2,
@@ -48,7 +88,7 @@ export const HeroSection = () => {
       discount: 10,
       rating: 5,
       badge: null,
-      image: HeroImg,
+      image: pro2,
     },
     {
       id: 3,
@@ -58,7 +98,7 @@ export const HeroSection = () => {
       discount: 10,
       rating: 4,
       badge: null,
-      image: HeroImg,
+      image: pro4,
     },
     {
       id: 4,
@@ -69,7 +109,7 @@ export const HeroSection = () => {
       rating: 4,
       badge: "Popular",
       badgeColor: "bg-yellow-400",
-      image: HeroImg,
+      image: pro3,
     },
     {
       id: 5,
@@ -79,7 +119,7 @@ export const HeroSection = () => {
       discount: 20,
       rating: 5,
       badge: null,
-      image: HeroImg,
+      image: pro5,
     },
     {
       id: 6,
@@ -90,7 +130,7 @@ export const HeroSection = () => {
       rating: 4,
       badge: "Popular",
       badgeColor: "bg-yellow-400",
-      image: HeroImg,
+      image: pro6,
     },
   ];
 
@@ -127,14 +167,14 @@ export const HeroSection = () => {
       text: "Before MoFresh, our produce spoiled quickly. Now, by storing our fruits, vegetables, and meat in their cold rooms, we reduce wastage, keep quality fresh, and sell on the marketplace at better prices. MoFresh made selling easier. Customers trust us every day.",
       author: "Ben Rwagira",
       role: "Former Farmer",
-      avatar: HeroImg,
+      avatar: cli2,
     },
     {
       id: 2,
       text: '"Your services was incredible.the cold boxes served me better. it showed me to keep clients arrive as close as if they were in my market.I stored my to find that on the same time produce for work with MoFresh."',
       author: "Eza neza company",
       role: "client",
-      avatar: HeroImg,
+      avatar: cli3,
     },
   ];
 
@@ -349,7 +389,7 @@ export const HeroSection = () => {
                 <h3 className="text-xl lg:text-2xl font-bold leading-tight">fresh <span className="text-white">Vegetables</span> everyday</h3>
               </div>
               <div className="absolute top-4 right-8 lg:right-12">
-                <img src={HeroImg} alt="Vegetables" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
+                <img src={of1} alt="Vegetables" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -362,7 +402,7 @@ export const HeroSection = () => {
                 <h3 className="text-2xl lg:text-3xl font-bold leading-tight">Open for fresh</h3>
               </div>
               <div className="absolute top-4 right-8 lg:right-12">
-                <img src={HeroImg} alt="Storage box" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
+                <img src={of2} alt="Storage box" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -381,7 +421,7 @@ export const HeroSection = () => {
                 <h3 className="text-3xl lg:text-4xl font-bold text-[#ff6b35]">Beef Meat</h3>
               </div>
               <div className="absolute bottom-6 right-8 lg:right-12">
-                <img src={HeroImg} alt="Beef meat" className="w-36 h-32 lg:w-44 lg:h-40 object-cover rounded-2xl shadow-lg" />
+                <img src={of3} alt="Beef meat" className="w-36 h-32 lg:w-44 lg:h-40 object-cover rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -395,7 +435,7 @@ export const HeroSection = () => {
                 <h3 className="text-5xl lg:text-6xl font-black leading-none">40% Off</h3>
               </div>
               <div className="absolute top-4 right-8 lg:right-12">
-                <img src={HeroImg} alt="Fresh produce" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
+                <img src={of4} alt="Fresh produce" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -419,7 +459,7 @@ export const HeroSection = () => {
               </Button>
             </div>
             <div className="hidden lg:block">
-              <img src={HeroImg} alt="Fresh produce basket" className="w-72 h-64 object-contain" />
+              <img src={of5} alt="Fresh produce basket" className="w-72 h-64 object-contain" />
             </div>
           </div>
         </div>
@@ -464,7 +504,7 @@ export const HeroSection = () => {
       <section
         className="w-full py-14 lg:py-20"
         style={{
-          backgroundImage: `linear-gradient(93.1deg, rgba(0, 0, 0, 0.75) 3.63%, rgba(26, 94, 63, 0.75) 99.23%), url('${HeroImg}')`,
+          backgroundImage: `linear-gradient(93.1deg, rgba(0, 0, 0, 0.75) 3.63%, rgba(26, 94, 63, 0.75) 99.23%), url('${cli1}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
