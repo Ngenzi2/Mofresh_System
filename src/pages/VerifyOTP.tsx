@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { verifyOtp } from '@/store/authSlice';
-import { Mail } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import heroImage from '@/assets/register.jpeg';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+
+// Assets
+import heroImage from '@/assets/register.png';
 import logo from '@/assets/Logo.png';
 
 export default function VerifyOTP() {
+  const { t } = useTranslation();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -15,103 +20,89 @@ export default function VerifyOTP() {
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return;
-    
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       prevInput?.focus();
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const otpString = otp.join('');
-    
+
     if (otpString.length === 6) {
       const result = await dispatch(verifyOtp({ otp: otpString }));
-      
+
       if (verifyOtp.fulfilled.match(result)) {
-        toast.success('Verification successful!', {
-          description: 'Your account has been verified. Redirecting...',
-        });
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+        toast.success(t('verificationSuccess') || 'Verified!');
+        setTimeout(() => navigate('/dashboard'), 1000);
       } else {
-        toast.error('Verification failed', {
-          description: result.payload as string || 'Invalid OTP code',
+        toast.error(t('verificationFailed') || 'Failed', {
+          description: result.payload as string || 'Invalid OTP',
         });
       }
     }
   };
 
   const handleResendOtp = () => {
-    // Reset OTP inputs
     setOtp(['', '', '', '', '', '']);
-    // In a real app, this would trigger another API call
-    toast.success('OTP resent', {
-      description: 'A new OTP has been sent to your email',
-    });
+    toast.success('New code sent!');
   };
 
   return (
-    <div className="min-h-screen bg-[#2a2a2a] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-[1200px] flex flex-col lg:flex-row shadow-xl overflow-hidden rounded-lg">
-        {/* Left Side - Hero Image */}
-        <div className="hidden lg:block lg:w-1/2 relative">
-          <img
-            src={heroImage}
-            alt="Keep It Fresh, Grow Your Business"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          <div className="absolute bottom-12 left-12 right-12">
-            <h2 className="text-white text-4xl xl:text-5xl mb-2">
-              Keep It <span className="text-[#00b050]">Fresh</span>,
-            </h2>
-            <h2 className="text-white text-4xl xl:text-5xl mb-2">Grow Your</h2>
-            <h2 className="text-4xl xl:text-5xl">
-              <span className="text-[#00b050]">Business</span>
-            </h2>
-          </div>
-        </div>
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans"
+      style={{
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Cinematic Overlay */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
 
-        {/* Right Side - OTP Form */}
-        <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <div className="max-w-[450px] mx-auto w-full">
-            {/* Logo */}
-            <div className="mb-8">
-              <img src={logo} alt="Via Fresh" className="h-12" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <div className="bg-white/10 backdrop-blur-3xl rounded-[2.5rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
+          <div className="p-8 sm:p-12">
+
+            {/* Logo Section */}
+            <div className="flex flex-col items-center mb-8">
+              <img src={logo} alt="MoFresh" className="h-10 mb-4" />
+              <div className="h-1 w-8 bg-green-500 rounded-full" />
             </div>
 
-            {/* Mail Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-[#e6f4ea] flex items-center justify-center">
-                <Mail className="w-10 h-10 text-[#00b050]" />
+            {/* Icon & Text */}
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                <Mail className="w-8 h-8 text-green-400" />
               </div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                {t('verifyOTP') || 'Verify OTP'}
+              </h1>
+              <p className="text-white/50 text-sm mt-2">
+                Sent to <span className="text-white font-medium">{otpEmail || 'your email'}</span>
+              </p>
             </div>
 
-            {/* Heading */}
-            <h1 className="text-center text-3xl mb-4 text-[#00b050]">Verify OTP</h1>
-            <p className="text-center text-gray-600 mb-8">
-              We sent an OTP to <span className="font-medium">{otpEmail || 'your Email'}</span> enter it below to continue
-            </p>
-
-            {/* OTP Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* OTP Inputs */}
-              <div className="flex justify-center gap-2 sm:gap-3">
+              <div className="flex justify-between gap-2">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -122,43 +113,54 @@ export default function VerifyOTP() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-12 sm:w-14 sm:h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00b050] focus:border-transparent"
+                    className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-green-500/50 outline-none text-white transition-all"
                   />
                 ))}
               </div>
 
-              {/* Resend OTP */}
-              <p className="text-center text-sm text-gray-600">
-                Didn't receive?{' '}
+              {/* Action Button */}
+              <motion.button
+                type="submit"
+                disabled={isLoading || otp.some((digit) => !digit)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('verifyContinue') || 'Verify & Continue'}
+              </motion.button>
+
+              {/* Resend Logic */}
+              <div className="text-center">
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  className="text-[#00b050] hover:underline"
+                  className="text-white/40 hover:text-green-400 text-xs font-bold uppercase tracking-widest transition-colors"
                 >
-                  Resend OTP
+                  {t('resendOTP') || 'Resend Code'}
                 </button>
-              </p>
-
-              {/* Verify Button */}
-              <button
-                type="submit"
-                disabled={isLoading || otp.some((digit) => !digit)}
-                className="w-full bg-[#1e5631] hover:bg-[#163f24] text-white py-3 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Verifying...' : 'Verify'}
-              </button>
-
-              {/* Back to Login Link */}
-              <p className="text-center text-sm text-gray-600">
-                Go Back to{' '}
-                <Link to="/login" className="text-[#00b050] hover:underline">
-                  Log In?
-                </Link>
-              </p>
+              </div>
             </form>
+
+            {/* Bottom Navigation */}
+            <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">
+              <Link
+                to="/login"
+                className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {t('backToLogin') || 'Back to Login'}
+              </Link>
+              <Link
+                to="/"
+                className="text-[10px] text-white/20 hover:text-white uppercase tracking-[0.4em] transition-all"
+              >
+                Go back home
+              </Link>
+            </div>
+
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

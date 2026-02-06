@@ -5,6 +5,7 @@ interface AuthState {
   user: any | null;
   token: string | null;
   isLoading: boolean;
+  isAuthenticated: boolean; // ADDED: Required for PrivateRoute
   otpEmail: string | null;
 }
 
@@ -12,6 +13,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   isLoading: false,
+  isAuthenticated: false, // ADDED: Required for PrivateRoute
   otpEmail: null,
 };
 
@@ -49,7 +51,7 @@ export const registerUser = createAsyncThunk(
     try {
       await dummyApiDelay();
       // Simulate successful registration - return email for OTP
-      if (email && password && fullName) {
+      if (email && password && fullName && phone) {
         return { email };
       }
       throw new Error('Registration failed');
@@ -85,6 +87,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.isAuthenticated = false; // ADDED
     },
     setOtpEmail: (state, action: PayloadAction<string>) => {
       state.otpEmail = action.payload;
@@ -100,6 +103,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.isAuthenticated = true; // ADDED
       })
       .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
@@ -123,6 +127,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.isAuthenticated = true; // ADDED
         state.otpEmail = null;
       })
       .addCase(verifyOtp.rejected, (state) => {

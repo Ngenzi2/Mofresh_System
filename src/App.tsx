@@ -1,28 +1,16 @@
-import { useState, useEffect } from 'react'
-import Home from './pages/Home'
-import About from './pages/About'
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n/config';
+import { ThemeProvider } from './components/ui/ThemeProvider';
+import AppRoutes from './routes/AppRoutes';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('/')
-
-  useEffect(() => {
-    // Handle hash-based routing
-    const handleHashChange = () => {
-      setCurrentPage(window.location.hash.slice(1) || '/')
-    }
-
-    handleHashChange() // Set initial page
-    window.addEventListener('hashchange', handleHashChange)
-
-    return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [])
-
-  // Render the appropriate page based on current route
-  if (currentPage === '/about') {
-    return <About />
-  }
-
-  return <Home />
+export default function App() {
+  return (
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+          <AppRoutes />
+        </div>
+      </ThemeProvider>
+    </I18nextProvider>
+  );
 }
-
-export default App

@@ -1,24 +1,59 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Plus, ChevronRight, Thermometer, Package, User, ShoppingBag } from "lucide-react";
-import { Button } from "./ui/button";
+import { Link, useNavigate } from 'react-router';
+import  { useAppDispatch } from "@/store/hooks";
+import { addToCart } from "@/store/cartSlice";
 
-// hero images
-import HeroImg from "@/assets/Hero.jpg";
+import { ArrowRight, Star, Plus, Thermometer, Package, User, ShoppingBag } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Button } from "./button";
+
+// --- Types ---
+interface Category {
+  id: number;
+  name: string;
+  image: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  unit: string;
+  discount: number;
+  rating: number;
+  badge: string | null;
+  badgeColor?: string;
+  image: string;
+}
+
+interface Step {
+  number: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+interface Testimonial {
+  id: number;
+  text: string;
+  author: string;
+  role: string;
+  avatar: string;
+}
+
+// Hero images
 import Hero1 from "@/assets/hero-1.png";
 import Hero2 from "@/assets/hero-2.png";
 import Hero3 from "@/assets/hero-3.png";
 import Hero4 from "@/assets/hero-4.png";
 
-// category images
-
+// Category images
 import cat1 from "@/assets/vegetables.png";
 import cat2 from "@/assets/meat.png";
 import cat3 from "@/assets/fruits.png";
 import cat4 from "@/assets/freezer.png";
 
-// product images
-
+// Product images
 import pro1 from "@/assets/brocoli.png";
 import pro2 from "@/assets/orange.png";
 import pro3 from "@/assets/freshmeat.png";
@@ -26,34 +61,33 @@ import pro4 from "@/assets/banana.png";
 import pro5 from "@/assets/fish.png";
 import pro6 from "@/assets/pepper.png";
 
-// offer pictures 
+// Offer pictures 
 import of1 from "@/assets/10.png";
 import of2 from "@/assets/20.png";
 import of3 from "@/assets/40.png";
 import of4 from "@/assets/offer.png";
 import of5 from "@/assets/getstarted.png";
 
-//client images
-
+// Client images
 import cli1 from "@/assets/clients.png";
 import cli2 from "@/assets/client-1.png";
 import cli3 from "@/assets/client-2.png";
 
+// Farmer image
+import farmerImage from "@/assets/farmer.png";
 
-
-
-
-
-
-
-export const HeroSection = () => {
+export const HeroSection: React.FC = () => {
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  /* ---------- STATE ---------- */
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [page, setPage] = useState<number>(0);
 
-  // 4 hero images for carousel
-  const heroImages = [Hero1,Hero2,Hero3,Hero4];
+  const heroImages: string[] = [Hero1, Hero2, Hero3, Hero4];
 
-  // Auto-rotate hero carousel every 5 seconds
+  /* ---------- CAROUSEL LOGIC ---------- */
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -61,311 +95,205 @@ export const HeroSection = () => {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
-  const categories = [
-    { id: 1, name: "Vegetables", image: cat1 },
-    { id: 2, name: "Meat", image: cat2 },
-    { id: 3, name: "Fruits", image: cat3 },
-    { id: 4, name: "Freezing Boxes", image: cat4},
+  /* ---------- DATA ---------- */
+  const categories: Category[] = [
+    { id: 1, name: t('vegetables'), image: cat1 },
+    { id: 2, name: t('meat'), image: cat2 },
+    { id: 3, name: t('fruits'), image: cat3 },
+    { id: 4, name: t('freezingBoxes'), image: cat4 },
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: "Fresh broccoli",
-      price: 1000,
-      unit: "Rwf/kg",
-      discount: 15,
-      rating: 4,
-      badge: "Popular",
-      badgeColor: "bg-yellow-400",
-      image: pro1,
-    },
-    {
-      id: 2,
-      name: "Fresh Orange",
-      price: 1500,
-      unit: "Rwf/kg",
-      discount: 10,
-      rating: 5,
-      badge: null,
-      image: pro2,
-    },
-    {
-      id: 3,
-      name: "Fresh banana",
-      price: 1500,
-      unit: "Rwf/kg",
-      discount: 10,
-      rating: 4,
-      badge: null,
-      image: pro4,
-    },
-    {
-      id: 4,
-      name: "Fresh Meat",
-      price: 1000,
-      unit: "Rwf/kg",
-      discount: 15,
-      rating: 4,
-      badge: "Popular",
-      badgeColor: "bg-yellow-400",
-      image: pro3,
-    },
-    {
-      id: 5,
-      name: "Fresh Fish",
-      price: 1300,
-      unit: "Rwf/kg",
-      discount: 20,
-      rating: 5,
-      badge: null,
-      image: pro5,
-    },
-    {
-      id: 6,
-      name: "Fresh pepper",
-      price: 1000,
-      unit: "Rwf/kg",
-      discount: 25,
-      rating: 4,
-      badge: "Popular",
-      badgeColor: "bg-yellow-400",
-      image: pro6,
-    },
+  const testimonials: Testimonial[] = [
+    { id: 1, text: t("testimonial1"), author: t("author1"), role: t("role1"), avatar: cli2 },
+    { id: 2, text: t("testimonial2"), author: t("author2"), role: t("role2"), avatar: cli3 },
+    { id: 3, text: t("testimonial1"), author: t("author1"), role: t("role1"), avatar: cli2 },
+    { id: 4, text: t("testimonial2"), author: t("author2"), role: t("role2"), avatar: cli3 },
   ];
 
-  const steps = [
-    {
-      number: "01",
-      title: "Register & Connect",
-      description: "Get set up in minutes, creating an account and connecting with the network",
-      icon: User,
-    },
-    {
-      number: "02",
-      title: "Store your produce",
-      description: "Deliver your fresh produce to our cold storage facility with storage",
-      icon: Package,
-    },
-    {
-      number: "03",
-      title: "Monitor in Real time",
-      description: "Track temperature, humidity and quality metrics via our dashboard 24/7",
-      icon: Thermometer,
-    },
-    {
-      number: "04",
-      title: "Sell & Deliver",
-      description: "List items on our marketplace or fulfill orders through our logistics for delivery",
-      icon: ShoppingBag,
-    },
+  const groups: Testimonial[][] = [];
+  for (let i = 0; i < testimonials.length; i += 2) {
+    groups.push(testimonials.slice(i, i + 2));
+  }
+
+  useEffect(() => {
+    const i = setInterval(() => {
+      setPage((p) => (p + 1) % groups.length);
+    }, 5000);
+    return () => clearInterval(i);
+  }, [groups.length]);
+
+  const products: Product[] = [
+    { id: 1, name: "Fresh broccoli", price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro1 },
+    { id: 2, name: "Fresh Orange", price: 1500, unit: "Rwf/kg", discount: 10, rating: 5, badge: null, image: pro2 },
+    { id: 3, name: "Fresh banana", price: 1500, unit: "Rwf/kg", discount: 10, rating: 4, badge: null, image: pro4 },
+    { id: 4, name: "Fresh Meat", price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro3 },
+    { id: 5, name: "Fresh Fish", price: 1300, unit: "Rwf/kg", discount: 20, rating: 5, badge: null, image: pro5 },
+    { id: 6, name: "Fresh pepper", price: 1000, unit: "Rwf/kg", discount: 25, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro6 },
   ];
 
-  const testimonials = [
-    {
-      id: 1,
-      text: "Before MoFresh, our produce spoiled quickly. Now, by storing our fruits, vegetables, and meat in their cold rooms, we reduce wastage, keep quality fresh, and sell on the marketplace at better prices. MoFresh made selling easier. Customers trust us every day.",
-      author: "Ben Rwagira",
-      role: "Former Farmer",
-      avatar: cli2,
-    },
-    {
-      id: 2,
-      text: '"Your services was incredible.the cold boxes served me better. it showed me to keep clients arrive as close as if they were in my market.I stored my to find that on the same time produce for work with MoFresh."',
-      author: "Eza neza company",
-      role: "client",
-      avatar: cli3,
-    },
+  const steps: Step[] = [
+    { number: "01", title: t('step1Title'), description: t('step1Desc'), icon: User },
+    { number: "02", title: t('step2Title'), description: t('step2Desc'), icon: Package },
+    { number: "03", title: t('step3Title'), description: t('step3Desc'), icon: Thermometer },
+    { number: "04", title: t('step4Title'), description: t('step4Desc'), icon: ShoppingBag },
   ];
+
+  const handleAddToCart = (product: Product) => {
+    dispatch(addToCart(product));
+    navigate("/cart");
+  };
 
   return (
-    <div className="w-full bg-white">
-      {/* ========== HERO SECTION WITH CAROUSEL ========== */}
+    <div className="w-full bg-white dark:bg-gray-900 transition-colors">
+      
+      {/* ========== ENHANCED HERO SECTION ========== */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-6 lg:py-8">
-        <div className="bg-[#1a5e3f] rounded-[32px] lg:rounded-[40px] overflow-hidden relative min-h-[450px] lg:h-[600px]">
-          <div className="flex flex-col lg:flex-row items-center justify-between px-8 sm:px-12 lg:px-16 py-10 lg:py-16 h-full relative z-10 gap-8 lg:gap-0">
-            {/* Left Content */}
-            <div className="w-full lg:w-[52%] text-white space-y-5 lg:space-y-6">
-              <div className="space-y-1">
-                <h1 className="leading-[1.1] font-bold">
-                  <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-[56px]">
-                    Store <span className="text-[#8bc34a]">Smart</span>.
-                  </span>
-                  <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-[56px]">
-                    Sell <span className="text-[#8bc34a]">Better</span>.
-                  </span>
-                  <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-[56px]">
-                    Start with <span className="text-[#8bc34a]">MoFresh</span>
-                  </span>
+        <div 
+          className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden min-h-[650px] lg:min-h-[800px] shadow-2xl transition-all duration-700"
+          style={{
+            backgroundImage: `url(${farmerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center right',
+          }}
+        >
+          {/* Enhanced Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-[#2d6a4f]/40 to-transparent dark:from-black/95 dark:via-gray-900/60" />
+          
+          <div className="relative z-10 px-8 sm:px-12 lg:px-24 py-16 lg:py-24 flex flex-col justify-center h-full min-h-[650px] lg:min-h-[800px]">
+            <div className="max-w-3xl space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+              <div className="space-y-4">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-[#9be15d]/20 border border-[#9be15d]/30 text-[#2E8B2E] text-sm font-bold tracking-widest uppercase">
+                  Freshness Delivered
+                </span>
+                <h1 className="text-5xl sm:text-7xl lg:text-[84px] font-black leading-[0.95] text-white tracking-tighter">
+                  Store <span className="text-[#2E8B2E] italic">Smart.</span><br />
+                  Sell <span className="text-[#2E8B2E] italic">Better.</span><br />
+                  <span className="text-white">Start with </span><span className="text-[#2E8B2E]">MoFresh</span>
                 </h1>
               </div>
 
-              <div className="bg-[rgba(77,116,79,0.4)] rounded-xl lg:rounded-2xl px-6 sm:px-8 lg:px-12 py-4 lg:py-5 mt-5">
-                <p className="text-white text-sm sm:text-base lg:text-lg font-normal leading-relaxed">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 lg:p-8 max-w-xl shadow-xl">
+                <p className="text-white/90 text-lg lg:text-xl font-medium leading-relaxed">
                   Affordable cold storage and a digital marketplace to help you reduce losses and reach better buyers.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <Button className="bg-[#23a31f] hover:bg-[#1e8c1a] text-white font-semibold text-sm sm:text-base px-6 lg:px-8 h-12 lg:h-14 rounded-lg flex items-center justify-center gap-2 transition-all">
+              <div className="flex flex-wrap gap-5 pt-4">
+                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#2E8B2E] text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all shadow-[0_10px_20px_rgba(35,163,31,0.3)] hover:-translate-y-1">
                   Shop Fresh Now
-                  <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
-                </Button>
-                <Button className="bg-[#23a31f] hover:bg-[#1e8c1a] text-white font-semibold text-sm sm:text-base px-6 lg:px-8 h-12 lg:h-14 rounded-lg flex items-center justify-center gap-2 transition-all">
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link to="/register" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/50 text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all hover:-translate-y-1">
                   Rent Now
-                  <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
-                </Button>
+                </Link>
               </div>
             </div>
 
-            {/* Right Hero Carousel - 4 sliding images */}
-            <div className="w-full lg:w-[45%] h-[280px] sm:h-[350px] lg:h-[480px] relative">
-              <div className="relative w-full h-full overflow-hidden rounded-2xl lg:rounded-3xl shadow-2xl">
-                {heroImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                      index === currentSlide
-                        ? "opacity-100 translate-x-0"
-                        : index < currentSlide
-                        ? "opacity-0 -translate-x-full"
-                        : "opacity-0 translate-x-full"
-                    }`}
-                  >
+            {/* Floating Carousel Box (Bottom Right) */}
+            <div className="absolute bottom-12 right-12 hidden xl:block">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-[#9be15d]/20 rounded-[40px] blur-2xl group-hover:bg-[#9be15d]/30 transition-colors" />
+                <div className="relative w-[450px] h-[450px] bg-white/10 backdrop-blur-xl rounded-[40px] border border-white/20 shadow-2xl flex items-center justify-center p-10">
+                  {heroImages.map((image, index) => (
                     <img
+                      key={index}
                       src={image}
-                      alt={`Hero ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      alt="Product"
+                      className={`absolute w-4/5 h-4/5 object-contain transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                        index === currentSlide ? "opacity-100 scale-100 rotate-0 translate-y-0" : "opacity-0 scale-75 rotate-12 translate-y-12"
+                      }`}
+                      style={{ filter: 'drop-shadow(0 20px 50px rgba(0,0,0,0.3))' }}
                     />
+                  ))}
+                  <div className="absolute bottom-8 flex gap-3">
+                    {heroImages.map((_, index) => (
+                      <div key={index} className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? "w-8 bg-[#9be15d]" : "w-2 bg-white/30"}`} />
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Three Features Below Hero */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8 mt-8 lg:mt-10 max-w-5xl mx-auto">
-          <div className="text-center">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-[#1a5e3f] rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4 shadow-lg">
-              <svg className="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:gap-12 mt-12 max-w-6xl mx-auto">
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h3 className="font-bold text-gray-900 text-base lg:text-lg mb-2">Smart cold chain</h3>
-            <p className="text-sm text-gray-600">Real-time temperature monitoring</p>
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{t('smartColdChain')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('realtimeMonitoring')}</p>
           </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-[#1a5e3f] rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4 shadow-lg">
-              <svg className="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
-            <h3 className="font-bold text-gray-900 text-base lg:text-lg mb-2">Fast Delivery</h3>
-            <p className="text-sm text-gray-600">Same-day for city zones</p>
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{t('fastDelivery')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('sameDayDelivery')}</p>
           </div>
-
-          <div className="text-center">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-[#1a5e3f] rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4 shadow-lg">
-              <svg className="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
+          <div className="text-center group">
+            <div className="w-20 h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
             </div>
-            <h3 className="font-bold text-gray-900 text-base lg:text-lg mb-2">Quality Assurance</h3>
-            <p className="text-sm text-gray-600">Double-checked for perfection</p>
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{t('qualityAssurance')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('doubleChecked')}</p>
           </div>
         </div>
       </section>
 
       {/* ========== SHOP BY CATEGORY ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12 pt-12 lg:pt-16 pb-8 lg:pb-10 bg-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10">
           <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-[#1a5e3f] mb-2">Shop by Category</h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700">
-              Find products quickly by browsing through organized categories
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d] mb-2">{t('shopByCategory')}</h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300">{t('categoriesDescription')}</p>
           </div>
-          <button className="bg-white border-2 border-[#1a5e3f] rounded-xl px-5 lg:px-6 py-2.5 flex items-center gap-2 hover:bg-green-50 transition-colors whitespace-nowrap">
-            <span className="text-[#1a5e3f] text-base lg:text-lg font-medium">View all</span>
-            <ArrowRight className="w-4 h-4 text-[#1a5e3f]" />
+          <button className="border-2 border-[#2d6a4f] dark:border-[#9be15d] rounded-xl px-6 py-2.5 flex items-center gap-2 hover:bg-green-50 dark:hover:bg-gray-800 transition-colors">
+            <span className="text-[#2d6a4f] dark:text-[#9be15d] font-bold">{t('viewAll')}</span>
+            <ArrowRight className="w-5 h-5 text-[#2d6a4f] dark:text-[#9be15d]" />
           </button>
         </div>
-
-        <div className="relative">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="relative rounded-xl lg:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl group"
-              >
-                <div className="aspect-square relative bg-white">
-                  <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-5 text-white">
-                    <h3 className="text-xl lg:text-3xl font-bold drop-shadow-lg">{category.name}</h3>
-                  </div>
-                </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((category) => (
+            <div key={category.id} className="group relative rounded-[32px] overflow-hidden cursor-pointer shadow-lg aspect-square">
+              <img src={category.image} alt={category.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <div className="absolute bottom-6 left-6 text-white">
+                <h3 className="text-2xl font-bold">{category.name}</h3>
               </div>
-            ))}
-          </div>
-
-          {/* Right Arrow Navigation Button - Desktop only */}
-          <div className="hidden lg:block absolute -right-16 top-1/2 -translate-y-1/2">
-            <button className="bg-[#1a5e3f] rounded-full w-14 h-14 flex items-center justify-center hover:bg-[#8bc34a] transition-all shadow-lg">
-              <ArrowRight className="w-6 h-6 text-white" />
-            </button>
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ========== LIMITED PRODUCTS ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12 py-12 lg:py-14">
-        <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-gray-900 mb-6 lg:mb-8">Limited Products</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+      {/* ========== FEATURED PRODUCTS ========== */}
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">Featured Products</h2>
+          <button className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">View All <ArrowRight className="w-5 h-5" /></button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="relative">
-                {product.discount && (
-                  <div className="absolute top-3 left-3 bg-[#ff6b35] text-white px-3 py-1 rounded-lg text-xs font-bold z-10">
-                    {product.discount}% Off
-                  </div>
-                )}
-                {product.badge && (
-                  <div className={`absolute top-3 right-3 ${product.badgeColor} text-gray-900 px-3 py-1 rounded-lg text-xs font-bold z-10`}>
-                    {product.badge}
-                  </div>
-                )}
-                <img src={product.image} alt={product.name} className="w-full h-48 sm:h-52 object-cover" />
+            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-700 group">
+              <div className="relative h-64 overflow-hidden bg-gray-50">
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                {product.badge && <div className={`absolute top-4 left-4 ${product.badgeColor} text-gray-900 px-4 py-1.5 rounded-full text-xs font-bold`}>{product.badge}</div>}
               </div>
-
-              <div className="p-4 lg:p-5">
-                <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3">{product.name}</h3>
-
-                <div className="flex items-center gap-0.5 mb-4">
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2 dark:text-white">{product.name}</h3>
+                <div className="flex items-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(product.rating) ? "fill-[#ffa500] text-[#ffa500]" : "fill-gray-200 text-gray-200"
-                      }`}
-                    />
+                    <Star key={i} className={`w-4 h-4 ${i < product.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
                   ))}
                 </div>
-
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">
-                      {product.price} <span className="text-xs font-normal text-gray-600">{product.unit}</span>
-                    </p>
+                    <p className="text-2xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{product.price.toLocaleString()} Rwf</p>
+                    <p className="text-sm text-gray-500">{product.unit}</p>
                   </div>
-                  <Button className="bg-[#fed600] hover:bg-[#e5c200] text-gray-900 rounded-full w-10 h-10 flex items-center justify-center p-0 shadow-md">
-                    <Plus className="w-5 h-5" />
+                  <Button onClick={() => handleAddToCart(product)} className="w-12 h-12 rounded-full bg-[#fed600] hover:bg-yellow-500">
+                    <Plus className="w-6 h-6 text-black" />
                   </Button>
                 </div>
               </div>
@@ -374,172 +302,117 @@ export const HeroSection = () => {
         </div>
       </section>
 
-      {/* ========== PROMOTIONAL BANNERS ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12 py-8 lg:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-          {/* Banner 1 - Green Vegetables */}
-          <div className="bg-[#1a7a4a] rounded-[28px] p-8 lg:p-10 text-white relative overflow-hidden h-64 lg:h-72">
-            <div className="absolute top-0 left-0 w-32 h-32 lg:w-40 lg:h-40 bg-[#238f5c] rounded-full -translate-x-12 lg:-translate-x-16 -translate-y-10 lg:-translate-y-12" />
-            <div className="relative z-10 flex flex-col justify-between h-full">
-              <div>
-                <div className="bg-white text-[#1a7a4a] text-xs lg:text-sm font-bold px-4 py-1.5 rounded-full inline-block mb-5">
-                  10% Off
-                </div>
-                <h3 className="text-xl lg:text-2xl font-bold leading-tight">Mofresh provided</h3>
-                <h3 className="text-xl lg:text-2xl font-bold leading-tight">fresh <span className="text-white">Vegetables</span> everyday</h3>
-              </div>
-              <div className="absolute top-4 right-8 lg:right-12">
-                <img src={of1} alt="Vegetables" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
+      {/* ========== PROMOTIONAL BANNERS (AS PER IMAGE) ========== */}
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Banner 1: Green */}
+          <div className="lg:col-span-2 relative h-[360px] bg-[#0B6B3E] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group">
+            <div className="absolute -top-[100px] -left-[100px] w-[300px] h-[300px] bg-[#1a8a4d] rounded-full" />
+            <div className="relative z-10 flex flex-col h-full">
+              <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-5 py-2 rounded-xl w-fit mb-6">10% Off</span>
+              <div className="max-w-[55%]">
+                <h3 className="text-4xl font-bold leading-tight">
+                  Mofresh provided fresh <span className="text-[#9BE15D]">Vegetables</span> everyday
+                </h3>
               </div>
             </div>
+            <img src={of1} className="absolute right-4 bottom-0 w-[280px] lg:w-[420px] object-contain transition-transform group-hover:scale-105" alt="Veg" />
           </div>
 
-          {/* Banner 2 - Orange Storage */}
-          <div className="bg-[#ff7a3d] rounded-[28px] p-8 lg:p-10 text-white relative overflow-hidden h-64 lg:h-72">
-            <div className="relative z-10 flex flex-col justify-between h-full">
-              <div>
-                <h3 className="text-2xl lg:text-3xl font-bold leading-tight mb-1">Big Offer</h3>
-                <h3 className="text-2xl lg:text-3xl font-bold leading-tight">Open for fresh</h3>
-              </div>
-              <div className="absolute top-4 right-8 lg:right-12">
-                <img src={of2} alt="Storage box" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
-              </div>
+          {/* Banner 2: Orange */}
+          <div className="relative h-[360px] bg-[#FF7A1A] rounded-[32px] overflow-hidden p-8 text-white group">
+            <div className="relative z-10 text-right">
+              <p className="text-4xl font-black text-[#FFD84D] uppercase italic">Big Offer</p>
+              <p className="text-xl font-bold">Open for fresh</p>
             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Banner 3 - Beef Meat */}
-          <div className="bg-[#7a2828] rounded-[28px] p-8 lg:p-10 text-white relative overflow-hidden h-64 lg:h-72">
-            <div className="relative z-10 flex flex-col justify-between h-full">
-              <div>
-                <div className="bg-[#ff6b35] text-white text-xs lg:text-sm font-bold px-4 py-1.5 rounded-full inline-block mb-4">
-                  Hurry up! Get 20% Off
-                </div>
-                <h3 className="text-base lg:text-lg font-normal mb-0">Enjoy your lunch</h3>
-                <h3 className="text-base lg:text-lg font-normal mb-2">with delicious</h3>
-                <h3 className="text-3xl lg:text-4xl font-bold text-[#ff6b35]">Beef Meat</h3>
-              </div>
-              <div className="absolute bottom-6 right-8 lg:right-12">
-                <img src={of3} alt="Beef meat" className="w-36 h-32 lg:w-44 lg:h-40 object-cover rounded-2xl shadow-lg" />
-              </div>
-            </div>
+            <img src={of4} className="absolute bottom-6 left-6 w-[220px] transition-transform group-hover:-translate-y-2" alt="Box" />
           </div>
 
-          {/* Banner 4 - Yellow Offer */}
-          <div className="bg-[#fed600] rounded-[28px] p-8 lg:p-10 text-gray-900 relative overflow-hidden h-64 lg:h-72">
-            <div className="relative z-10 flex flex-col justify-between h-full">
-              <div>
-                <h3 className="text-lg lg:text-xl font-semibold leading-tight mb-0">We are willing</h3>
-                <h3 className="text-lg lg:text-xl font-semibold leading-tight mb-3">to make you an offer</h3>
-                <h3 className="text-5xl lg:text-6xl font-black leading-none">40% Off</h3>
-              </div>
-              <div className="absolute top-4 right-8 lg:right-12">
-                <img src={of4} alt="Fresh produce" className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-2xl shadow-lg" />
-              </div>
+          {/* Banner 3: Red */}
+          <div className="relative h-[360px] bg-[#7B0F14] rounded-[32px] overflow-hidden p-8 text-white group">
+            <div className="relative z-10">
+              <p className="text-[#FFD84D] font-bold mb-2">Hurry up! Get 20% Off</p>
+              <h3 className="text-3xl font-bold leading-tight">Enjoy your lunch with delicious <br/> Beef Meat</h3>
             </div>
+            <img src={of2} className="absolute right-4 bottom-4 w-[240px] transition-transform group-hover:rotate-3" alt="Meat" />
+          </div>
+
+          {/* Banner 4: Yellow */}
+          <div className="lg:col-span-2 relative h-[360px] bg-[#FFE34D] rounded-[32px] overflow-hidden p-8 lg:p-12 text-black group">
+            <div className="absolute -bottom-[100px] -left-[100px] w-[350px] h-[350px] bg-[#f9d72f] rounded-full" />
+            <div className="relative z-10 flex flex-col justify-between h-full">
+              <h3 className="text-3xl lg:text-4xl font-bold max-w-[50%]">We are willing to make you an offer</h3>
+              <p className="text-6xl font-black italic">40% Off</p>
+            </div>
+            <img src={of3} className="absolute right-8 top-1/2 -translate-y-1/2 w-[320px] lg:w-[450px] transition-transform group-hover:scale-110" alt="Fruits" />
           </div>
         </div>
       </section>
 
       {/* ========== SUBSCRIPTION BANNER ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12 py-8 lg:py-10">
-        <div className="bg-[#1a7a4a] rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white relative overflow-hidden">
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
-            <div className="max-w-xl">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
-                Get 20% Cash Back every times
-              </h2>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
-                with a <span className="text-white">Subscription</span>
-              </h2>
-              <p className="text-base lg:text-lg mb-6 text-white/90">On All Shopping you do</p>
-              <Button className="bg-white text-[#1a7a4a] hover:bg-gray-100 font-semibold px-8 lg:px-10 py-5 lg:py-6 rounded-lg text-base transition-all shadow-lg">
-                Get Started
-              </Button>
-            </div>
-            <div className="hidden lg:block">
-              <img src={of5} alt="Fresh produce basket" className="w-72 h-64 object-contain" />
-            </div>
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
+        <div className="bg-[#2d7a4f] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group">
+          <div className="relative z-10 max-w-2xl space-y-6">
+            <h2 className="text-4xl lg:text-6xl font-black leading-tight">Get 20% Cash Back every time with a Subscription</h2>
+            <p className="text-xl opacity-90">On all shopping you do within the Mofresh network.</p>
+            <Link to="/register" className="bg-white text-black font-bold px-10 h-16 rounded-2xl inline-flex items-center gap-2 hover:bg-[#9be15d] transition-all">
+              Get Started <ArrowRight className="w-6 h-6" />
+            </Link>
           </div>
+          <img src={of5} className="absolute top-0 right-0 h-full w-1/3 object-cover opacity-50 lg:opacity-100 transition-transform group-hover:scale-105" alt="Basket" />
         </div>
       </section>
 
-      {/* ========== HOW MOFRESH WORKS ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12 py-12 lg:py-16 bg-white">
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
-            How <span className="text-[#8bc34a]">MoFresh</span> works
+      {/* ========== HOW IT WORKS ========== */}
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-20">
+        <div className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl lg:text-5xl font-black dark:text-white">
+            {t('howMofreshWorks')} <span className="text-[#9be15d]">{t('heroTitle6')}</span> {t('howItWorks')}
           </h2>
-          <p className="text-sm lg:text-base text-gray-600 max-w-3xl mx-auto">
-            Get started in minutes, our streamlined process makes it easy to preserve, manage, and sell your agricultural products
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{t('worksStreamlined')}</p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 relative">
-          {steps.map((step, index) => {
-            const IconComponent = step.icon;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {steps.map((step) => {
+            const Icon = step.icon;
             return (
-              <div key={step.number} className="text-center relative">
-                <div className="relative mb-6 flex justify-center">
-                  <div className="w-20 h-20 lg:w-24 lg:h-24 bg-[#1a5e3f] rounded-3xl flex items-center justify-center text-white transform transition-all duration-300 hover:bg-[#8bc34a] shadow-lg relative">
-                    <IconComponent className="w-10 h-10 lg:w-12 lg:h-12" />
-                    <div className="absolute -top-3 -right-3 w-10 h-10 bg-[#fed600] rounded-full flex items-center justify-center text-sm font-bold text-gray-900 shadow-md z-10">
-                      {step.number}
-                    </div>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className="hidden lg:block absolute top-12 left-[calc(50%+48px)] w-[calc(100%+32px)] h-[2px] bg-gray-200" />
-                  )}
+              <div key={step.number} className="text-center relative group">
+                <div className="w-24 h-24 bg-[#2d6a4f] dark:bg-gray-700 rounded-3xl flex items-center justify-center mx-auto mb-8 relative group-hover:bg-[#9be15d] transition-all shadow-xl">
+                  <Icon className="w-12 h-12 text-white" />
+                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-[#fed600] rounded-full flex items-center justify-center font-black text-black text-lg">{step.number}</div>
                 </div>
-                <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-3">{step.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{step.description}</p>
+                <h3 className="text-xl font-bold mb-4 dark:text-white">{step.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{step.description}</p>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* ========== TESTIMONIALS ========== */}
-      <section
-        className="w-full py-14 lg:py-20"
-        style={{
-          backgroundImage: `linear-gradient(93.1deg, rgba(0, 0, 0, 0.75) 3.63%, rgba(26, 94, 63, 0.75) 99.23%), url('${cli1}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="text-center mb-12 lg:mb-14">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2">
-              Discover what <span className="text-[#fed600]">client</span> says
-            </h2>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#fed600] leading-tight">about us</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="bg-[#1a5e3f] text-white rounded-2xl lg:rounded-3xl p-8 lg:p-10 transform transition-all duration-300 hover:scale-105 shadow-xl"
-              >
-                <p className="text-sm lg:text-base mb-8 leading-relaxed">{testimonial.text}</p>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.author}
-                    className="w-14 h-14 lg:w-16 lg:h-16 rounded-full object-cover border-4 border-[#8bc34a]"
-                  />
-                  <div>
-                    <h4 className="font-bold text-base lg:text-lg">{testimonial.author}</h4>
-                    <p className="text-sm text-white/70">{testimonial.role}</p>
+      {/* ========== TESTIMONIALS SLIDER ========== */}
+      <section className="py-24 relative overflow-hidden" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,.7)),url(${cli1})`, backgroundSize: "cover", backgroundAttachment: "fixed" }}>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex transition-transform duration-1000 ease-in-out" style={{ transform: `translateX(-${page * 100}%)` }}>
+            {groups.map((group, i) => (
+              <div key={i} className="w-full flex-shrink-0 grid md:grid-cols-2 gap-8">
+                {group.map((t) => (
+                  <div key={t.id} className="bg-white/10 backdrop-blur-lg p-10 rounded-[40px] text-white border border-white/10">
+                    <p className="text-lg italic mb-8 leading-relaxed">"{t.text}"</p>
+                    <div className="flex items-center gap-4">
+                      <img src={t.avatar} className="w-16 h-16 rounded-full border-2 border-[#9be15d]" alt={t.author} />
+                      <div>
+                        <h4 className="font-black text-xl">{t.author}</h4>
+                        <p className="text-[#9be15d] font-medium">{t.role}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </section>
+
     </div>
   );
 };

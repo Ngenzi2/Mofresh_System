@@ -1,151 +1,121 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginUser } from '@/store/authSlice';
+import { useState, type FormEvent } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
-import heroImage from '@/assets/login.jpeg';
+import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router';
+
+// Import your assets
+import heroImage from '@/assets/login.png';
 import logo from '@/assets/Logo.png';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const dispatch = useAppDispatch();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { isLoading } = useAppSelector((state) => state.auth);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    const result = await dispatch(loginUser({ email, password }));
-    
-    if (loginUser.fulfilled.match(result)) {
-      toast.success('Login successful!', {
-        description: 'Welcome back! Redirecting to dashboard...',
-      });
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-    } else {
-      toast.error('Login failed', {
-        description: result.payload as string || 'Invalid email or password',
-      });
-    }
+
+    // Logic for auth...
+
+    // Redirect to your app's main area
+    navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-[#2a2a2a] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-[1200px] flex flex-col lg:flex-row shadow-xl overflow-hidden rounded-lg">
-        {/* Left Side - Form */}
-        <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <div className="max-w-[400px] mx-auto w-full">
-            {/* Logo */}
-            <div className="mb-8">
-              <img src={logo} alt="Via Fresh" className="h-12" />
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans"
+      style={{
+        backgroundImage: `url(${heroImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-black/10 backdrop-brightness-90" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-lg"
+      >
+        <div className="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] border border-white/30 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-10 sm:p-14 text-white text-center">
+
+          <div className="flex flex-col items-center mb-10">
+            <img src={logo} alt="MoFresh" className="h-10 mb-2 drop-shadow-md" />
+            <div className="h-px w-12 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+          </div>
+
+          <h1 className="text-4xl font-bold mb-2 tracking-tight drop-shadow-lg">
+            Welcome Back
+          </h1>
+          <p className="text-white/80 text-sm mb-10">
+            Log in to your account
+          </p>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+              <input
+                required
+                type="email"
+                placeholder="Email Address"
+                className="w-full bg-white/5 border border-white/20 rounded-full py-3.5 pl-12 pr-4 outline-none focus:bg-white/10 focus:border-white/50 transition-all placeholder:text-white/50"
+              />
             </div>
 
-            {/* Heading */}
-            <h1 className="text-[#00b050] mb-3">Welcome back</h1>
-            <p className="text-gray-600 mb-8 text-sm">
-              Sign in to access your dashboard and manage your business.
-            </p>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00b050] focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <label htmlFor="password" className="block text-sm text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00b050] focus:border-transparent"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-                <div className="text-right mt-2">
-                  <Link to="/forgot-password" className="text-sm text-[#00b050] hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
-
-              {/* Submit Button */}
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+              <input
+                required
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                className="w-full bg-white/5 border border-white/20 rounded-full py-3.5 pl-12 pr-12 outline-none focus:bg-white/10 focus:border-white/50 transition-all placeholder:text-white/50"
+              />
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#1e5631] hover:bg-[#163f24] text-white py-3 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
               >
-                {isLoading ? 'Logging in...' : 'Log In'}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
 
-              {/* Sign Up Link */}
-              <p className="text-center text-sm text-gray-600">
-                Don't have an account already?{' '}
-                <Link to="/register" className="text-[#00b050] hover:underline">
-                  Sign up
-                </Link>
+            <div className="flex items-center justify-between px-2 text-xs font-medium text-white/70">
+              <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
+                <input type="checkbox" className="accent-[#4ade80] w-4 h-4 rounded border-none bg-white/10" />
+                Remember me
+              </label>
+              {/* FORGOT PASSWORD LINK */}
+              <Link to="/forgot-password" className="hover:text-white transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+
+            <motion.button
+              type="submit"
+              whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(74, 222, 128, 0.4)" }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-[#4ade80] to-[#22c55e] text-white py-4 rounded-xl font-bold text-lg shadow-lg uppercase tracking-widest"
+            >
+              Login
+            </motion.button>
+
+            <div className="pt-4 text-xs font-medium text-white/60 flex flex-col gap-3">
+              <p>
+                Don't have an account?{' '}
+                <Link to="/register" className="text-white hover:underline font-bold">Sign up</Link>
               </p>
-            </form>
-          </div>
-        </div>
 
-        {/* Right Side - Hero Image */}
-        <div className="hidden lg:block lg:w-1/2 relative">
-          <img
-            src={heroImage}
-            alt="Keep It Fresh, Grow Your Business"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          <div className="absolute bottom-12 left-12 right-12">
-            <h2 className="text-white text-4xl xl:text-5xl mb-2">
-              Keep It <span className="text-[#00b050]">Fresh</span>,
-            </h2>
-            <h2 className="text-white text-4xl xl:text-5xl mb-2">Grow Your</h2>
-            <h2 className="text-4xl xl:text-5xl">
-              <span className="text-[#00b050]">Business</span>
-            </h2>
-          </div>
+              {/* GO BACK HOME LINK */}
+              <Link
+                to="/"
+                className="mt-2 text-white/40 hover:text-white transition-colors uppercase tracking-widest text-[10px]"
+              >
+                Go back home
+              </Link>
+            </div>
+          </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
