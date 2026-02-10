@@ -255,7 +255,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {stats.map((stat, idx) => {
                 const Icon = stat.icon;
                 return (
@@ -291,21 +291,21 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
             </div>
 
             {/* Action Banners */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="relative overflow-hidden rounded-[2.5rem] h-52 group cursor-pointer shadow-lg shadow-[#1a4d2e]/10">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#1a4d2e] via-[#1a4d2e]/90 to-transparent p-10 flex flex-col justify-center text-white z-10">
-                  <h3 className="text-2xl font-black mb-6 leading-tight max-w-[200px]">Need more capacity?</h3>
-                  <button className="flex items-center gap-3 bg-[#ffb703] hover:bg-[#fb8500] text-[#1a4d2e] px-6 py-3 rounded-2xl font-bold w-fit transition-all hover:scale-105 shadow-xl shadow-black/20">
-                    Rent assets <ArrowRight className="w-5 h-5" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#1a4d2e] via-[#1a4d2e]/90 to-transparent p-6 sm:p-10 flex flex-col justify-center text-white z-10">
+                  <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 leading-tight max-w-[200px]">Need more capacity?</h3>
+                  <button className="flex items-center gap-2 sm:gap-3 bg-[#ffb703] hover:bg-[#fb8500] text-[#1a4d2e] px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-bold w-fit transition-all hover:scale-105 shadow-xl shadow-black/20 text-sm sm:text-base">
+                    Rent assets <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
                 <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Logistics" />
               </div>
 
               <div className="relative overflow-hidden rounded-[2.5rem] h-52 group cursor-pointer shadow-lg shadow-[#38a169]/10">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#52796f] via-[#52796f]/90 to-transparent p-10 flex flex-col justify-center text-white z-10 transition-transform">
-                  <h3 className="text-2xl font-black mb-6 leading-tight max-w-[200px]">Source fresh produce</h3>
-                  <button className="flex items-center gap-3 border-2 border-white hover:bg-white hover:text-[#354f52] text-white px-6 py-3 rounded-2xl font-bold w-fit transition-all hover:scale-105 shadow-xl shadow-black/20 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#52796f] via-[#52796f]/90 to-transparent p-6 sm:p-10 flex flex-col justify-center text-white z-10 transition-transform">
+                  <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 leading-tight max-w-[200px]">Source fresh produce</h3>
+                  <button className="flex items-center gap-2 sm:gap-3 border-2 border-white hover:bg-white hover:text-[#354f52] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-bold w-fit transition-all hover:scale-105 shadow-xl shadow-black/20 backdrop-blur-sm text-sm sm:text-base">
                     Visit Marketplace
                   </button>
                 </div>
@@ -315,21 +315,21 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
 
             {/* Recent Bookings Table */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-8 flex items-center justify-between border-b border-gray-50">
-                <h3 className="text-xl font-black text-gray-900">Recent Bookings</h3>
-                <button className="text-sm font-bold text-gray-400 hover:text-[#38a169] transition-colors">
+              <div className="p-6 sm:p-8 flex items-center justify-between border-b border-gray-50">
+                <h3 className="text-lg sm:text-xl font-black text-gray-900">Recent Bookings</h3>
+                <button className="text-xs sm:text-sm font-bold text-gray-400 hover:text-[#38a169] transition-colors">
                   View All
                 </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <th className="px-10 py-6">Asset</th>
-                      <th className="px-10 py-6">Order ID</th>
-                      <th className="px-10 py-6">Status</th>
-                      <th className="px-10 py-6">Pick up date</th>
-                      <th className="px-10 py-6 text-right">Amount</th>
+                    <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Asset</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Order ID</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Status</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Pick up date</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 text-right whitespace-nowrap">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">

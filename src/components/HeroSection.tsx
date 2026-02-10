@@ -159,30 +159,30 @@ export const HeroSection: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-[#2d6a4f]/40 to-transparent dark:from-black/95 dark:via-gray-900/60" />
 
           <div className="relative z-10 px-8 sm:px-12 lg:px-24 py-16 lg:py-24 flex flex-col justify-center h-full min-h-[650px] lg:min-h-[800px]">
-            <div className="max-w-3xl space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+            <div className="max-w-3xl space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
               <div className="space-y-4">
-                <span className="inline-block px-4 py-1.5 rounded-full bg-[#9be15d]/20 border border-[#9be15d]/30 text-[#2E8B2E] text-sm font-bold tracking-widest uppercase">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-[#9be15d]/20 border border-[#9be15d]/30 text-[#2E8B2E] text-xs sm:text-sm font-bold tracking-widest uppercase">
                   {t('freshnessDelivered')}
                 </span>
-                <h1 className="text-5xl sm:text-7xl lg:text-[84px] font-black leading-[0.95] text-white tracking-tighter">
-                  {t('heroTitle1')} <span className="text-[#2E8B2E] italic">{t('heroTitle2')}</span><br />
-                  {t('heroTitle3')} <span className="text-[#2E8B2E] italic">{t('heroTitle4')}</span><br />
+                <h1 className="text-4xl sm:text-6xl lg:text-[84px] font-black leading-[0.95] text-white tracking-tighter">
+                  {t('heroTitle1')} <span className="text-[#2E8B2E] italic">{t('heroTitle2')}</span><br className="hidden sm:block" />
+                  {t('heroTitle3')} <span className="text-[#2E8B2E] italic">{t('heroTitle4')}</span><br className="hidden sm:block" />
                   <span className="text-white">{t('heroTitle5')} </span><span className="text-[#2E8B2E]">{t('heroTitle6')}</span>
                 </h1>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 lg:p-8 max-w-xl">
-                <p className="text-white/90 text-lg lg:text-xl font-medium leading-relaxed">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-xl">
+                <p className="text-white/90 text-base sm:text-lg lg:text-xl font-medium leading-relaxed">
                   {t('heroDescription')}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-5 pt-4">
-                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#2E8B2E] text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all hover:-translate-y-1">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pt-2 sm:pt-4">
+                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#2E8B2E] text-white font-bold text-lg sm:text-xl px-8 sm:px-10 h-14 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center sm:justify-start gap-3 transition-all hover:-translate-y-1">
                   {t('shopFreshNow')}
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link to="/register" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/50 text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all hover:-translate-y-1">
+                <Link to="/register" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/50 text-white font-bold text-lg sm:text-xl px-8 sm:px-10 h-14 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center sm:justify-start gap-3 transition-all hover:-translate-y-1 text-center">
                   {t('rentNow')}
                 </Link>
               </div>
@@ -305,17 +305,17 @@ export const HeroSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
           {/* Banner 1: Green */}
-          <div className="lg:col-span-2 relative h-[360px] bg-[#0B6B3E] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group border border-white/5">
+          <div className="lg:col-span-2 relative h-[360px] bg-[#0B6B3E] rounded-[32px] overflow-hidden p-6 sm:p-8 lg:p-12 text-white group border border-white/5">
             <div className="absolute -top-[100px] -left-[100px] w-[300px] h-[300px] bg-[#1a8a4d] rounded-full" />
             <div className="relative z-10 flex flex-col h-full">
-              <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-5 py-2 rounded-xl w-fit mb-6">10% {t('off')}</span>
-              <div className="max-w-[55%]">
-                <h3 className="text-4xl font-bold leading-tight">
+              <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-5 py-2 rounded-xl w-fit mb-4 sm:mb-6">10% {t('off')}</span>
+              <div className="max-w-[70%] sm:max-w-[55%]">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                   {t('mofreshProvided')} <span className="text-[#9BE15D]">{t('freshVegetables')}</span> {t('everyday')}
                 </h3>
               </div>
             </div>
-            <img src={of1} className="absolute right-4 bottom-0 w-[280px] lg:w-[420px] object-contain transition-transform group-hover:scale-105" alt="Veg" />
+            <img src={of1} className="absolute right-0 sm:right-4 bottom-0 w-[220px] sm:w-[280px] lg:w-[420px] object-contain transition-transform group-hover:scale-105" alt="Veg" />
           </div>
 
           {/* Banner 2: Orange */}
@@ -337,13 +337,13 @@ export const HeroSection: React.FC = () => {
           </div>
 
           {/* Banner 4: Yellow */}
-          <div className="lg:col-span-2 relative h-[360px] bg-[#FFE34D] rounded-[32px] overflow-hidden p-8 lg:p-12 text-black group border border-black/5">
+          <div className="lg:col-span-2 relative h-[360px] bg-[#FFE34D] rounded-[32px] overflow-hidden p-6 sm:p-8 lg:p-12 text-black group border border-black/5">
             <div className="absolute -bottom-[100px] -left-[100px] w-[350px] h-[350px] bg-[#f9d72f] rounded-full" />
             <div className="relative z-10 flex flex-col justify-between h-full">
-              <h3 className="text-3xl lg:text-4xl font-bold max-w-[50%]">{t('willingOffer')}</h3>
-              <p className="text-6xl font-black italic">40% {t('off')}</p>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold max-w-[60%] sm:max-w-[50%]">{t('willingOffer')}</h3>
+              <p className="text-4xl sm:text-6xl font-black italic">40% {t('off')}</p>
             </div>
-            <img src={of3} className="absolute right-8 top-1/2 -translate-y-1/2 w-[320px] lg:w-[450px] transition-transform group-hover:scale-110" alt="Fruits" />
+            <img src={of3} className="absolute right-0 sm:right-8 top-1/2 -translate-y-1/2 w-[240px] sm:w-[320px] lg:w-[450px] transition-transform group-hover:scale-110" alt="Fruits" />
           </div>
         </div>
       </section>

@@ -173,7 +173,7 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {stats.map((stat, idx) => {
                 const Icon = stat.icon;
                 return (
@@ -200,9 +200,9 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Asset Health */}
               <div className="lg:col-span-2 bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <h3 className="text-xl font-black text-gray-900">Asset Status</h3>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <span className="flex items-center gap-2 text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase">
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Operational
                     </span>
@@ -219,9 +219,9 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
                     { label: 'Tricycles', status: 'Optimal', count: '24/25', health: 92 },
                   ].map((item, idx) => (
                     <div key={idx} className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
                         <span className="font-bold text-gray-700">{item.label}</span>
-                        <span className="text-gray-400 font-medium">{item.count} assets • {item.health}% health</span>
+                        <span className="text-xs text-gray-400 font-medium">{item.count} assets • {item.health}% health</span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                         <motion.div

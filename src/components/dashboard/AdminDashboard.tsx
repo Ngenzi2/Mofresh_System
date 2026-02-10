@@ -175,7 +175,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeNav }) => 
             </div>
 
             {/* Global Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {globalStats.map((stat, idx) => {
                 const Icon = stat.icon;
                 return (
@@ -203,18 +203,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeNav }) => 
 
             {/* Hub Performance Table */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-8 border-b border-gray-50">
-                <h3 className="text-xl font-black text-gray-900">Hub Performance</h3>
+              <div className="p-6 sm:p-8 border-b border-gray-50">
+                <h3 className="text-lg sm:text-xl font-black text-gray-900">Hub Performance</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <th className="px-10 py-6">Hub Location</th>
-                      <th className="px-10 py-6">Utilization</th>
-                      <th className="px-10 py-6">Revenue</th>
-                      <th className="px-10 py-6">Status</th>
-                      <th className="px-10 py-6 text-right">Actions</th>
+                    <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Hub Location</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Utilization</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Revenue</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 whitespace-nowrap">Status</th>
+                      <th className="px-6 sm:px-10 py-4 sm:py-6 text-right whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
