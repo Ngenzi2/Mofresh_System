@@ -14,12 +14,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Assets
-import heroImage from "@/assets/register.png";
-import logo from "@/assets/Logo.png";
+import { useTranslation } from "react-i18next";
+import { AuthLayout } from "@/components/ui/AuthLayout";
 
 export default function Register() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -37,12 +36,12 @@ export default function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t('passwordsDoNotMatch') || "Passwords do not match");
       return;
     }
 
     if (!acceptTerms) {
-      toast.error("Please accept terms");
+      toast.error(t('pleaseAcceptTerms') || "Please accept terms");
       return;
     }
 
@@ -51,7 +50,7 @@ export default function Register() {
     );
 
     if (registerUser.fulfilled.match(result)) {
-      toast.success("Account created successfully!");
+      toast.success(t('accountCreatedSuccess') || "Account created successfully!");
       setTimeout(() => navigate("/verify-otp"), 1000);
     } else {
       toast.error("Registration failed", {
@@ -61,148 +60,147 @@ export default function Register() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans"
-      style={{
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+    <AuthLayout
+      title={t('signUp')}
+      subtitle={t('createAccount')}
+      sideTitle={t('registerTitle')}
+      sideSubtitle={t('registerSubtitle')}
     >
-      {/* Background Polish */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 w-full max-w-xl"
-      >
-        {/* THE BALANCED GLASS CARD */}
-        <div className="bg-white/10 backdrop-blur-3xl rounded-[2.5rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
-          <div className="p-8 sm:p-12">
-
-            {/* Header / Logo */}
-            <div className="flex flex-col items-center mb-8">
-              <img src={logo} alt="MoFresh" className="h-10 mb-4" />
-              <h1 className="text-3xl font-bold text-white tracking-tight">Create Account</h1>
-              <div className="h-1 w-8 bg-green-500 rounded-full mt-2" />
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Personal Info Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-green-400" />
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 outline-none focus:bg-white/10 focus:border-white/30 text-white transition-all placeholder:text-white/30"
-                    required
-                  />
-                </div>
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-green-400" />
-                  <input
-                    type="tel"
-                    placeholder="Phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 outline-none focus:bg-white/10 focus:border-white/30 text-white transition-all placeholder:text-white/30"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Email Row */}
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-green-400" />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 outline-none focus:bg-white/10 focus:border-white/30 text-white transition-all placeholder:text-white/30"
-                  required
-                />
-              </div>
-
-              {/* Password Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-green-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-10 outline-none focus:bg-white/10 focus:border-white/30 text-white transition-all placeholder:text-white/30"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white">
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-green-400" />
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-10 outline-none focus:bg-white/10 focus:border-white/30 text-white transition-all placeholder:text-white/30"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white">
-                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Terms */}
-              <div className="flex items-center gap-3 py-2">
-                <label className="relative flex items-center cursor-pointer">
-                  <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="sr-only peer" />
-                  <div className="w-5 h-5 border border-white/20 rounded-md peer-checked:bg-green-500 peer-checked:border-green-500 transition-all flex items-center justify-center">
-                    <AnimatePresence>{acceptTerms && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                        <CheckCircle2 size={12} className="text-white" />
-                      </motion.div>
-                    )}</AnimatePresence>
-                  </div>
-                </label>
-                <span className="text-xs text-white/40 leading-none">
-                  I agree to the <Link to="/terms" className="text-white hover:underline">Terms</Link> & <Link to="/privacy" className="text-white hover:underline">Privacy</Link>
-                </span>
-              </div>
-
-              {/* Action Button */}
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-green-900/20 uppercase tracking-widest text-sm flex items-center justify-center gap-2"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
-              </motion.button>
-            </form>
-
-            {/* Bottom Links */}
-            <div className="mt-8 pt-6 border-t border-white/5 text-center flex flex-col gap-4">
-              <p className="text-sm text-white/40">
-                Already have an account? <Link to="/login" className="text-white font-bold hover:text-green-400">Sign In</Link>
-              </p>
-              <Link to="/" className="text-[10px] text-white/20 hover:text-white uppercase tracking-[0.4em] transition-all">
-                Go back home
-              </Link>
-            </div>
-
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-1.5">
+          <label className="text-sm font-semibold text-[#2d6a4f] block ml-1">
+            {t('fullName')}
+          </label>
+          <div className="relative group">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d6a4f]" />
+            <input
+              type="text"
+              placeholder={t('enterFullName')}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] text-gray-900 transition-all placeholder:text-gray-400"
+              required
+            />
           </div>
         </div>
-      </motion.div>
-    </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-semibold text-[#2d6a4f] block ml-1">
+            {t('phoneLabel')}
+          </label>
+          <div className="relative group">
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d6a4f]" />
+            <input
+              type="tel"
+              placeholder={t('enterPhone')}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] text-gray-900 transition-all placeholder:text-gray-400"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-semibold text-[#2d6a4f] block ml-1">
+            {t('emailAddressLabel')}
+          </label>
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d6a4f]" />
+            <input
+              type="email"
+              placeholder={t('enterEmail')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] text-gray-900 transition-all placeholder:text-gray-400"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-[#2d6a4f] block ml-1">
+              {t('password')}
+            </label>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d6a4f]" />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder={t('password')}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-11 pr-10 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] text-gray-900 transition-all placeholder:text-gray-400"
+                required
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2d6a4f]">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-[#2d6a4f] block ml-1">
+              {t('confirmPassword') || 'Confirm'}
+            </label>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#2d6a4f]" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder={t('confirmPassword') || 'Confirm'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-11 pr-10 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] text-gray-900 transition-all placeholder:text-gray-400"
+                required
+              />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2d6a4f]">
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 py-1">
+          <label className="relative flex items-center cursor-pointer">
+            <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="sr-only peer" />
+            <div className="w-5 h-5 border border-gray-200 rounded-md peer-checked:bg-[#38a169] peer-checked:border-[#38a169] transition-all flex items-center justify-center">
+              <AnimatePresence>{acceptTerms && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                  <CheckCircle2 size={12} className="text-white" />
+                </motion.div>
+              )}</AnimatePresence>
+            </div>
+          </label>
+          <span className="text-xs text-gray-500 font-medium">
+            I agree to the <Link to="/terms" className="text-[#38a169] hover:underline font-bold">Terms</Link> & <Link to="/privacy" className="text-[#38a169] hover:underline font-bold">Privacy</Link>
+          </span>
+        </div>
+
+        <motion.button
+          type="submit"
+          disabled={isLoading}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          className="w-full bg-[#38a169] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#2d6a4f] transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm"
+        >
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('createAccount')}
+        </motion.button>
+
+        <div className="pt-4 text-center space-y-4">
+          <p className="text-sm text-gray-500">
+            {t('alreadyHaveAccount')}{' '}
+            <Link to="/login" className="text-[#38a169] font-bold hover:underline">
+              {t('signIn')}
+            </Link>
+          </p>
+
+          <Link
+            to="/"
+            className="inline-block text-[10px] text-gray-400 hover:text-[#2d6a4f] uppercase tracking-[0.3em] font-medium transition-colors"
+          >
+            Go back home
+          </Link>
+        </div>
+      </form>
+    </AuthLayout>
   );
 }

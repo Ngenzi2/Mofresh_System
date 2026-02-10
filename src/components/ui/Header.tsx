@@ -23,7 +23,7 @@ export function Header() {
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const cartCount = useAppSelector((state) =>
     state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
   );
@@ -61,16 +61,15 @@ export function Header() {
   };
 
   return (
-    <header 
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-2 shadow-sm" 
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+          ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-2"
           : "bg-white dark:bg-gray-900 py-4 lg:py-6"
-      }`}
+        }`}
     >
       <div className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex items-center justify-between h-12 lg:h-14">
-          
+
           {/* Left: Logo + mobile menu */}
           <div className="flex items-center gap-4">
             <div className="flex md:hidden">
@@ -92,9 +91,9 @@ export function Header() {
             </div>
 
             <Link to="/" className="flex items-center group">
-              <img 
-                src={Logo} 
-                alt="MoFresh Logo" 
+              <img
+                src={Logo}
+                alt="MoFresh Logo"
                 className="h-8 lg:h-10 w-auto group-hover:scale-105 transition-transform"
               />
             </Link>
@@ -105,8 +104,8 @@ export function Header() {
             <Link to="/" className="nav-link">{t('home')}</Link>
             <Link to="/about" className="nav-link">{t('about')}</Link>
             {/* Direct Anchor for HeroSection ID */}
-            <a 
-              href="#how-it-works" 
+            <a
+              href="#how-it-works"
               onClick={() => scrollToSection('#how-it-works')}
               className="nav-link"
             >
@@ -117,7 +116,7 @@ export function Header() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 sm:gap-4">
-            
+
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -134,7 +133,7 @@ export function Header() {
               <ShoppingCart size={20} />
               <AnimatePresence>
                 {cartCount > 0 && (
-                  <motion.span 
+                  <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
@@ -163,9 +162,8 @@ export function Header() {
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
-                      className={`w-full px-4 py-2 text-left text-sm rounded-xl transition-colors ${
-                        currentLanguage === lang ? 'bg-[#9be15d] text-[#2d6a4f] font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
-                      }`}
+                      className={`w-full px-4 py-2 text-left text-sm rounded-xl transition-colors ${currentLanguage === lang ? 'bg-[#9be15d] text-[#2d6a4f] font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
+                        }`}
                     >
                       {lang === 'en' ? 'English' : lang === 'fr' ? 'Français' : 'Kinyarwanda'}
                     </button>

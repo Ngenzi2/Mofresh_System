@@ -14,10 +14,10 @@ export function Footer() {
           <div className="col-span-1">
             {/* Logo - with better visibility */}
             <Link to="/" className="inline-block mb-4">
-              <div className=" rounded-xl shadow-lg inline-block">
-                <img 
-                  src={Logo} 
-                  alt="MoFresh Logo" 
+              <div className=" rounded-xl inline-block">
+                <img
+                  src={Logo}
+                  alt="MoFresh Logo"
                   className="h-8 w-auto"
                 />
               </div>
