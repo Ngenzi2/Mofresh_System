@@ -23,7 +23,7 @@ export function Header() {
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const cartCount = useAppSelector((state) =>
     state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
   );
@@ -61,16 +61,15 @@ export function Header() {
   };
 
   return (
-    <header 
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-2 shadow-sm" 
-          : "bg-white dark:bg-gray-900 py-4 lg:py-6"
-      }`}
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+        ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-2"
+        : "bg-white dark:bg-gray-900 py-4 lg:py-6"
+        }`}
     >
       <div className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex items-center justify-between h-12 lg:h-14">
-          
+
           {/* Left: Logo + mobile menu */}
           <div className="flex items-center gap-4">
             <div className="flex md:hidden">
@@ -80,21 +79,58 @@ export function Header() {
                     <Menu className="w-6 h-6" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="left" className="bg-white dark:bg-gray-900 p-6">
-                  <nav className="flex flex-col gap-6 mt-10">
-                    <Link to="/" className="text-2xl font-black text-gray-900 dark:text-white">{t('home')}</Link>
-                    <Link to="/about" className="text-2xl font-black text-gray-900 dark:text-white">{t('about')}</Link>
-                    <a href="#how-it-works" className="text-2xl font-black text-gray-900 dark:text-white">{t('howItWorks')}</a>
-                    <Link to="/contact" className="text-2xl font-black text-gray-900 dark:text-white">{t('contact')}</Link>
-                  </nav>
+                <SheetContent side="left" className="bg-white dark:bg-gray-900 p-0 border-r-0">
+                  <div className="flex flex-col h-full bg-white dark:bg-gray-900 transition-colors">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                      <img src={Logo} alt="Logo" className="h-8 w-auto" />
+                      <div className="flex items-center gap-2">
+                        <button onClick={toggleTheme} className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                    <nav className="flex-1 p-6 space-y-6">
+                      <Link to="/" className="block text-2xl font-black text-gray-900 dark:text-white hover:text-[#2d6a4f] transition-colors">{t('home')}</Link>
+                      <Link to="/about" className="block text-2xl font-black text-gray-900 dark:text-white hover:text-[#2d6a4f] transition-colors">{t('about')}</Link>
+                      <a href="#how-it-works" onClick={() => scrollToSection('#how-it-works')} className="block text-2xl font-black text-gray-900 dark:text-white hover:text-[#2d6a4f] transition-colors">{t('howItWorks')}</a>
+                      <Link to="/contact" className="block text-2xl font-black text-gray-900 dark:text-white hover:text-[#2d6a4f] transition-colors">{t('contact')}</Link>
+                    </nav>
+
+                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Select Language</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(['en', 'fr', 'rw'] as Language[]).map((lang) => (
+                            <button
+                              key={lang}
+                              onClick={() => handleLanguageChange(lang)}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === lang
+                                  ? 'bg-[#9be15d] text-[#2d6a4f]'
+                                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                }`}
+                            >
+                              {lang === 'en' ? 'English' : lang === 'fr' ? 'Français' : 'Kinyarwanda'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Link
+                        to="/login"
+                        className="flex items-center justify-center w-full bg-[#2d6a4f] text-[#9be15d] py-4 rounded-2xl font-black transition-all shadow-lg active:scale-[0.98]"
+                      >
+                        {t('login')}
+                      </Link>
+                    </div>
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
 
             <Link to="/" className="flex items-center group">
-              <img 
-                src={Logo} 
-                alt="MoFresh Logo" 
+              <img
+                src={Logo}
+                alt="MoFresh Logo"
                 className="h-8 lg:h-10 w-auto group-hover:scale-105 transition-transform"
               />
             </Link>
@@ -105,8 +141,8 @@ export function Header() {
             <Link to="/" className="nav-link">{t('home')}</Link>
             <Link to="/about" className="nav-link">{t('about')}</Link>
             {/* Direct Anchor for HeroSection ID */}
-            <a 
-              href="#how-it-works" 
+            <a
+              href="#how-it-works"
               onClick={() => scrollToSection('#how-it-works')}
               className="nav-link"
             >
@@ -117,7 +153,7 @@ export function Header() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 sm:gap-4">
-            
+
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -134,7 +170,7 @@ export function Header() {
               <ShoppingCart size={20} />
               <AnimatePresence>
                 {cartCount > 0 && (
-                  <motion.span 
+                  <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
@@ -163,9 +199,8 @@ export function Header() {
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
-                      className={`w-full px-4 py-2 text-left text-sm rounded-xl transition-colors ${
-                        currentLanguage === lang ? 'bg-[#9be15d] text-[#2d6a4f] font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
-                      }`}
+                      className={`w-full px-4 py-2 text-left text-sm rounded-xl transition-colors ${currentLanguage === lang ? 'bg-[#9be15d] text-[#2d6a4f] font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
+                        }`}
                     >
                       {lang === 'en' ? 'English' : lang === 'fr' ? 'Français' : 'Kinyarwanda'}
                     </button>

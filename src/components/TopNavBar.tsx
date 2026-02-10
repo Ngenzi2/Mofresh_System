@@ -22,7 +22,7 @@ export const TopNavBar = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-50 w-full h-[70px] sm:h-[80px] border-b bg-background">
+    <header className="sticky top-0 z-50 w-full h-[70px] sm:h-[80px] bg-background">
       {/* ===== Mobile / Tablet ===== */}
       <div className="flex md:hidden items-center justify-between px-4 sm:px-6 h-full">
         <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export const TopNavBar = () => {
               size="icon"
               className="h-8 w-8 sm:h-10 sm:w-10"
             >
-              <Menu size={26}/>
+              <Menu size={26} />
             </Button>
           </SheetTrigger>
 
@@ -95,13 +95,13 @@ export const TopNavBar = () => {
             ))}
           </NavigationMenuList>
           <div className="flex gap-2 ml-4 lg:ml-8 xl:ml-10">
-            <Button 
+            <Button
               onClick={() => navigate("/register")}
               className="bg-green-600 hover:bg-green-700 text-white text-sm lg:text-base px-3 lg:px-4 py-2"
             >
               <div className="flex items-center gap-2">SignUp</div>
             </Button>
-            <Button 
+            <Button
               onClick={() => navigate("/login")}
               className="bg-green-600 hover:bg-green-700 text-white text-sm lg:text-base px-3 lg:px-4 py-2"
             >

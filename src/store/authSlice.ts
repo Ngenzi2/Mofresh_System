@@ -1,11 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
+interface User {
+  email: string;
+  name: string;
+  role: 'BUYER' | 'SITE_MANAGER' | 'ADMIN';
+  location: string | null;
+}
+
 interface AuthState {
-  user: any | null;
+  user: User | null;
   token: string | null;
   isLoading: boolean;
-  isAuthenticated: boolean; // ADDED: Required for PrivateRoute
+  isAuthenticated: boolean;
   otpEmail: string | null;
 }
 
@@ -13,7 +20,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   isLoading: false,
-  isAuthenticated: false, // ADDED: Required for PrivateRoute
+  isAuthenticated: false,
   otpEmail: null,
 };
 
@@ -24,9 +31,25 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       await dummyApiDelay();
+
+      const emailLower = email.toLowerCase();
+      let user: User = { email, name: 'John Doe', role: 'BUYER', location: null };
+
+      if (emailLower === 'admin@mofresh.rw') {
+        user = { email, name: 'Main Admin', role: 'ADMIN', location: null };
+      } else if (emailLower === 'kigali@mofresh.rw') {
+        user = { email, name: 'Kigali Manager', role: 'SITE_MANAGER', location: 'Kigali' };
+      } else if (emailLower === 'nyagatare@mofresh.rw') {
+        user = { email, name: 'Nyagatare Manager', role: 'SITE_MANAGER', location: 'Nyagatare' };
+      } else if (emailLower === 'rwamagana@mofresh.rw') {
+        user = { email, name: 'Rwamagana Manager', role: 'SITE_MANAGER', location: 'Rwamagana' };
+      } else if (emailLower === 'buyer@mofresh.rw') {
+        user = { email, name: 'Kwizera', role: 'BUYER', location: null };
+      }
+
       if (email && password) {
         return {
-          user: { email, name: 'John Doe' },
+          user,
           token: 'dummy-token-' + Date.now(),
         };
       }
@@ -69,7 +92,7 @@ export const verifyOtp = createAsyncThunk(
       // Simulate OTP verification
       if (otp.length === 6) {
         return {
-          user: { email: 'user@example.com', name: 'John Doe' },
+          user: { email: 'user@example.com', name: 'John Doe', role: 'BUYER' as const, location: null },
           token: 'dummy-token-' + Date.now(),
         };
       }
@@ -91,6 +114,11 @@ const authSlice = createSlice({
     },
     setOtpEmail: (state, action: PayloadAction<string>) => {
       state.otpEmail = action.payload;
+    },
+    updateUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -136,5 +164,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, setOtpEmail } = authSlice.actions;
+export const { logout, setOtpEmail, updateUser } = authSlice.actions;
 export default authSlice.reducer;

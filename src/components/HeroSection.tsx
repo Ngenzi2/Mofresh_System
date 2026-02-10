@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from 'react-router';
-import  { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import { addToCart } from "@/store/cartSlice";
 
 import { ArrowRight, Star, Plus, Thermometer, Package, User, ShoppingBag } from "lucide-react";
@@ -80,7 +80,7 @@ export const HeroSection: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  
+
   /* ---------- STATE ---------- */
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [page, setPage] = useState<number>(0);
@@ -104,10 +104,9 @@ export const HeroSection: React.FC = () => {
   ];
 
   const testimonials: Testimonial[] = [
-    { id: 1, text: t("testimonial1"), author: t("author1"), role: t("role1"), avatar: cli2 },
-    { id: 2, text: t("testimonial2"), author: t("author2"), role: t("role2"), avatar: cli3 },
-    { id: 3, text: t("testimonial1"), author: t("author1"), role: t("role1"), avatar: cli2 },
-    { id: 4, text: t("testimonial2"), author: t("author2"), role: t("role2"), avatar: cli3 },
+    { id: 1, text: t("testimonial1Text"), author: t("testimonial1Name"), role: t("testimonial1Role"), avatar: cli2 },
+    { id: 2, text: t("testimonial2Text"), author: t("testimonial2Name"), role: t("testimonial2Role"), avatar: cli3 },
+    { id: 3, text: t("testimonial3Text"), author: t("testimonial3Name"), role: t("testimonial3Role"), avatar: farmerImage },
   ];
 
   const groups: Testimonial[][] = [];
@@ -123,12 +122,12 @@ export const HeroSection: React.FC = () => {
   }, [groups.length]);
 
   const products: Product[] = [
-    { id: 1, name: "Fresh broccoli", price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro1 },
-    { id: 2, name: "Fresh Orange", price: 1500, unit: "Rwf/kg", discount: 10, rating: 5, badge: null, image: pro2 },
-    { id: 3, name: "Fresh banana", price: 1500, unit: "Rwf/kg", discount: 10, rating: 4, badge: null, image: pro4 },
-    { id: 4, name: "Fresh Meat", price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro3 },
-    { id: 5, name: "Fresh Fish", price: 1300, unit: "Rwf/kg", discount: 20, rating: 5, badge: null, image: pro5 },
-    { id: 6, name: "Fresh pepper", price: 1000, unit: "Rwf/kg", discount: 25, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro6 },
+    { id: 1, name: t('broccoli'), price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro1 },
+    { id: 2, name: t('orange'), price: 1500, unit: "Rwf/kg", discount: 10, rating: 5, badge: null, image: pro2 },
+    { id: 3, name: t('banana'), price: 1500, unit: "Rwf/kg", discount: 10, rating: 4, badge: null, image: pro4 },
+    { id: 4, name: t('meatProduct'), price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro3 },
+    { id: 5, name: t('fishProduct'), price: 1300, unit: "Rwf/kg", discount: 20, rating: 5, badge: null, image: pro5 },
+    { id: 6, name: t('pepperProduct'), price: 1000, unit: "Rwf/kg", discount: 25, rating: 4, badge: t('popular'), badgeColor: "bg-yellow-400", image: pro6 },
   ];
 
   const steps: Step[] = [
@@ -145,11 +144,11 @@ export const HeroSection: React.FC = () => {
 
   return (
     <div className="w-full bg-white dark:bg-gray-900 transition-colors">
-      
+
       {/* ========== ENHANCED HERO SECTION ========== */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-6 lg:py-8">
-        <div 
-          className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden min-h-[650px] lg:min-h-[800px] shadow-2xl transition-all duration-700"
+        <div
+          className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden min-h-[650px] lg:min-h-[800px] border border-gray-200 dark:border-gray-800 transition-all duration-700"
           style={{
             backgroundImage: `url(${farmerImage})`,
             backgroundSize: 'cover',
@@ -158,33 +157,33 @@ export const HeroSection: React.FC = () => {
         >
           {/* Enhanced Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-[#2d6a4f]/40 to-transparent dark:from-black/95 dark:via-gray-900/60" />
-          
+
           <div className="relative z-10 px-8 sm:px-12 lg:px-24 py-16 lg:py-24 flex flex-col justify-center h-full min-h-[650px] lg:min-h-[800px]">
-            <div className="max-w-3xl space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+            <div className="max-w-3xl space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
               <div className="space-y-4">
-                <span className="inline-block px-4 py-1.5 rounded-full bg-[#9be15d]/20 border border-[#9be15d]/30 text-[#2E8B2E] text-sm font-bold tracking-widest uppercase">
-                  Freshness Delivered
+                <span className="inline-block px-4 py-1.5 rounded-full bg-[#9be15d]/20 border border-[#9be15d]/30 text-[#2E8B2E] text-xs sm:text-sm font-bold tracking-widest uppercase">
+                  {t('freshnessDelivered')}
                 </span>
-                <h1 className="text-5xl sm:text-7xl lg:text-[84px] font-black leading-[0.95] text-white tracking-tighter">
-                  Store <span className="text-[#2E8B2E] italic">Smart.</span><br />
-                  Sell <span className="text-[#2E8B2E] italic">Better.</span><br />
-                  <span className="text-white">Start with </span><span className="text-[#2E8B2E]">MoFresh</span>
+                <h1 className="text-4xl sm:text-6xl lg:text-[84px] font-black leading-[0.95] text-white tracking-tighter">
+                  {t('heroTitle1')} <span className="text-[#2E8B2E] italic">{t('heroTitle2')}</span><br className="hidden sm:block" />
+                  {t('heroTitle3')} <span className="text-[#2E8B2E] italic">{t('heroTitle4')}</span><br className="hidden sm:block" />
+                  <span className="text-white">{t('heroTitle5')} </span><span className="text-[#2E8B2E]">{t('heroTitle6')}</span>
                 </h1>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 lg:p-8 max-w-xl shadow-xl">
-                <p className="text-white/90 text-lg lg:text-xl font-medium leading-relaxed">
-                  Affordable cold storage and a digital marketplace to help you reduce losses and reach better buyers.
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-xl">
+                <p className="text-white/90 text-base sm:text-lg lg:text-xl font-medium leading-relaxed">
+                  {t('heroDescription')}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-5 pt-4">
-                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#2E8B2E] text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all shadow-[0_10px_20px_rgba(35,163,31,0.3)] hover:-translate-y-1">
-                  Shop Fresh Now
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pt-2 sm:pt-4">
+                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#2E8B2E] text-white font-bold text-lg sm:text-xl px-8 sm:px-10 h-14 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center sm:justify-start gap-3 transition-all hover:-translate-y-1">
+                  {t('shopFreshNow')}
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link to="/register" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/50 text-white font-bold text-xl px-10 h-16 rounded-2xl flex items-center gap-3 transition-all hover:-translate-y-1">
-                  Rent Now
+                <Link to="/register" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white/50 text-white font-bold text-lg sm:text-xl px-8 sm:px-10 h-14 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center sm:justify-start gap-3 transition-all hover:-translate-y-1 text-center">
+                  {t('rentNow')}
                 </Link>
               </div>
             </div>
@@ -193,15 +192,14 @@ export const HeroSection: React.FC = () => {
             <div className="absolute bottom-12 right-12 hidden xl:block">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-[#9be15d]/20 rounded-[40px] blur-2xl group-hover:bg-[#9be15d]/30 transition-colors" />
-                <div className="relative w-[450px] h-[450px] bg-white/10 backdrop-blur-xl rounded-[40px] border border-white/20 shadow-2xl flex items-center justify-center p-10">
+                <div className="relative w-[450px] h-[450px] bg-white/10 backdrop-blur-xl rounded-[40px] border border-white/20 flex items-center justify-center p-10">
                   {heroImages.map((image, index) => (
                     <img
                       key={index}
                       src={image}
                       alt="Product"
-                      className={`absolute w-4/5 h-4/5 object-contain transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                        index === currentSlide ? "opacity-100 scale-100 rotate-0 translate-y-0" : "opacity-0 scale-75 rotate-12 translate-y-12"
-                      }`}
+                      className={`absolute w-4/5 h-4/5 object-contain transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] ${index === currentSlide ? "opacity-100 scale-100 rotate-0 translate-y-0" : "opacity-0 scale-75 rotate-12 translate-y-12"
+                        }`}
                       style={{ filter: 'drop-shadow(0 20px 50px rgba(0,0,0,0.3))' }}
                     />
                   ))}
@@ -256,7 +254,7 @@ export const HeroSection: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
-            <div key={category.id} className="group relative rounded-[32px] overflow-hidden cursor-pointer shadow-lg aspect-square">
+            <div key={category.id} className="group relative rounded-[32px] overflow-hidden cursor-pointer border border-gray-100 dark:border-gray-800 aspect-square">
               <img src={category.image} alt={category.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 text-white">
@@ -270,12 +268,12 @@ export const HeroSection: React.FC = () => {
       {/* ========== FEATURED PRODUCTS ========== */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
         <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">Featured Products</h2>
-          <button className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">View All <ArrowRight className="w-5 h-5" /></button>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{t('featuredProducts')}</h2>
+          <button className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">{t('viewAll')} <ArrowRight className="w-5 h-5" /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
-            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-700 group">
+            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 group">
               <div className="relative h-64 overflow-hidden bg-gray-50">
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 {product.badge && <div className={`absolute top-4 left-4 ${product.badgeColor} text-gray-900 px-4 py-1.5 rounded-full text-xs font-bold`}>{product.badge}</div>}
@@ -305,59 +303,59 @@ export const HeroSection: React.FC = () => {
       {/* ========== PROMOTIONAL BANNERS (AS PER IMAGE) ========== */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
+
           {/* Banner 1: Green */}
-          <div className="lg:col-span-2 relative h-[360px] bg-[#0B6B3E] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group">
+          <div className="lg:col-span-2 relative h-[360px] bg-[#0B6B3E] rounded-[32px] overflow-hidden p-6 sm:p-8 lg:p-12 text-white group border border-white/5">
             <div className="absolute -top-[100px] -left-[100px] w-[300px] h-[300px] bg-[#1a8a4d] rounded-full" />
             <div className="relative z-10 flex flex-col h-full">
-              <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-5 py-2 rounded-xl w-fit mb-6">10% Off</span>
-              <div className="max-w-[55%]">
-                <h3 className="text-4xl font-bold leading-tight">
-                  Mofresh provided fresh <span className="text-[#9BE15D]">Vegetables</span> everyday
+              <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold px-5 py-2 rounded-xl w-fit mb-4 sm:mb-6">10% {t('off')}</span>
+              <div className="max-w-[70%] sm:max-w-[55%]">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
+                  {t('mofreshProvided')} <span className="text-[#9BE15D]">{t('freshVegetables')}</span> {t('everyday')}
                 </h3>
               </div>
             </div>
-            <img src={of1} className="absolute right-4 bottom-0 w-[280px] lg:w-[420px] object-contain transition-transform group-hover:scale-105" alt="Veg" />
+            <img src={of1} className="absolute right-0 sm:right-4 bottom-0 w-[220px] sm:w-[280px] lg:w-[420px] object-contain transition-transform group-hover:scale-105" alt="Veg" />
           </div>
 
           {/* Banner 2: Orange */}
-          <div className="relative h-[360px] bg-[#FF7A1A] rounded-[32px] overflow-hidden p-8 text-white group">
+          <div className="relative h-[360px] bg-[#FF7A1A] rounded-[32px] overflow-hidden p-8 text-white group border border-white/5">
             <div className="relative z-10 text-right">
-              <p className="text-4xl font-black text-[#FFD84D] uppercase italic">Big Offer</p>
-              <p className="text-xl font-bold">Open for fresh</p>
+              <p className="text-4xl font-black text-[#FFD84D] uppercase italic">{t('bigOffer')}</p>
+              <p className="text-xl font-bold">{t('openForFresh')}</p>
             </div>
             <img src={of4} className="absolute bottom-6 left-6 w-[220px] transition-transform group-hover:-translate-y-2" alt="Box" />
           </div>
 
           {/* Banner 3: Red */}
-          <div className="relative h-[360px] bg-[#7B0F14] rounded-[32px] overflow-hidden p-8 text-white group">
+          <div className="relative h-[360px] bg-[#7B0F14] rounded-[32px] overflow-hidden p-8 text-white group border border-white/5">
             <div className="relative z-10">
-              <p className="text-[#FFD84D] font-bold mb-2">Hurry up! Get 20% Off</p>
-              <h3 className="text-3xl font-bold leading-tight">Enjoy your lunch with delicious <br/> Beef Meat</h3>
+              <p className="text-[#FFD84D] font-bold mb-2">{t('hurryUp')}</p>
+              <h3 className="text-3xl font-bold leading-tight">{t('enjoyLunch')} <br /> {t('beefMeat')}</h3>
             </div>
             <img src={of2} className="absolute right-4 bottom-4 w-[240px] transition-transform group-hover:rotate-3" alt="Meat" />
           </div>
 
           {/* Banner 4: Yellow */}
-          <div className="lg:col-span-2 relative h-[360px] bg-[#FFE34D] rounded-[32px] overflow-hidden p-8 lg:p-12 text-black group">
+          <div className="lg:col-span-2 relative h-[360px] bg-[#FFE34D] rounded-[32px] overflow-hidden p-6 sm:p-8 lg:p-12 text-black group border border-black/5">
             <div className="absolute -bottom-[100px] -left-[100px] w-[350px] h-[350px] bg-[#f9d72f] rounded-full" />
             <div className="relative z-10 flex flex-col justify-between h-full">
-              <h3 className="text-3xl lg:text-4xl font-bold max-w-[50%]">We are willing to make you an offer</h3>
-              <p className="text-6xl font-black italic">40% Off</p>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold max-w-[60%] sm:max-w-[50%]">{t('willingOffer')}</h3>
+              <p className="text-4xl sm:text-6xl font-black italic">40% {t('off')}</p>
             </div>
-            <img src={of3} className="absolute right-8 top-1/2 -translate-y-1/2 w-[320px] lg:w-[450px] transition-transform group-hover:scale-110" alt="Fruits" />
+            <img src={of3} className="absolute right-0 sm:right-8 top-1/2 -translate-y-1/2 w-[240px] sm:w-[320px] lg:w-[450px] transition-transform group-hover:scale-110" alt="Fruits" />
           </div>
         </div>
       </section>
 
       {/* ========== SUBSCRIPTION BANNER ========== */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
-        <div className="bg-[#2d7a4f] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group">
+        <div className="bg-[#2d7a4f] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group border border-white/5">
           <div className="relative z-10 max-w-2xl space-y-6">
-            <h2 className="text-4xl lg:text-6xl font-black leading-tight">Get 20% Cash Back every time with a Subscription</h2>
-            <p className="text-xl opacity-90">On all shopping you do within the Mofresh network.</p>
+            <h2 className="text-4xl lg:text-6xl font-black leading-tight">{t('cashbackTitle')} {t('withSubscription')}</h2>
+            <p className="text-xl opacity-90">{t('onAllShopping')}</p>
             <Link to="/register" className="bg-white text-black font-bold px-10 h-16 rounded-2xl inline-flex items-center gap-2 hover:bg-[#9be15d] transition-all">
-              Get Started <ArrowRight className="w-6 h-6" />
+              {t('getStarted')} <ArrowRight className="w-6 h-6" />
             </Link>
           </div>
           <img src={of5} className="absolute top-0 right-0 h-full w-1/3 object-cover opacity-50 lg:opacity-100 transition-transform group-hover:scale-105" alt="Basket" />
@@ -377,7 +375,7 @@ export const HeroSection: React.FC = () => {
             const Icon = step.icon;
             return (
               <div key={step.number} className="text-center relative group">
-                <div className="w-24 h-24 bg-[#2d6a4f] dark:bg-gray-700 rounded-3xl flex items-center justify-center mx-auto mb-8 relative group-hover:bg-[#9be15d] transition-all shadow-xl">
+                <div className="w-24 h-24 bg-[#2d6a4f] dark:bg-gray-700 rounded-3xl flex items-center justify-center mx-auto mb-8 relative group-hover:bg-[#9be15d] transition-all border border-white/5">
                   <Icon className="w-12 h-12 text-white" />
                   <div className="absolute -top-4 -right-4 w-12 h-12 bg-[#fed600] rounded-full flex items-center justify-center font-black text-black text-lg">{step.number}</div>
                 </div>
