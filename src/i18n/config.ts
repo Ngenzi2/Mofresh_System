@@ -59,6 +59,8 @@ const resources = {
       mofreshBoxDesc: 'Portable cold boxes and thermal plates for rent and purchase.',
       mofreshAppLabel: 'MoFresh App',
       mofreshAppDesc: 'Digital platform connecting farmers, buyers, and logistics.',
+      cashbackDescription: "Get 20% Cash Back every time <br/> with a Subscription",
+      "onAllShopping": "On all shopping you do",
 
       // Testimonials
       testimonial1Name: 'Habimana J.',
@@ -153,6 +155,7 @@ const resources = {
       meat: 'Meat & Fish',
       fruits: 'Fresh Fruits',
       freezingBoxes: 'Box Rentals',
+      
 
       // Slogans & Buttons
       aboutSlogan1: 'Preserving Freshness',
@@ -313,6 +316,11 @@ const resources = {
       mofreshBoxDesc: 'Boîtes frigorifiques portables et plaques thermiques à louer et à acheter.',
       mofreshAppLabel: 'Application MoFresh',
       mofreshAppDesc: 'Plateforme numérique connectant agriculteurs, acheteurs et logistique.',
+      cashbackDescription: "Obtenez 20% de remise chaque fois <br/> avec un abonnement",
+      "onAllShopping": "Sur tous vos achats"
+,
+
+
 
       // Testimonials
       testimonial1Name: 'Habimana J.',
@@ -540,7 +548,7 @@ const resources = {
       meatProduct: 'Inyama nshya',
       fishProduct: 'Ifi nshya',
       pepperProduct: 'Uruvusiri rushya',
-       "cashbackDescription": "Get 20% Cash Back every times <br /> with a Subscription",
+      
 
       // About Page
       aboutUsTitle: 'Kuri Twe',
@@ -569,6 +577,10 @@ const resources = {
       mofreshBoxDesc: 'Amasanduku n\'amasahane akonje agendanwa byo gukodesha no kugura.',
       mofreshAppLabel: 'MoFresh App',
       mofreshAppDesc: 'Urubuga rwa digitale ruhuza abahinzi, abaguzi, n\'abatwara umusaruro.',
+      cashbackDescription: "Bona 20% Cash Back buri gihe <br/> ukoresheje Subscription",
+      "onAllShopping": "Ku byo ugura byose",
+
+
 
       // Testimonials
       testimonial1Name: 'Habimana J.',
