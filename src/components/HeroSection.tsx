@@ -84,6 +84,8 @@ export const HeroSection: React.FC = () => {
   /* ---------- STATE ---------- */
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [page, setPage] = useState<number>(0);
+  console.log(currentSlide); // or use it in your JSX
+
 
   const heroImages: string[] = [Hero1, Hero2, Hero3, Hero4];
 
