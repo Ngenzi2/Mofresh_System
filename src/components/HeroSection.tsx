@@ -366,7 +366,7 @@ export const HeroSection: React.FC = () => {
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-20">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl lg:text-5xl font-black dark:text-white">
-            {t('howMofreshWorks')} <span className="text-[#9be15d]">{t('heroTitle6')}</span> {t('howItWorks')}
+            {t('how MofreshWorks')} <span className="text-[#9be15d]">{t('heroTitle6')}</span> {t('howItWorks')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{t('worksStreamlined')}</p>
         </div>
