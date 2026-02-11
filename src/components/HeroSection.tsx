@@ -234,10 +234,10 @@ export const HeroSection: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d] mb-2">{t('Shop By Category')}</h2>
             <p className="text-lg text-gray-700 dark:text-gray-300">{t('Categories Description')}</p>
           </div>
-          <button className="border-2 border-[#2d6a4f] dark:border-[#9be15d] rounded-xl px-6 py-2.5 flex items-center gap-2 hover:bg-green-50 dark:hover:bg-gray-800 transition-colors">
+          <Link to="/view-all" className="border-2 border-[#2d6a4f] dark:border-[#9be15d] rounded-xl px-6 py-2.5 flex items-center gap-2 hover:bg-green-50 dark:hover:bg-gray-800 transition-colors">
             <span className="text-[#2d6a4f] dark:text-[#9be15d] font-bold">{t('viewAll')}</span>
             <ArrowRight className="w-5 h-5 text-[#2d6a4f] dark:text-[#9be15d]" />
-          </button>
+          </Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
@@ -256,7 +256,7 @@ export const HeroSection: React.FC = () => {
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
         <div className="flex justify-between items-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{t('featuredProducts')}</h2>
-          <button className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">{t('viewAll')} <ArrowRight className="w-5 h-5" /></button>
+          <Link to="/view-all" className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">{t('viewAll')} <ArrowRight className="w-5 h-5" /></Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
