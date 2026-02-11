@@ -45,8 +45,7 @@ function ViewAll() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const [sortBy, setSortBy] = useState('freshness');
+  
  
 
   const categories: Category[] = [
