@@ -8,6 +8,7 @@ import Dashboard from '@/pages/Dashboard';
 import ForgotPassword from '@/pages/ForgotPassword';
 import Cart from '@/pages/Cart';
 import Contact from '@/pages/Contact';
+import ViewAll from '@/pages/ViewAll';
 
 function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/view-all" element={<ViewAll />} />
     </Routes>
   );
 }
