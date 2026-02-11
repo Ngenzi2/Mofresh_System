@@ -540,6 +540,7 @@ const resources = {
       meatProduct: 'Inyama nshya',
       fishProduct: 'Ifi nshya',
       pepperProduct: 'Uruvusiri rushya',
+       "cashbackDescription": "Get 20% Cash Back every times <br /> with a Subscription",
 
       // About Page
       aboutUsTitle: 'Kuri Twe',
