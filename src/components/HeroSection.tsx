@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Trans } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { useAppDispatch } from "@/store/hooks";
 import { addToCart } from "@/store/cartSlice";
@@ -338,10 +339,14 @@ export const HeroSection: React.FC = () => {
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
         <div className="bg-[#2d7a4f] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group border border-white/5">
           <div className="relative z-10 max-w-2xl space-y-6">
-            <h2 className="text-4xl lg:text-6xl font-black leading-tight">{t('cashback Title ')} {t('with Subscription')}</h2>
-            <p className="text-xl opacity-90">{t('onAllShopping')}</p>
-            <Link to="/register" className="bg-white text-black font-bold px-10 h-16 rounded-2xl inline-flex items-center gap-2 hover:bg-[#9be15d] transition-all">
-              {t('getStarted')} <ArrowRight className="w-6 h-6" />
+            <h2 className="text-4xl font-bold leading-tight">
+              <Trans i18nKey="cashbackDescription">
+                Get 20% Cash Back every times <br /> with a Subscription
+              </Trans>
+            </h2>
+            <p className="text-xl opacity-90 ">{t('On All Shopping you do')}</p>
+            <Link to="/register" className="bg-white text-black font-bold px-10 h-16 rounded-4xl gap-2 inline-flex items-center  hover:bg-[#9be15d] transition-all">
+              {t('Get Started')} <ArrowRight className="w-6 h-6"/>
             </Link>
           </div>
           <img src={of5} className="absolute top-0 right-0 h-full w-1/3 object-cover opacity-50 lg:opacity-100 transition-transform group-hover:scale-105" alt="Basket" />
