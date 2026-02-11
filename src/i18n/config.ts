@@ -18,7 +18,7 @@ const resources = {
       heroTitle3: 'Sell',
       heroTitle4: 'Better',
       heroTitle5: 'Start with',
-      heroTitle6: 'MoFresh',
+      heroTitle6: 'MOFRESH',
       heroDescription: 'From farm to market, we provide solar-powered cold rooms, plates, and boxes to keep your produce fresh and reduce losses.',
       shopFreshNow: 'Shop Fresh Now',
       rentNow: 'Rent Now',
@@ -100,7 +100,7 @@ const resources = {
       address: 'KG 652 St Kigali, Rwanda',
       phone: '+250 788 526 631',
       email: 'info@mofresh.rw',
-      copyright: '© 2025 MoFresh. All rights reserved.',
+      copyright: '© 2026 MoFresh. All rights reserved.',
       privacyPolicy: 'Privacy policy',
       termsOfService: 'Terms of services',
       cookies: 'Cookies',
@@ -403,6 +403,7 @@ const resources = {
       step4Desc: 'Louez nos boîtes frigorifiques portables pour vos besoins de transport.',
 
       // Categories
+       "Shop By Category": "Acheter par catégorie",
       vegetables: 'Légumes',
       meat: 'Viande et Poisson',
       fruits: 'Fruits Frais',
@@ -526,7 +527,7 @@ const resources = {
       heroTitle3: 'Gura',
       heroTitle4: 'Neza',
       heroTitle5: 'Tangira na',
-      heroTitle6: 'MoFresh',
+      heroTitle6: ' MOFRESH',
       heroDescription: 'Kuva ku murima kugera ku isoko, dutanga ibyumba bikonje, amasahane, n\'amasanduku bikoresha ingufu z\'izuba kugira ngo ibicuruzwa byawe bigume ari bishya.',
       shopFreshNow: 'Gura Ibinyamisogwe',
       rentNow: 'Gukodesha',
@@ -585,9 +586,9 @@ const resources = {
       off: 'Kugabanuka',
       bigOffer: 'Igitangazo gikomeye',
       openForFresh: 'Byafunguye ibinyamisogwe',
-      hurryUp: 'Yihutire! Bongeraho 20%',
+      hurryUp: 'Ihute! Tukagabanyirize 20%',
       enjoyLunch: 'Wishimire ifunguro rya sasita',
-      beefMeat: 'Inyama y\'inka',
+      beefMeat: '',
       willingOffer: 'Turashaka kukubera igitangazo',
 
       // Footer
@@ -608,7 +609,7 @@ const resources = {
       address: 'KG 652 St Kigali, Rwanda',
       phone: '+250 788 526 631',
       email: 'info@mofresh.rw',
-      copyright: '© 2025 MoFresh. Uburenganzira bwose burindwa.',
+      copyright: '© 2026 MoFresh. Uburenganzira bwose burindwa.',
       privacyPolicy: 'Politiki y\'ibanga',
       termsOfService: 'Amategeko ya serivisi',
       cookies: 'Cookies',
@@ -647,6 +648,8 @@ const resources = {
       emailAddressLabel: 'Aderesi ya Imeri',
 
       // How it Works Steps
+      ' HOW ':"UBURYO",
+      'WORKS':"IKORA",
       step1Title: 'Gugura ku Muhinzi',
       step1Desc: 'Tugura umusaruro mwiza mu buryo butaziguye ku bahinzi baho.',
       step2Title: 'Kubika mu Bukonje',
@@ -657,6 +660,7 @@ const resources = {
       step4Desc: 'Kodesha amasanduku yacu akonje agendanwa ku bwawe.',
 
       // Categories
+      "Shop By Category": "Gura hagendewe ku byiciro",
       vegetables: 'Imboga',
       meat: 'Inyama n\'Ifi',
       fruits: 'Imbuto Nshya',
