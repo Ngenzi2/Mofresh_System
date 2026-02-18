@@ -118,7 +118,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground min-h-screen;
+    background-color: #051408;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(46, 139, 46, 0.15) 0%, transparent 60%),
+      linear-gradient(135deg, #051408 0%, #0B6B3E 100%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+    background-attachment: fixed;
   }
 }

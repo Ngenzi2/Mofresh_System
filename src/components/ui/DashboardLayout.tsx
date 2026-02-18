@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logout } from '@/store/authSlice';
+import { logoutUser } from '@/store/authSlice';
+import logo from '@/assets/Logo.png';
 import {
   LayoutDashboard,
   Package,
@@ -18,11 +19,14 @@ import {
   CreditCard,
   Users,
   MapPin,
-  Globe,
   Sun,
   Moon,
   ShoppingCart,
   ChevronDown,
+  Globe,
+  DollarSign,
+  UserPlus,
+  LayoutGrid,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './ThemeProvider';
@@ -83,7 +87,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   }, [activeNav]);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     navigate('/login');
   };
 
@@ -94,18 +98,29 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         return [
           { name: 'Dashboard', icon: LayoutDashboard },
           { name: 'Site Management', icon: MapPin },
-          { name: 'Financials', icon: CreditCard },
+          { name: 'Assets', icon: Box },
+          { name: 'Products', icon: Package },
+          { name: 'Financials', icon: DollarSign },
           { name: 'User Management', icon: Users },
+          { name: 'Vendor Requests', icon: UserPlus },
           { name: 'Reports', icon: FileText },
           { name: 'Settings', icon: SettingsIcon },
         ];
       case 'SITE_MANAGER':
         return [
           { name: 'Dashboard', icon: LayoutDashboard },
-          { name: 'Asset Inventory', icon: Package },
-          { name: 'Rentals', icon: Truck },
-          { name: 'Maintenance', icon: Wrench },
+          { name: 'Hub Inventory', icon: Package },
+          { name: 'Asset Control', icon: Wrench },
           { name: 'Reports', icon: FileText },
+          { name: 'Settings', icon: SettingsIcon },
+        ];
+      case 'SUPPLIER':
+        return [
+          { name: 'Dashboard', icon: LayoutDashboard },
+          { name: 'Manage Products', icon: Package },
+          { name: 'Categories', icon: LayoutGrid },
+          { name: 'Deliveries', icon: Truck },
+          { name: 'Earnings', icon: DollarSign },
           { name: 'Settings', icon: SettingsIcon },
         ];
       case 'BUYER':
@@ -115,7 +130,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { name: 'My Rentals', icon: Box },
           { name: 'Marketplace', icon: Store },
           { name: 'Orders', icon: Package },
-          { name: 'Invoice', icon: FileText },
+          { name: 'Invoice', icon: CreditCard },
           { name: 'Settings', icon: SettingsIcon },
         ];
     }
@@ -123,22 +138,62 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const navItems = getNavItems();
 
+  const getRoleLabel = () => {
+    switch (user?.role) {
+      case 'ADMIN':
+        return 'Administrator';
+      case 'SITE_MANAGER':
+        return `${user?.location} Manager`;
+      case 'SUPPLIER':
+        return 'Supplier Profile';
+      case 'BUYER':
+        return 'Client Profile';
+      default:
+        return 'User';
+    }
+  };
+
   const SidebarContent = () => (
     <>
+      {/* Logo Section */}
+      <div className="p-8 pb-6 border-b border-white/10">
+        <div className="flex items-center">
+          <img src={logo} alt="MoFresh Logo" className="h-12 w-auto object-contain" />
+        </div>
+        <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-4">
+          {getRoleLabel()}
+        </p>
+      </div>
+
       {/* Dashboard Label */}
       <div className="p-8 pb-4">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Management Console</h2>
+        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+          Management Console
+        </h2>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-0 space-y-1">
+      <nav className="flex-1 px-0 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeNav === item.name;
+          const getRolePrefix = (role: string) => {
+            switch (role) {
+              case 'SITE_MANAGER': return 'manager';
+              default: return role.toLowerCase();
+            }
+          };
+          const rolePrefix = user ? getRolePrefix(user.role) : 'dashboard';
+          const slug = item.name.toLowerCase().replace(/\s+/g, '-');
+          const itemPath = `/${rolePrefix}/${slug === 'dashboard' ? '' : slug}`;
+
+          const isActive =
+            (slug === 'dashboard' && (window.location.pathname === `/${rolePrefix}` || window.location.pathname === `/${rolePrefix}/`)) ||
+            (slug !== 'dashboard' && window.location.pathname.startsWith(`/${rolePrefix}/${slug}`));
+
           return (
             <button
               key={item.name}
-              onClick={() => setActiveNav(item.name)}
+              onClick={() => navigate(itemPath)}
               className={`w-full flex items-center gap-4 px-8 py-4 transition-all relative group ${isActive
                 ? 'bg-white/10 text-white'
                 : 'text-white/60 hover:bg-white/5 hover:text-white'
@@ -150,8 +205,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   className="absolute left-0 top-0 bottom-0 w-1 bg-[#ffb703] shadow-[0_0_10px_rgba(255,183,3,0.5)]"
                 />
               )}
-              <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 text-[#ffb703]' : 'group-hover:scale-110'}`} />
-              <span className={`text-sm tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
+              <Icon
+                className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 text-[#ffb703]' : 'group-hover:scale-110'
+                  }`}
+              />
+              <span className={`text-sm tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>
+                {item.name}
+              </span>
             </button>
           );
         })}
@@ -202,11 +262,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 left-0 w-64 bg-[#1a4d2e] dark:bg-gray-950 text-white flex flex-col z-50 lg:hidden shadow-2xl"
+            className="fixed inset-y-0 left-0 w-64 bg-[#1a4d2e] dark:bg-gray-950 text-white flex flex-col z-50 lg:hidden shadow-2xl overflow-y-auto"
           >
-            <div className="p-6 flex justify-between items-center border-b border-white/10">
-              <span className="font-black tracking-tighter text-xl">MoFresh</span>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white/60 hover:text-white">
+            <div className="p-6 flex justify-between items-center border-b border-white/10 flex-shrink-0">
+              <img src={logo} alt="MoFresh Logo" className="h-10 w-auto object-contain" />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-white/60 hover:text-white"
+              >
                 <ChevronDown className="w-6 h-6 rotate-90" />
               </button>
             </div>
@@ -218,7 +281,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         {/* Content Header (Enhanced Top Bar) */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-8 py-4 transition-colors">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-8 py-4 transition-colors flex-shrink-0">
           <div className="flex items-center justify-between gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button
@@ -263,8 +326,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all font-bold text-[10px] sm:text-xs"
                 >
                   <Globe size={14} className="text-[#38a169] sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">{languageLabels[currentLanguage] || 'Eng'}</span>
-                  <ChevronDown size={12} className={`transition-transform sm:w-3.5 sm:h-3.5 ${isLanguageDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className="hidden xs:inline">
+                    {languageLabels[currentLanguage] || 'Eng'}
+                  </span>
+                  <ChevronDown
+                    size={12}
+                    className={`transition-transform sm:w-3.5 sm:h-3.5 ${isLanguageDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -279,10 +348,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         <button
                           key={lang}
                           onClick={() => handleLanguageChange(lang)}
-                          className={`w-full px-4 py-2 text-left text-xs rounded-lg transition-colors ${currentLanguage === lang ? 'bg-[#38a169]/10 text-[#38a169] font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
+                          className={`w-full px-4 py-2 text-left text-xs rounded-lg transition-colors ${currentLanguage === lang
+                            ? 'bg-[#38a169]/10 text-[#38a169] font-bold'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white'
                             }`}
                         >
-                          {lang === 'en' ? 'English' : lang === 'fr' ? 'Français' : 'Kinyarwanda'}
+                          {lang === 'en'
+                            ? 'English'
+                            : lang === 'fr'
+                              ? 'Français'
+                              : 'Kinyarwanda'}
                         </button>
                       ))}
                     </motion.div>
@@ -291,7 +366,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </div>
 
               {/* Cart - Always visible but smaller on mobile */}
-              <button className="relative p-2 sm:p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-[#38a169]/10 hover:text-[#38a169] transition-all">
+              <button
+                onClick={() => navigate('/cart')}
+                className="relative p-2 sm:p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-[#38a169]/10 hover:text-[#38a169] transition-all"
+              >
                 <ShoppingCart size={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 <AnimatePresence>
                   {cartCount > 0 && (
@@ -314,9 +392,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 className="flex items-center gap-2 sm:gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full px-1 sm:px-2 py-1 transition-colors group"
               >
                 <div className="text-right hidden xl:block">
-                  <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">{user?.name || 'User'}</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
+                    {user?.name || 'User'}
+                  </p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                    {user?.role === 'SITE_MANAGER' ? `${user?.location} Manager` : user?.role === 'ADMIN' ? 'Administrator' : 'Client Profile'}
+                    {getRoleLabel()}
                   </p>
                 </div>
                 <div className="relative flex-shrink-0">

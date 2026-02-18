@@ -7,12 +7,17 @@ import {
   User,
   Phone,
   Mail,
-  MapPin,
   Camera,
   Save,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { updateUser } from '@/store/authSlice';
+import { reportsService, rentalsService } from '@/api';
+import { HubInventory } from './site/HubInventory';
+import { AssetControl } from './site/AssetControl';
+import { toast } from 'sonner';
+import { RefreshCw } from 'lucide-react';
+import type { MockSite } from '@/store/mockDataSlice';
 
 interface SiteManagerDashboardProps {
   activeNav: string;
@@ -21,36 +26,128 @@ interface SiteManagerDashboardProps {
 export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ activeNav }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { sites } = useAppSelector((state) => state.mockData);
+
+  const handleSwitchSite = (site: MockSite) => {
+    if (!user) return;
+    dispatch(updateUser({
+      id: user.id,
+      userData: {
+        siteId: site.id,
+        location: site.name
+      }
+    }));
+    toast.success(`Switched to ${site.name} Control`);
+  };
 
   // Settings Form State
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: '+250 788 111 222', // Mock initial phone
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    phone: user?.phone || '',
     location: user?.location || 'Kigali, Rwanda',
+    nationalId: null as File | null,
+    businessCert: null as File | null,
+    profilePicture: null as File | null,
   });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setTimeout(() => {
-      dispatch(updateUser({ name: formData.name, location: formData.location }));
-      setIsSaving(false);
-    }, 1000);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'nationalId' | 'businessCert' | 'profilePicture') => {
+    const file = e.target.files?.[0] || null;
+    setFormData(prev => ({ ...prev, [field]: file }));
+
+    if (field === 'profilePicture' && file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
   };
 
+  const handleUpdateProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    try {
+      await dispatch(updateUser({
+        id: user.id,
+        userData: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          nationalIdDocument: formData.nationalId || undefined,
+          businessCertificateDocument: formData.businessCert || undefined,
+          avatar: formData.profilePicture || undefined,
+        }
+      })).unwrap();
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error(error || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const [siteStats, setSiteStats] = useState({
+    revenue: '0 Rwf',
+    assets: '0',
+    rentals: '0',
+    maintenance: '0'
+  });
+
+  React.useEffect(() => {
+    const fetchSiteData = async () => {
+      // Logic to determine siteId. 
+      // If user.location *is* the siteId (as hinted in previous code), use it.
+      // Or if user.siteId exists (it should based on UserEntity).
+      const siteId = user?.siteId;
+
+      if (!siteId) return;
+
+      try {
+        const [revenueRes, rentalsRes] = await Promise.all([
+          reportsService.getRevenueReport({ siteId }),
+          rentalsService.getRentals({ siteId }).catch(() => [])
+        ]);
+
+        const revenueData = (revenueRes as any)?.data || revenueRes || {};
+        const rentalsList = Array.isArray(rentalsRes) ? rentalsRes : (rentalsRes as any)?.data || [];
+
+        const activeRentals = rentalsList.filter((r: any) => r.status === 'ACTIVE').length;
+
+        // For Assets and Maintenance, we might need other endpoints not yet fully clear (e.g. products/assets endpoint)
+        // For now we will keep them separate or mock them if API is missing, 
+        // but we DID create productsService. Let's assume some products are assets?
+        // Let's just update what we can: Revenue and Rentals.
+
+        setSiteStats(prev => ({
+          ...prev,
+          revenue: `${revenueData.totalRevenue?.toLocaleString() || 0} Rwf`,
+          rentals: activeRentals.toString(),
+          // assets: '...', // Need asset API
+          // maintenance: '...' // Need maintenance API
+        }));
+      } catch (error) {
+        console.error('Error fetching site manager data:', error);
+      }
+    };
+
+    fetchSiteData();
+  }, [user?.siteId, user?.location]);
+
   const stats = [
-    { label: 'Total Assets', value: '450', icon: Box, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Active Rentals', value: '382', icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Pending Maintenance', value: '12', icon: Wrench, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Total Assets', value: siteStats.assets, icon: Box, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Active Rentals', value: siteStats.rentals, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Pending Maintenance', value: siteStats.maintenance, icon: Wrench, color: 'text-orange-600', bg: 'bg-orange-50' },
   ];
 
   const renderContent = () => {
     switch (activeNav) {
-      case 'Asset Inventory':
-        return <div className="p-12 text-center text-gray-400">Asset Inventory management coming soon...</div>;
-      case 'Rentals':
-        return <div className="p-12 text-center text-gray-400">Total Site Rentals tracking coming soon...</div>;
+      case 'Hub Inventory':
+        return <HubInventory />;
+      case 'Asset Control':
+        return <AssetControl />;
       case 'Maintenance':
         return <div className="p-12 text-center text-gray-400">Maintenance scheduling coming soon...</div>;
       case 'Reports':
@@ -73,42 +170,69 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
               {/* Left Column: Avatar */}
               <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-6">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-[#38a169]/10">
-                    <img
-                      src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200"
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-[#38a169]/10 flex items-center justify-center bg-gray-50">
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-gray-400">
+                        <User className="w-12 h-12" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter">No Photo</span>
+                      </div>
+                    )}
                   </div>
-                  <button className="absolute bottom-1 right-1 bg-[#1a4d2e] p-2.5 rounded-full text-white shadow-lg transform transition-transform group-hover:scale-110">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'profilePicture')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-1 right-1 bg-[#1a4d2e] p-2.5 rounded-full text-white shadow-lg transform transition-transform group-hover:scale-110"
+                  >
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-gray-900">{user?.name}</h3>
+                  <h3 className="text-lg font-black text-gray-900">{user?.firstName} {user?.lastName}</h3>
                   <p className="text-sm font-bold text-[#38a169] uppercase tracking-widest">{user?.location} Hub Manager</p>
                 </div>
                 <div className="w-full pt-6 border-t border-gray-50 flex flex-col gap-4">
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <Mail className="w-4 h-4 text-[#ffb703]" /> {user?.email}
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <MapPin className="w-4 h-4 text-[#ffb703]" /> {formData.location}
-                  </div>
                 </div>
               </div>
 
               {/* Right Column: Fields */}
               <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleUpdateProfile}>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Full Name</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">First Name</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Last Name</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
                       />
                     </div>
@@ -125,15 +249,23 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
                       />
                     </div>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Hub Location (Assigned)</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">National ID Document</label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                        type="file"
+                        onChange={(e) => setFormData({ ...formData, nationalId: e.target.files?.[0] || null })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-xs font-bold text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Business Certificate</label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={(e) => setFormData({ ...formData, businessCert: e.target.files?.[0] || null })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-xs font-bold text-gray-800 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -158,11 +290,40 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
       default:
         return (
           <div className="space-y-8">
+            {/* Demo Site Selector */}
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-3xl p-6 mb-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600">
+                    <RefreshCw className="w-6 h-6 animate-spin-slow" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-blue-900 dark:text-blue-300 uppercase tracking-widest">Demo: Site Selector</h3>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">Pick any hub to view its real-time dashboard</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sites.map(site => (
+                    <button
+                      key={site.id}
+                      onClick={() => handleSwitchSite(site)}
+                      className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${user?.siteId === site.id
+                        ? 'bg-[#1a4d2e] text-white shadow-lg'
+                        : 'bg-white/80 dark:bg-gray-800/80 text-gray-500 hover:bg-white hover:text-blue-600 border border-blue-100 dark:border-blue-900/50'
+                        }`}
+                    >
+                      {site.name.split(' ')[0]} Hub
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-black text-gray-900 leading-tight">
-                  {user?.location} <span className="text-[#38a169]">Hub Control</span>
+                  {user?.location || 'Local'} <span className="text-[#38a169]">Hub Control</span>
                 </h1>
                 <p className="text-gray-500 mt-1">Real-time overview of local operations and assets</p>
               </div>

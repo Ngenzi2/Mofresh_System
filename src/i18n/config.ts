@@ -155,7 +155,7 @@ const resources = {
       meat: 'Meat & Fish',
       fruits: 'Fresh Fruits',
       freezingBoxes: 'Box Rentals',
-      
+
 
       // Slogans & Buttons
       aboutSlogan1: 'Preserving Freshness',
@@ -181,6 +181,85 @@ const resources = {
       signIn: 'Sign in',
       logIn: 'Log In',
       createAccount: 'Create Account',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      passwordsDoNotMatch: 'Passwords do not match',
+      pleaseAcceptTerms: 'Please accept the terms and conditions',
+      accountCreatedSuccess: 'Account created successfully!',
+
+      // Registration Fields
+      accountType: 'Account Type',
+      personal: 'Personal',
+      business: 'Business',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      enterFirstName: 'Enter first name',
+      enterLastName: 'Enter last name',
+      idNumber: 'ID / Indangamuntu Number',
+      enterIdNumber: 'Enter ID number',
+      tinNumber: 'TIN Number',
+      enterTinNumber: 'Enter TIN number',
+
+      // Vendor Registration
+      vendorRegistration: 'Vendor Registration',
+      registerAsVendor: 'Register as Vendor',
+      vendorRegistrationTitle: 'Become a Vendor',
+      vendorRegistrationSubtitle: 'Join our network of trusted vendors and grow your business with MoFresh',
+      enterYourEmail: 'Enter your email to get started',
+      vendorRegistrationInfo: 'Vendor Registration Process',
+      vendorRegistrationDescription: 'Submit your email and our team will review your application. You will receive vendor credentials and access instructions via email within 24-48 hours.',
+      vendorEmailNote: 'Use a valid business email address',
+      submitApplication: 'Submit Application',
+      submitting: 'Submitting...',
+      emailSentSuccess: 'Email Sent Successfully!',
+      vendorEmailSent: 'Vendor credentials will be sent to your email!',
+      vendorCredentialsMessage: 'We will send your vendor credentials and instructions to your email address. Please check your inbox.',
+      checkYourEmail: 'Check your email',
+      backToLogin: 'Back to Login',
+
+      // Common UI Text
+      or: 'Or',
+      goBackHome: 'GO BACK HOME',
+      terms: 'Terms',
+      privacy: 'Privacy',
+      agreeToThe: 'I agree to the',
+
+      // Login Page
+      welcomeBack: 'Welcome',
+      back: 'Back',
+      secureLogin: 'Secure Login',
+      enterYourCredentials: 'Enter your credentials to access MoFresh',
+      pleaseFillAllFields: 'Please fill in all fields',
+      invalidCredentials: 'Invalid email or password',
+      errorOccurred: 'An error occurred. Please try again.',
+      processing: 'Processing...',
+      rememberMe: 'Remember me',
+
+      // Forgot Password
+      accountRecovery: 'Account Recovery',
+      resetLinkSent: 'Reset link sent to your email',
+      instructionsSentTo: 'Instructions have been sent to',
+      resendEmail: 'Resend Email',
+      sendResetLink: 'Send Reset Link',
+
+      // Verify OTP
+      secureVerification: 'Secure Verification',
+      enterVerificationCode: 'Enter the verification code sent to your email',
+      sentTo: 'Sent to',
+      verifyIdentity: 'Verify Identity',
+      resendOTP: 'Resend OTP',
+      newCodeSent: 'New code sent!',
+      verificationSuccess: 'Verification successful!',
+      verificationFailed: 'Verification failed',
+
+      // Register Page
+      createNewAccount: 'Create New Account',
+      joinMoFreshCommunity: 'Join the MoFresh community today',
+      registrationSuccess: 'Registration successful!',
+      verificationSent: 'Verification code sent to your email',
+      registrationFailed: 'Registration failed',
+      selectSite: 'Select Site',
+      businessName: 'Business Name',
 
       // Dashboard Common
       managementConsole: 'Management Console',
@@ -318,7 +397,7 @@ const resources = {
       mofreshAppDesc: 'Plateforme numérique connectant agriculteurs, acheteurs et logistique.',
       cashbackDescription: "Obtenez 20% de remise chaque fois <br/> avec un abonnement",
       "onAllShopping": "Sur tous vos achats"
-,
+      ,
 
 
 
@@ -411,7 +490,7 @@ const resources = {
       step4Desc: 'Louez nos boîtes frigorifiques portables pour vos besoins de transport.',
 
       // Categories
-       "Shop By Category": "Acheter par catégorie",
+      "Shop By Category": "Acheter par catégorie",
       vegetables: 'Légumes',
       meat: 'Viande et Poisson',
       fruits: 'Fruits Frais',
@@ -441,6 +520,45 @@ const resources = {
       signIn: 'Se connecter',
       logIn: 'Se Connecter',
       createAccount: 'Créer un Compte',
+      password: 'Mot de passe',
+      confirmPassword: 'Confirmer le mot de passe',
+      passwordsDoNotMatch: 'Les mots de passe ne correspondent pas',
+      pleaseAcceptTerms: 'Veuillez accepter les termes et conditions',
+      accountCreatedSuccess: 'Compte créé avec succès!',
+
+      // Login Page
+      secureLogin: 'Connexion Sécurisée',
+      enterYourCredentials: 'Entrez vos identifiants pour accéder à MoFresh',
+      pleaseFillAllFields: 'Veuillez remplir tous les champs',
+      invalidCredentials: 'Email ou mot de passe invalide',
+      errorOccurred: 'Une erreur s\'est produite. Veuillez réessayer.',
+      rememberMe: 'Se souvenir de moi',
+
+      // Forgot Password
+      accountRecovery: 'Récupération de Compte',
+      resetLinkSent: 'Lien de réinitialisation envoyé à votre email',
+      instructionsSentTo: 'Les instructions ont été envoyées à',
+      sendResetLink: 'Envoyer le lien',
+      resendEmail: 'Renvoyer l\'email',
+
+      // Verify OTP
+      secureVerification: 'Vérification Sécurisée',
+      enterVerificationCode: 'Entrez le code de vérification envoyé à votre email',
+      sentTo: 'Envoyé à',
+      verifyIdentity: 'Vérifier l\'identité',
+      resendOTP: 'Renvoyer le code',
+      newCodeSent: 'Nouveau code envoyé!',
+      verificationSuccess: 'Vérification réussie!',
+      verificationFailed: 'Échec de la vérification',
+
+      // Register Page
+      createNewAccount: 'Créer un Nouveau Compte',
+      joinMoFreshCommunity: 'Rejoignez la communauté MoFresh aujourd\'hui',
+      registrationSuccess: 'Inscription réussie!',
+      verificationSent: 'Code de vérification envoyé à votre email',
+      registrationFailed: 'Échec de l\'inscription',
+      selectSite: 'Sélectionner le site',
+      businessName: 'Nom de l\'entreprise',
 
       // Dashboard Common
       managementConsole: 'Console de Gestion',
@@ -548,7 +666,7 @@ const resources = {
       meatProduct: 'Inyama nshya',
       fishProduct: 'Ifi nshya',
       pepperProduct: 'Uruvusiri rushya',
-      
+
 
       // About Page
       aboutUsTitle: 'Kuri Twe',
@@ -661,8 +779,8 @@ const resources = {
       emailAddressLabel: 'Aderesi ya Imeri',
 
       // How it Works Steps
-      ' HOW ':"UBURYO",
-      'WORKS':"IKORA",
+      ' HOW ': "UBURYO",
+      'WORKS': "IKORA",
       step1Title: 'Gugura ku Muhinzi',
       step1Desc: 'Tugura umusaruro mwiza mu buryo butaziguye ku bahinzi baho.',
       step2Title: 'Kubika mu Bukonje',
@@ -703,6 +821,45 @@ const resources = {
       signIn: 'Injira',
       logIn: 'Injira',
       createAccount: 'Kora Konti',
+      password: 'Ijambo ry\'ibanga',
+      confirmPassword: 'Emeza ijambo ry\'ibanga',
+      passwordsDoNotMatch: 'Amagambo y\'ibanga ntabwo ahuje',
+      pleaseAcceptTerms: 'Nyamuneka emera amategeko n\'amabwiriza',
+      accountCreatedSuccess: 'Konti yarakoze neza!',
+
+      // Login Page
+      secureLogin: 'Kwinjira Neza',
+      enterYourCredentials: 'Injiza ibyangombwa byawe kugira ngo ugere kuri MoFresh',
+      pleaseFillAllFields: 'Nyamuneka uzuza ibisabwa byose',
+      invalidCredentials: 'Imeri cyangwa ijambo ry\'ibanga si ryo',
+      errorOccurred: 'Habaye ikosa. Nyamuneka gerageza ukundi.',
+      rememberMe: 'Nyibuka',
+
+      // Forgot Password
+      accountRecovery: 'Kugarura Konti',
+      resetLinkSent: 'Umuyoboro wo gusubiza woherejwe kuri imeri yawe',
+      instructionsSentTo: 'Amabwiriza yoherejwe kuri',
+      sendResetLink: 'Ohereza umuyoboro',
+      resendEmail: 'Ongera wohereze imeri',
+
+      // Verify OTP
+      secureVerification: 'Kwemeza Neza',
+      enterVerificationCode: 'Injiza kode yo kwemeza yoherejwe kuri imeri yawe',
+      sentTo: 'Yoherejwe kuri',
+      verifyIdentity: 'Emeza umwirondoro',
+      resendOTP: 'Ongera wohereze kode',
+      newCodeSent: 'Kode nshya yoherejwe!',
+      verificationSuccess: 'Kwemeza byagenze neza!',
+      verificationFailed: 'Kwemeza byanze',
+
+      // Register Page
+      createNewAccount: 'Kora Konti Nshya',
+      joinMoFreshCommunity: 'Injira mu muryango wa MoFresh uyu munsi',
+      registrationSuccess: 'Kwiyandikisha byagenze neza!',
+      verificationSent: 'Kode yo kwemeza yoherejwe kuri imeri yawe',
+      registrationFailed: 'Kwiyandikisha byanze',
+      selectSite: 'Hitamo ahantu',
+      businessName: 'Izina ry\'ubucuruzi',
 
       // Dashboard Common
       managementConsole: 'Ubuyobozi Bukuru',
