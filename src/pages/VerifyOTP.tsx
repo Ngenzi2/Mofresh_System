@@ -1,15 +1,12 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { verifyOtp } from '@/store/authSlice';
-import { Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { verifyOtp, resendOtp } from '@/store/authSlice';
+import { Mail, Loader2, ArrowLeft, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-
-// Assets
-import heroImage from '@/assets/register.png';
-import logo from '@/assets/Logo.png';
+import { AuthLayout } from '@/components/ui/AuthLayout';
 
 export default function VerifyOTP() {
   const { t } = useTranslation();
@@ -46,7 +43,11 @@ export default function VerifyOTP() {
 
       if (verifyOtp.fulfilled.match(result)) {
         toast.success(t('verificationSuccess') || 'Verified!');
-        setTimeout(() => navigate('/dashboard'), 1000);
+        const userRole = result.payload.user.role;
+        const dashboardPath = userRole === 'ADMIN' ? '/admin/dashboard' :
+          userRole === 'SITE_MANAGER' ? '/manager/dashboard' :
+            userRole === 'SUPPLIER' ? '/supplier/dashboard' : '/buyer/dashboard';
+        setTimeout(() => navigate(dashboardPath), 1000);
       } else {
         toast.error(t('verificationFailed') || 'Failed', {
           description: result.payload as string || 'Invalid OTP',
@@ -55,112 +56,90 @@ export default function VerifyOTP() {
     }
   };
 
-  const handleResendOtp = () => {
-    setOtp(['', '', '', '', '', '']);
-    toast.success('New code sent!');
+  const handleResendOtp = async () => {
+    try {
+      await dispatch(resendOtp());
+      setOtp(['', '', '', '', '', '']);
+      toast.success(t('newCodeSent') || 'New code sent!');
+    } catch (error) {
+      toast.error(t('resendFailed') || 'Failed to resend code');
+    }
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans"
-      style={{
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+    <AuthLayout
+      title={t('secureVerification') || 'Identity Security'}
+      subtitle={t('enterVerificationCode') || 'Enter the code sent to your email'}
     >
-      {/* Cinematic Overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 w-full max-w-md"
-      >
-        <div className="bg-white/10 backdrop-blur-3xl rounded-[2.5rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden">
-          <div className="p-8 sm:p-12">
-
-            {/* Logo Section */}
-            <div className="flex flex-col items-center mb-8">
-              <img src={logo} alt="MoFresh" className="h-10 mb-4" />
-              <div className="h-1 w-8 bg-green-500 rounded-full" />
-            </div>
-
-            {/* Icon & Text */}
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                <Mail className="w-8 h-8 text-green-400" />
-              </div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
-                {t('verifyOTP') || 'Verify OTP'}
-              </h1>
-              <p className="text-white/50 text-sm mt-2">
-                Sent to <span className="text-white font-medium">{otpEmail || 'your email'}</span>
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* OTP Inputs */}
-              <div className="flex justify-between gap-2">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-green-500/50 outline-none text-white transition-all"
-                  />
-                ))}
-              </div>
-
-              {/* Action Button */}
-              <motion.button
-                type="submit"
-                disabled={isLoading || otp.some((digit) => !digit)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('verifyContinue') || 'Verify & Continue'}
-              </motion.button>
-
-              {/* Resend Logic */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  className="text-white/40 hover:text-green-400 text-xs font-bold uppercase tracking-widest transition-colors"
-                >
-                  {t('resendOTP') || 'Resend Code'}
-                </button>
-              </div>
-            </form>
-
-            {/* Bottom Navigation */}
-            <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">
-              <Link
-                to="/login"
-                className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                {t('backToLogin') || 'Back to Login'}
-              </Link>
-              <Link
-                to="/"
-                className="text-[10px] text-white/20 hover:text-white uppercase tracking-[0.4em] transition-all"
-              >
-                Go back home
-              </Link>
-            </div>
-
+      <div className="w-full flex flex-col items-center">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 bg-[#2E8B2E]/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#2E8B2E]/20">
+            <Mail className="w-5 h-5 text-[#2E8B2E]/80" />
           </div>
+          <p className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">
+            {t('sentTo') || 'Verification sent to'} <br /> <span className="text-gray-900 dark:text-gray-300 text-xs font-black">{otpEmail || 'your email'}</span>
+          </p>
         </div>
-      </motion.div>
-    </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8 w-full">
+          {/* OTP Inputs */}
+          <div className="flex justify-between gap-2 sm:gap-3">
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                id={`otp-${index}`}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-full h-14 sm:h-16 text-center text-2xl font-black bg-gray-50/50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-2xl focus:ring-4 focus:ring-[#2E8B2E]/10 focus:border-[#2E8B2E] outline-none transition-all text-gray-900 dark:text-white"
+              />
+            ))}
+          </div>
+
+          <div className="space-y-5">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              type="submit"
+              disabled={isLoading || otp.some((digit) => !digit)}
+              className="w-full bg-[#2E8B2E] hover:bg-[#1a4d2e] text-white font-black py-4.5 rounded-2xl transition-all shadow-xl shadow-[#2E8B2E]/10 hover:shadow shadow-[#2E8B2E]/20 disabled:opacity-50 uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-2"
+            >
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('verifyIdentity') || 'Verify Access'}
+            </motion.button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                className="text-gray-400 dark:text-gray-600 hover:text-[#2E8B2E] text-[10px] font-black uppercase tracking-widest transition-colors"
+              >
+                {t('resendOTP') || 'Request new code'}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-gray-50 dark:border-white/[0.03] flex flex-col items-center gap-4 w-full">
+          <Link
+            to="/login"
+            className="flex items-center gap-2 text-gray-400 dark:text-gray-600 hover:text-[#2E8B2E] transition-colors text-[10px] font-black uppercase tracking-widest"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('backToLogin') || 'Back to Login'}
+          </Link>
+
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-[10px] font-black text-gray-300 dark:text-gray-700 hover:text-[#2E8B2E] uppercase tracking-wider transition-all"
+          >
+            <Home className="w-4 h-4" />
+            {t('goBackHome')}
+          </Link>
+        </div>
+      </div>
+    </AuthLayout>
   );
 }
