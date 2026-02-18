@@ -1,11 +1,41 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { authService, usersService } from '@/api';
+import type { UserEntity } from '@/types/api.types';
+import { UserRole, ClientAccountType } from '@/types/api.types';
+
+// Map backend roles to frontend roles
+const mapBackendRole = (role: UserRole): 'BUYER' | 'SITE_MANAGER' | 'ADMIN' | 'SUPPLIER' => {
+  switch (role) {
+    case UserRole.CLIENT:
+      return 'BUYER';
+    case UserRole.SITE_MANAGER:
+      return 'SITE_MANAGER';
+    case UserRole.SUPER_ADMIN:
+      return 'ADMIN';
+    case UserRole.SUPPLIER:
+      return 'SUPPLIER';
+    default:
+      return 'BUYER';
+  }
+};
 
 interface User {
+  id: string;
   email: string;
   name: string;
-  role: 'BUYER' | 'SITE_MANAGER' | 'ADMIN';
+  role: 'BUYER' | 'SITE_MANAGER' | 'ADMIN' | 'SUPPLIER';
   location: string | null;
+  accountType?: 'personal' | 'business';
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  idNumber?: string;
+  tinNumber?: string;
+  businessName?: string;
+  isActive?: boolean;
+  profilePicture?: string | null;
+  siteId?: string | null;
 }
 
 interface AuthState {
@@ -14,46 +44,118 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   otpEmail: string | null;
+  otpRequired: boolean;
 }
 
+const savedToken = localStorage.getItem('accessToken');
+const savedUser = localStorage.getItem('user');
+
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: savedUser ? JSON.parse(savedUser) : null,
+  token: savedToken,
   isLoading: false,
-  isAuthenticated: false,
+  isAuthenticated: !!savedToken && !!savedUser,
   otpEmail: null,
+  otpRequired: false,
 };
 
-const dummyApiDelay = () => new Promise((resolve) => setTimeout(resolve, 1000));
+// Transform backend user to frontend user
+const transformUser = (backendUser: UserEntity): User => {
+  return {
+    id: backendUser.id,
+    email: backendUser.email,
+    name: `${backendUser.firstName} ${backendUser.lastName}`,
+    role: mapBackendRole(backendUser.role),
+    location: backendUser.siteId || null,
+    accountType: backendUser.clientAccountType?.toLowerCase() as 'personal' | 'business',
+    firstName: backendUser.firstName,
+    lastName: backendUser.lastName,
+    phone: backendUser.phone,
+    idNumber: backendUser.nationalIdDocument || undefined,
+    tinNumber: backendUser.tinNumber || undefined,
+    businessName: backendUser.businessName || undefined,
+    isActive: backendUser.isActive,
+    profilePicture: backendUser.profilePicture,
+    siteId: backendUser.siteId || null,
+  };
+};
 
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      await dummyApiDelay();
+      const response = await authService.login({ email, password });
 
-      const emailLower = email.toLowerCase();
-      let user: User = { email, name: 'John Doe', role: 'BUYER', location: null };
-
-      if (emailLower === 'admin@mofresh.rw') {
-        user = { email, name: 'Main Admin', role: 'ADMIN', location: null };
-      } else if (emailLower === 'kigali@mofresh.rw') {
-        user = { email, name: 'Kigali Manager', role: 'SITE_MANAGER', location: 'Kigali' };
-      } else if (emailLower === 'nyagatare@mofresh.rw') {
-        user = { email, name: 'Nyagatare Manager', role: 'SITE_MANAGER', location: 'Nyagatare' };
-      } else if (emailLower === 'rwamagana@mofresh.rw') {
-        user = { email, name: 'Rwamagana Manager', role: 'SITE_MANAGER', location: 'Rwamagana' };
-      } else if (emailLower === 'buyer@mofresh.rw') {
-        user = { email, name: 'Kwizera', role: 'BUYER', location: null };
-      }
-
-      if (email && password) {
+      // Check if OTP is required (Backend uses status: "otp_sent")
+      if (response.otpRequired || (response as any).status === 'otp_sent') {
         return {
-          user,
-          token: 'dummy-token-' + Date.now(),
+          otpRequired: true,
+          email: (response as any).email || email,
         };
       }
-      throw new Error('Invalid credentials');
+
+      // CLIENT role gets tokens directly
+      if (response.accessToken && response.user) {
+        const transformed = transformUser(response.user);
+        localStorage.setItem('accessToken', response.accessToken);
+        if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
+        localStorage.setItem('user', JSON.stringify(transformed));
+
+        return {
+          user: transformed,
+          token: response.accessToken,
+          otpRequired: false,
+        };
+      }
+
+      throw new Error('Invalid response from server');
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async ({ otp }: { otp: string }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      const email = state.auth.otpEmail;
+
+      if (!email) {
+        throw new Error('No email found for OTP verification');
+      }
+
+      const response = await authService.verifyOtp({ email, code: otp });
+
+      const transformed = transformUser(response.user);
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify(transformed));
+
+      return {
+        user: transformed,
+        token: response.accessToken,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const resendOtp = createAsyncThunk(
+  'auth/resendOtp',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      const email = state.auth.otpEmail;
+
+      if (!email) {
+        throw new Error('No email found for OTP resend');
+      }
+
+      await authService.resendOtp({ email });
+      return { success: true };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -64,39 +166,87 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (
     {
-      fullName,
+      accountType,
+      firstName,
+      lastName,
       phone,
       email,
       password,
-    }: { fullName: string; phone: string; email: string; password: string },
+      tinNumber,
+      businessName,
+      nationalIdDocument,
+      businessCertificateDocument,
+      siteId,
+    }: {
+      accountType: 'personal' | 'business';
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email: string;
+      password: string;
+      tinNumber?: string;
+      businessName?: string;
+      nationalIdDocument?: File;
+      businessCertificateDocument?: File;
+      siteId?: string;
+    },
     { rejectWithValue }
   ) => {
     try {
-      await dummyApiDelay();
-      // Simulate successful registration - return email for OTP
-      if (email && password && fullName && phone) {
-        return { email };
-      }
-      throw new Error('Registration failed');
+      // Transform to backend format
+      const userData = {
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        role: UserRole.CLIENT,
+        clientAccountType: accountType.toUpperCase() as ClientAccountType,
+        tinNumber,
+        businessName,
+        nationalIdDocument,
+        businessCertificateDocument,
+        siteId,
+      };
+
+      await usersService.register(userData);
+
+      // Return email for OTP verification
+      return { email };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-export const verifyOtp = createAsyncThunk(
-  'auth/verifyOtp',
-  async ({ otp }: { otp: string }, { rejectWithValue }) => {
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
     try {
-      await dummyApiDelay();
-      // Simulate OTP verification
-      if (otp.length === 6) {
-        return {
-          user: { email: 'user@example.com', name: 'John Doe', role: 'BUYER' as const, location: null },
-          token: 'dummy-token-' + Date.now(),
-        };
+      await authService.logout();
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      return { success: true };
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk(
+  'auth/updateUser',
+  async (
+    { id, userData }: { id: string; userData: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const updatedUser = await usersService.updateUser(id, userData);
+      const existingUser = localStorage.getItem('user');
+      if (existingUser) {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       }
-      throw new Error('Invalid OTP');
+      return transformUser(updatedUser);
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -107,18 +257,24 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout: (state) => {
+    clearAuth: (state) => {
       state.user = null;
       state.token = null;
-      state.isAuthenticated = false; // ADDED
+      state.isAuthenticated = false;
+      state.otpEmail = null;
+      state.otpRequired = false;
     },
     setOtpEmail: (state, action: PayloadAction<string>) => {
       state.otpEmail = action.payload;
     },
-    updateUser: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
+    loginMock: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.token = 'mock-jwt-token';
+      state.isAuthenticated = true;
+      state.otpRequired = false;
+      state.isLoading = false;
+      localStorage.setItem('user', JSON.stringify(action.payload));
+      localStorage.setItem('accessToken', 'mock-jwt-token');
     },
   },
   extraReducers: (builder) => {
@@ -129,24 +285,22 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true; // ADDED
+
+        if (action.payload.otpRequired) {
+          state.otpRequired = true;
+          state.otpEmail = action.payload.email || null;
+        } else {
+          state.user = action.payload.user || null;
+          state.token = action.payload.token || null;
+          state.isAuthenticated = true;
+          state.otpRequired = false;
+        }
       })
       .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
+        state.isAuthenticated = false;
       })
-      // Register
-      .addCase(registerUser.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.otpEmail = action.payload.email;
-      })
-      .addCase(registerUser.rejected, (state) => {
-        state.isLoading = false;
-      })
+
       // Verify OTP
       .addCase(verifyOtp.pending, (state) => {
         state.isLoading = true;
@@ -155,14 +309,66 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.isAuthenticated = true; // ADDED
+        state.isAuthenticated = true;
+        state.otpRequired = false;
         state.otpEmail = null;
       })
       .addCase(verifyOtp.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Resend OTP
+      .addCase(resendOtp.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resendOtp.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(resendOtp.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Register
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.otpEmail = action.payload.email;
+        state.otpRequired = true;
+      })
+      .addCase(registerUser.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.otpRequired = false;
+        state.otpEmail = null;
+      })
+      .addCase(logoutUser.fulfilled, () => {
+        // State already cleared in pending
+      })
+      .addCase(logoutUser.rejected, () => {
+        // Even if the server-side logout fails, we want the user logged out locally.
+        // So we keep the cleared state.
+      })
+
+      .addCase(updateUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUser.rejected, (state) => {
         state.isLoading = false;
       });
   },
 });
 
-export const { logout, setOtpEmail, updateUser } = authSlice.actions;
+export const { clearAuth, setOtpEmail, loginMock } = authSlice.actions;
 export default authSlice.reducer;

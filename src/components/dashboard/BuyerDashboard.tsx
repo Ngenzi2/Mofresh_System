@@ -7,13 +7,15 @@ import {
   ShoppingBag,
   User,
   Phone,
-  MapPin,
   Mail,
   Camera,
   Save,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { updateUser } from '@/store/authSlice';
+import { invoicesService, productsService, rentalsService, ordersService } from '@/api';
+import type { InvoiceResponseDto, ProductEntity, OrderEntity, RentalEntity } from '@/types/api.types';
+import { toast } from 'sonner';
 
 interface BuyerDashboardProps {
   activeNav: string;
@@ -25,35 +27,117 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
 
   // Settings Form State
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: '+250 788 123 456', // Mock initial phone
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    phone: user?.phone || '',
     location: user?.location || 'Kigali, Rwanda',
+    nationalId: null as File | null,
+    businessCert: null as File | null,
+    profilePicture: null as File | null,
   });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      dispatch(updateUser({ name: formData.name, location: formData.location }));
-      setIsSaving(false);
-      // Optional: Add a toast notification here if available
-    }, 1000);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'nationalId' | 'businessCert' | 'profilePicture') => {
+    const file = e.target.files?.[0] || null;
+    setFormData(prev => ({ ...prev, [field]: file }));
+
+    if (field === 'profilePicture' && file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
   };
+
+  const handleUpdateProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    try {
+      await dispatch(updateUser({
+        id: user.id,
+        userData: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          nationalIdDocument: formData.nationalId || undefined,
+          businessCertificateDocument: formData.businessCert || undefined,
+          avatar: formData.profilePicture || undefined,
+        }
+      })).unwrap();
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error(error || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const [invoices, setInvoices] = useState<InvoiceResponseDto[]>([]);
+  const [balance, setBalance] = useState(0);
+
+  React.useEffect(() => {
+    const fetchInvoices = async () => {
+      if (!user?.id) return;
+      try {
+        const response = await invoicesService.getAllInvoices({ clientId: user.id });
+        // Handle both raw array and wrapped response { data: [], ... }
+        const data = Array.isArray(response) ? response : (response as any)?.data || [];
+        setInvoices(data);
+
+        const totalUnpaid = data
+          .filter((inv: InvoiceResponseDto) => inv.status === 'UNPAID')
+          .reduce((sum: number, inv: InvoiceResponseDto) => sum + (inv.totalAmount - inv.paidAmount), 0);
+        setBalance(totalUnpaid);
+      } catch (error) {
+        console.error('Error fetching buyer invoices:', error);
+      }
+    };
+
+    fetchInvoices();
+  }, [user?.id]);
 
   const stats = [
     { label: 'Active assets', value: '12', icon: Box, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Invoice Balance', value: '376,000 Rwf', subValue: '+Add funds', icon: CreditCard, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    { label: 'Total Orders', value: '148', badge: '+5% this week', icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Invoice Balance', value: `${balance.toLocaleString()} Rwf`, subValue: '+Add funds', icon: CreditCard, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { label: 'Total Orders', value: (invoices?.length || 0).toString(), badge: '+5% this week', icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50' },
   ];
 
-  const recentBookings = [
-    { id: '#ORD-2489', asset: 'MoFresh smart box 50l', status: 'Active', date: 'Jan, 20, 2026', amount: '12,000 Rwf', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=100' },
-    { id: '#ORD-2490', asset: 'Tricycle', status: 'Pending', date: 'Jan, 20, 2026', amount: '8,000 Rwf', img: 'https://images.unsplash.com/photo-1558981403-c5f91dbafc3d?auto=format&fit=crop&q=80&w=100' },
-    { id: '#ORD-2491', asset: 'Cold Box', status: 'Completed', date: 'Jan, 20, 2026', amount: '15,000 Rwf', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=100' },
-    { id: '#ORD-2492', asset: 'MoFresh smart box 50l', status: 'Completed', date: 'Jan, 20, 2026', amount: '12,000 Rwf', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=100' },
-  ];
+
+  const [rentals, setRentals] = useState<RentalEntity[]>([]);
+  const [products, setProducts] = useState<ProductEntity[]>([]);
+  const [orders, setOrders] = useState<OrderEntity[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [rentalsRes, productsRes, ordersRes] = await Promise.all([
+          rentalsService.getMyRentals().catch(() => []),
+          productsService.getAllProducts().catch(() => []),
+          ordersService.getMyOrders().catch(() => [])
+        ]);
+
+        // Handle potentially wrapped responses if API returns { data: ... }
+        setRentals(Array.isArray(rentalsRes) ? rentalsRes : (rentalsRes as any)?.data || []);
+        setProducts(Array.isArray(productsRes) ? productsRes : (productsRes as any)?.data || []);
+        setOrders(Array.isArray(ordersRes) ? ordersRes : (ordersRes as any)?.data || []);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast.error('Failed to load some dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchData();
+    }
+  }, [user?.id]);
+
+  // ... existing invoice fetch logic ...
 
   const renderContent = () => {
     switch (activeNav) {
@@ -61,58 +145,112 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-black text-gray-900">My Rentals</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 space-y-4">
-                  <div className="h-40 bg-gray-100 rounded-2xl overflow-hidden">
-                    <img src={`https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=400&sig=${i}`} className="w-full h-full object-cover" />
+            {isLoading ? (
+              <div className="text-center py-20 text-gray-500">Loading rentals...</div>
+            ) : rentals.length === 0 ? (
+              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 text-center">
+                <Box className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-500">You have no active rentals.</p>
+                <button className="mt-4 text-[#38a169] font-bold hover:underline">Rent Asset</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {rentals.map((rental) => (
+                  <div key={rental.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 space-y-4">
+                    <div className="h-40 bg-gray-100 rounded-2xl overflow-hidden relative">
+                      {rental.image ? <img src={rental.image} className="w-full h-full object-cover" /> : <Box className="w-12 h-12 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-300" />}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">{rental.assetName}</h3>
+                      <p className="text-sm text-gray-500">Hub: {rental.hubLocation}</p>
+                      <p className="text-xs text-gray-400 mt-1">Due: {new Date(rental.endDate).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${rental.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {rental.status}
+                      </span>
+                      <button className="text-xs font-bold text-[#1a4d2e] hover:underline">View Details</button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Smart Box 50L #{i}</h3>
-                    <p className="text-sm text-gray-500">Hub: Kigali Main</p>
-                  </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase">Active</span>
-                    <button className="text-xs font-bold text-[#1a4d2e] hover:underline">View Details</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'Marketplace':
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-black text-gray-900">Fresh Produce Marketplace</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 space-y-3 group cursor-pointer transition-transform hover:-translate-y-1">
-                  <div className="h-32 bg-gray-100 rounded-2xl overflow-hidden">
-                    <img src={`https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400&sig=${i}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            {isLoading ? (
+              <div className="text-center py-20 text-gray-500">Loading marketplace...</div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-20 text-gray-500">No products available.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {products.map((product) => (
+                  <div key={product.id} className="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 space-y-3 group cursor-pointer transition-transform hover:-translate-y-1">
+                    <div className="h-32 bg-gray-100 rounded-2xl overflow-hidden relative">
+                      {product.image ? (
+                        <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full bg-green-50 flex items-center justify-center"><ShoppingBag className="w-8 h-8 text-green-200" /></div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 line-clamp-1">{product.name}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-2">{product.description}</p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-black text-[#1a4d2e]">{product.price.toLocaleString()} Rwf/{product.unit}</span>
+                      <button className="bg-[#38a169] text-white p-2 rounded-xl hover:bg-[#1a4d2e] transition-colors">
+                        <ShoppingBag className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-800">Fresh Tomatoes (5kg)</h3>
-                    <p className="text-xs text-gray-500">By Gako Farmer Group</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-black text-[#1a4d2e]">4,500 Rwf</span>
-                    <button className="bg-[#38a169] text-white p-2 rounded-xl hover:bg-[#1a4d2e] transition-colors">
-                      <ShoppingBag className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'Orders':
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-black text-gray-900">Order Management</h2>
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 text-center text-gray-400">
-              <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p>Your order history and tracking will appear here.</p>
-            </div>
+            {isLoading ? (
+              <div className="text-center py-20 text-gray-500">Loading orders...</div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 text-center text-gray-400">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>You have no past orders.</p>
+                <button className="mt-4 text-[#38a169] font-bold hover:underline">Start Shopping</button>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase">Order ID</th>
+                      <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase">Date</th>
+                      <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {orders.map((order) => (
+                      <tr key={order.id} className="hover:bg-gray-50/50">
+                        <td className="px-6 py-4 font-medium text-gray-900">{order.id.slice(0, 8)}</td>
+                        <td className="px-6 py-4 text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                            }`}>{order.status}</span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-bold">{order.totalAmount.toLocaleString()} Rwf</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       case 'Invoice':
@@ -143,42 +281,69 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
               {/* Left Column: Avatar */}
               <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-6">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-[#38a169]/10">
-                    <img
-                      src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200"
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-[#38a169]/10 flex items-center justify-center bg-gray-50">
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-gray-400">
+                        <User className="w-12 h-12" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter">No Photo</span>
+                      </div>
+                    )}
                   </div>
-                  <button className="absolute bottom-1 right-1 bg-[#1a4d2e] p-2.5 rounded-full text-white shadow-lg transform transition-transform group-hover:scale-110">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'profilePicture')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-1 right-1 bg-[#1a4d2e] p-2.5 rounded-full text-white shadow-lg transform transition-transform group-hover:scale-110"
+                  >
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-gray-900">{user?.name}</h3>
+                  <h3 className="text-lg font-black text-gray-900">{user?.firstName} {user?.lastName}</h3>
                   <p className="text-sm font-bold text-[#38a169] uppercase tracking-widest">{user?.role} Profile</p>
                 </div>
                 <div className="w-full pt-6 border-t border-gray-50 flex flex-col gap-4">
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <Mail className="w-4 h-4 text-[#ffb703]" /> {user?.email}
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <MapPin className="w-4 h-4 text-[#ffb703]" /> {formData.location}
-                  </div>
                 </div>
               </div>
 
               {/* Right Column: Fields */}
               <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleUpdateProfile}>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Full Name</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">First Name</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Last Name</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
                       />
                     </div>
@@ -195,27 +360,23 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
                       />
                     </div>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Location / Address</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">National ID Document</label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                        type="file"
+                        onChange={(e) => setFormData({ ...formData, nationalId: e.target.files?.[0] || null })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-xs font-bold text-gray-800 transition-all outline-none"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Email Address (Read Only)</label>
-                    <div className="relative opacity-60">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Business Certificate</label>
+                    <div className="relative">
                       <input
-                        type="email"
-                        value={user?.email}
-                        readOnly
-                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-none rounded-2xl text-sm font-bold text-gray-500 cursor-not-allowed outline-none"
+                        type="file"
+                        onChange={(e) => setFormData({ ...formData, businessCert: e.target.files?.[0] || null })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-xs font-bold text-gray-800 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -244,7 +405,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-black text-gray-900 leading-tight">
-                  Welcome Back, <span className="text-[#38a169]">{user?.name?.split(' ')[0]}</span>
+                  Welcome Back, <span className="text-[#38a169]">{user?.firstName}</span>
                 </h1>
                 <p className="text-gray-500 mt-1">Here's what's happening with your logistics today</p>
               </div>
@@ -333,29 +494,29 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {recentBookings.map((booking, idx) => (
+                    {invoices.slice(0, 5).map((invoice, idx) => (
                       <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
                         <td className="px-10 py-6">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center overflow-hidden border border-gray-100 p-1">
-                              <img src={booking.img} className="w-full h-full object-cover rounded-xl" />
+                              <Box className="w-6 h-6 text-[#38a169]" />
                             </div>
-                            <span className="text-sm font-bold text-gray-800 capitalize">{booking.asset}</span>
+                            <span className="text-sm font-bold text-gray-800 capitalize">Invoice #{invoice.invoiceNumber}</span>
                           </div>
                         </td>
                         <td className="px-10 py-6">
-                          <span className="text-sm font-medium text-gray-400">{booking.id}</span>
+                          <span className="text-sm font-medium text-gray-400">{invoice.id.slice(0, 8)}</span>
                         </td>
                         <td className="px-10 py-6">
-                          <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider ${booking.status === 'Active' ? 'bg-green-100 text-[#38a169]' :
-                            booking.status === 'Pending' ? 'bg-orange-100 text-[#ffb703]' :
+                          <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider ${invoice.status === 'PAID' ? 'bg-green-100 text-[#38a169]' :
+                            invoice.status === 'UNPAID' ? 'bg-orange-100 text-[#ffb703]' :
                               'bg-gray-100 text-gray-400'
                             }`}>
-                            {booking.status}
+                            {invoice.status}
                           </span>
                         </td>
-                        <td className="px-10 py-6 text-sm font-bold text-gray-400">{booking.date}</td>
-                        <td className="px-10 py-6 text-sm font-black text-gray-900 text-right">{booking.amount}</td>
+                        <td className="px-10 py-6 text-sm font-bold text-gray-400">{new Date(invoice.createdAt).toLocaleDateString()}</td>
+                        <td className="px-10 py-6 text-sm font-black text-gray-900 text-right">{invoice.totalAmount.toLocaleString()} Rwf</td>
                       </tr>
                     ))}
                   </tbody>

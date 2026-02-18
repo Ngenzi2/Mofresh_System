@@ -68,7 +68,7 @@ export function TopBar() {
       </div>
 
       {/* Marquee Effect */}
-      <div className="flex-1 overflow-hidden mx-4 lg:mx-8 hidden md:block">
+      <div className="flex-1 overflow-hidden mx-2 sm:mx-4 lg:mx-8">
         <div className="animate-marquee whitespace-nowrap inline-block">
           {marqueeMessages.map((msg, idx) => (
             <span key={idx} className="font-medium italic mx-8">
