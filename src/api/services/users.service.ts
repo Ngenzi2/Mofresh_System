@@ -106,7 +106,7 @@ class UsersService {
    */
   async getVendorRequests(): Promise<(VendorRequestDto & { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED'; createdAt: string })[]> {
     try {
-      const response = await apiClient.get<any>('/users/vendor-request');
+      const response = await apiClient.get<any>('/users/vendor-requests');
       if (response.data?.data && Array.isArray(response.data.data)) {
         return response.data.data;
       }
