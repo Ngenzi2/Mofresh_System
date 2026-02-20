@@ -7,11 +7,11 @@ export function Footer() {
   const { t } = useTranslation();
 
   return (
-    <footer className="bg-[#2d6a4f] dark:bg-gray-950 text-white transition-colors">
+    <footer className="bg-[#2d6a4f] dark:bg-gray-950 text-white transition-colors sm:mt-20 ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Logo and Description */}
-          <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col items-center sm:items-start">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col items-center sm:items-start">
             {/* Logo - with better visibility */}
             <Link to="/" className="inline-block mb-4">
               <div className="rounded-xl inline-block">
@@ -22,7 +22,7 @@ export function Footer() {
                 />
               </div>
             </Link>
-            <p className="text-gray-300 dark:text-gray-400 text-sm mb-6 leading-relaxed max-w-sm">
+            <p className="text-gray-300 dark:text-gray-400 text-sm mb-6 leading-relaxed max-w-sm text-center sm:text-left">
               {t('footerDescription')}
             </p>
             <div className="flex gap-3">
@@ -42,7 +42,7 @@ export function Footer() {
           </div>
 
           {/* Platform */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center sm:text-left">
             <h3 className="font-bold text-lg text-white">{t('platform')}</h3>
             <ul className="space-y-3 text-gray-300 dark:text-gray-400 text-sm">
               <li><a href="#" className="hover:text-[#9be15d] transition-colors">{t('features')}</a></li>
@@ -54,7 +54,7 @@ export function Footer() {
           </div>
 
           {/* Company */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center sm:text-left">
             <h3 className="font-bold text-lg text-white">{t('company')}</h3>
             <ul className="space-y-3 text-gray-300 dark:text-gray-400 text-sm">
               <li><Link to="/about" className="hover:text-[#9be15d] transition-colors">{t('aboutUs2')}</Link></li>
@@ -66,7 +66,7 @@ export function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center sm:text-left">
             <h3 className="font-bold text-lg text-white">{t('contactTitle')}</h3>
             <ul className="space-y-4 text-gray-300 dark:text-gray-400 text-sm">
               <li className="flex items-start gap-3 justify-center sm:justify-start">
@@ -87,9 +87,9 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-white/10 dark:border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-400">
-            <p className="font-medium">{t('copyright')}</p>
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:items-center text-sm text-gray-400">
+            <p className="font-medium text-center md:text-left">{t('copyright')}</p>
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-x-8">
               <a href="#" className="hover:text-[#9be15d] transition-colors">{t('privacyPolicy')}</a>
               <a href="#" className="hover:text-[#9be15d] transition-colors">{t('termsOfService')}</a>
               <a href="#" className="hover:text-[#9be15d] transition-colors">{t('cookies')}</a>
