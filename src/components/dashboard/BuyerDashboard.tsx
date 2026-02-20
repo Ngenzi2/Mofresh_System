@@ -115,9 +115,9 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
       setIsLoading(true);
       try {
         const [rentalsRes, productsRes, ordersRes] = await Promise.all([
-          rentalsService.getMyRentals().catch(() => []),
+          rentalsService.getRentals().catch(() => []),
           productsService.getAllProducts().catch(() => []),
-          ordersService.getMyOrders().catch(() => [])
+          ordersService.getAllOrders().catch(() => [])
         ]);
 
         // Handle potentially wrapped responses if API returns { data: ... }
@@ -163,7 +163,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
                     <div>
                       <h3 className="font-bold text-gray-900">{rental.assetName}</h3>
                       <p className="text-sm text-gray-500">Hub: {rental.hubLocation}</p>
-                      <p className="text-xs text-gray-400 mt-1">Due: {new Date(rental.endDate).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">Due: {new Date(rental.rentalEndDate).toLocaleDateString()}</p>
                     </div>
                     <div className="flex justify-between items-center pt-2">
                       <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${rental.status === 'ACTIVE' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
@@ -201,7 +201,7 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
                       <p className="text-xs text-gray-500 line-clamp-2">{product.description}</p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-black text-[#1a4d2e]">{product.price.toLocaleString()} Rwf/{product.unit}</span>
+                      <span className="font-black text-[#1a4d2e]">{(product.price ?? product.sellingPricePerUnit).toLocaleString()} Rwf/{product.unit}</span>
                       <button className="bg-[#38a169] text-white p-2 rounded-xl hover:bg-[#1a4d2e] transition-colors">
                         <ShoppingBag className="w-4 h-4" />
                       </button>

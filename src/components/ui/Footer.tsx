@@ -1,7 +1,10 @@
-import { Facebook, Twitter, Linkedin, Instagram, MapPin, Phone, Mail } from 'lucide-react';
+import { Linkedin, Instagram, MapPin, Phone, Mail } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import Logo from '@/assets/Logo.png';
+
+// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
+const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
 
 export function Footer() {
   const { t } = useTranslation();
@@ -15,28 +18,21 @@ export function Footer() {
             {/* Logo - with better visibility */}
             <Link to="/" className="inline-block mb-4">
               <div className="rounded-xl inline-block">
-                <img
-                  src={Logo}
-                  alt="MoFresh Logo"
-                  className="h-8 w-auto"
-                />
+                <img src={Logo} alt="MoFresh Logo" className="h-8 w-auto" />
               </div>
             </Link>
             <p className="text-gray-300 dark:text-gray-400 text-sm mb-6 leading-relaxed max-w-sm text-center sm:text-left">
               {t('footerDescription')}
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 rounded-lg bg-[#2D6A4F] dark:bg-gray-800 flex items-center justify-center hover:bg-[#40916C] dark:hover:bg-gray-700 transition-colors border border-white/10">
-                <Facebook className="w-5 h-5" />
+              <a href="https://www.instagram.com/mofreshrw/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-[#9be15d] hover:text-[#0B3D2E] transition-all border border-white/10 hover:border-[#9be15d]">
+                <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-[#2D6A4F] dark:bg-gray-800 flex items-center justify-center hover:bg-[#40916C] dark:hover:bg-gray-700 transition-colors border border-white/10">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-[#2D6A4F] dark:bg-gray-800 flex items-center justify-center hover:bg-[#40916C] dark:hover:bg-gray-700 transition-colors border border-white/10">
+              <a href="https://www.linkedin.com/company/kivu-cold-group/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-[#9be15d] hover:text-[#0B3D2E] transition-all border border-white/10 hover:border-[#9be15d]">
                 <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-[#2D6A4F] dark:bg-gray-800 flex items-center justify-center hover:bg-[#40916C] dark:hover:bg-gray-700 transition-colors border border-white/10">
-                <Instagram className="w-5 h-5" />
+              <a href="https://wa.me/250788526631" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all border border-white/10 hover:border-[#25D366]">
+                <Phone className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -85,8 +81,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-white/10 dark:border-gray-800">
           <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:items-center text-sm text-gray-400">
             <p className="font-medium text-center md:text-left">{t('copyright')}</p>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-x-8">

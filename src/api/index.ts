@@ -8,6 +8,10 @@ export { default as reportsService } from './services/reports.service';
 export { default as productsService } from './services/products.service';
 export { default as ordersService } from './services/orders.service';
 export { default as rentalsService } from './services/rentals.service';
+export { default as infrastructureService } from './services/infrastructure.service';
+export { default as logisticsService } from './services/logistics.service';
+export { default as auditService } from './services/audit.service';
+export { default as seederService } from './services/seeder.service';
 
 // Export API client
 export { default as apiClient } from './client';

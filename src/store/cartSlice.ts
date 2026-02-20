@@ -13,7 +13,7 @@ interface CartState {
   items: CartItem[];
 }
 
-/* ---------------- LOCAL STORAGE ---------------- */
+// Persist cart in localStorage
 const loadCartFromStorage = (): CartItem[] => {
   try {
     const data = localStorage.getItem('cart');
@@ -27,12 +27,12 @@ const saveCartToStorage = (items: CartItem[]) => {
   localStorage.setItem('cart', JSON.stringify(items));
 };
 
-/* ---------------- INITIAL STATE ---------------- */
+// Initial state
 const initialState: CartState = {
   items: loadCartFromStorage(),
 };
 
-/* ---------------- SLICE ---------------- */
+// Redux slice
 const cartSlice = createSlice({
   name: 'cart',
   initialState,

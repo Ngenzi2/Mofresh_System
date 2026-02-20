@@ -206,7 +206,9 @@ export default function Register() {
               >
                 <option value="" disabled className="text-gray-400">𝖲𝖾𝗅𝖾𝖼𝗍 𝗒𝗈𝗎𝗋 𝗌𝗂𝗍𝖾 𝗍𝗈 𝗌𝗍𝖺𝗋𝗍...</option>
                 {sites.map(site => (
-                  <option key={site.id} value={site.id} className="text-gray-900 bg-white">{site.name}</option>
+                  <option key={site.id} value={site.id} className="text-gray-900 bg-white">
+                    {site.name} — {site.location}
+                  </option>
                 ))}
               </select>
             </div>

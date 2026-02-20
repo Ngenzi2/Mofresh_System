@@ -1,65 +1,110 @@
-import React, { useState } from 'react';
-import { Search, Plus, MapPin, Check, ExternalLink, X, Users } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addSite, updateSite, deleteSite, type MockSite } from '@/store/mockDataSlice';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, MapPin, Check, ExternalLink, X, Users, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { sitesService, usersService } from '@/api';
+import type { SiteEntity, UserEntity } from '@/types/api.types';
 
 export const SiteManagement: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { sites, users } = useAppSelector((state) => state.mockData);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [users, setUsers] = useState<UserEntity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSite, setEditingSite] = useState<MockSite | null>(null);
-  const [formData, setFormData] = useState<Partial<MockSite>>({
+  const [editingSite, setEditingSite] = useState<SiteEntity | null>(null);
+  const [formData, setFormData] = useState<Partial<SiteEntity>>({
     name: '',
     location: '',
-    status: 'OPERATIONAL',
-    capacity: 0,
     managerId: '',
   });
 
-  const handleOpenModal = (site?: MockSite) => {
+  const fetchSites = async () => {
+    try {
+      const data = await sitesService.getAllSites();
+      setSites(data);
+    } catch (error: any) {
+      toast.error('Failed to fetch sites');
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await usersService.getAllUsers();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      toast.error('Failed to fetch users');
+      setUsers([]);
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([fetchSites(), fetchUsers()]);
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  const handleOpenModal = (site?: SiteEntity) => {
     if (site) {
       setEditingSite(site);
-      setFormData(site);
+      setFormData({
+        name: site.name,
+        location: site.location,
+        managerId: site.managerId || '',
+      });
     } else {
       setEditingSite(null);
-      setFormData({ name: '', location: '', status: 'OPERATIONAL', capacity: 0, managerId: '' });
+      setFormData({ name: '', location: '', managerId: '' });
     }
     setIsModalOpen(true);
   };
 
-  const handleSaveSite = (e: React.FormEvent) => {
+  const handleSaveSite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.location) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (editingSite) {
-      dispatch(updateSite({ ...editingSite, ...formData } as MockSite));
-      toast.success(`Site updated: ${formData.name}`);
-    } else {
-      const newSite: MockSite = {
-        id: `s-${Date.now()}`,
-        ...formData as any
-      };
-      dispatch(addSite(newSite));
-      toast.success(`Site created: ${formData.name}`);
+    try {
+      if (editingSite) {
+        await sitesService.updateSite(editingSite.id, {
+          name: formData.name,
+          location: formData.location,
+          managerId: formData.managerId || undefined,
+        });
+        toast.success(`Site updated: ${formData.name}`);
+      } else {
+        await sitesService.createSite({
+          name: formData.name!,
+          location: formData.location!,
+          managerId: formData.managerId || undefined,
+        });
+        toast.success(`Site created: ${formData.name}`);
+      }
+      fetchSites();
+      setIsModalOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save site');
     }
-    setIsModalOpen(false);
   };
 
-  const handleDeleteSite = (id: string) => {
+  const handleDeleteSite = async (id: string) => {
     if (confirm('Are you sure you want to delete this site?')) {
-      dispatch(deleteSite(id));
-      toast.success('Site deleted');
+      try {
+        await sitesService.deleteSite(id);
+        toast.success('Site deleted');
+        fetchSites();
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete site');
+      }
     }
   };
 
-  const filteredSites = sites.filter(s =>
+  const filteredSites = sites.filter((s: SiteEntity) =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -92,57 +137,56 @@ export const SiteManagement: React.FC = () => {
       </div>
 
       {/* Sites Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredSites.map((site) => (
-          <div key={site.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-green-50 text-[#38a169] rounded-2xl flex items-center justify-center">
-                  <MapPin className="w-7 h-7" />
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-[#1a4d2e] animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading sites...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredSites.map((site) => (
+            <div key={site.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-green-50 text-[#38a169] rounded-2xl flex items-center justify-center">
+                    <MapPin className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900">{site.name}</h3>
+                    <p className="text-sm font-bold text-gray-400">{site.location}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-900">{site.name}</h3>
-                  <p className="text-sm font-bold text-gray-400">{site.location}</p>
+                <div className="flex gap-2">
+                  <button onClick={() => handleOpenModal(site)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                    <ExternalLink className="w-5 h-5 text-gray-400 hover:text-[#1a4d2e]" />
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => handleOpenModal(site)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-                  <ExternalLink className="w-5 h-5 text-gray-400 hover:text-[#1a4d2e]" />
+
+              <div className="mb-6">
+                <div className="flex justify-between items-center text-xs mb-1.5">
+                  <span className="font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Users className="w-3 h-3 text-[#ffb703]" />
+                    {users.find(u => u.id === site.managerId)?.firstName || 'Unassigned'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider bg-green-50 text-green-600`}>
+                  OPERATIONAL
+                </span>
+                <button
+                  onClick={() => handleDeleteSite(site.id)}
+                  className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                >
+                  Decommission
                 </button>
               </div>
             </div>
-
-            <div className="mb-6">
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-[#ffb703]" />
-                  {users.find(u => u.id === site.managerId)?.firstName || 'Unassigned'}
-                </span>
-                <span className="font-black text-gray-900">{site.capacity}% Full</span>
-              </div>
-              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ${site.status === 'OPERATIONAL' ? 'bg-[#38a169]' : 'bg-orange-500'}`}
-                  style={{ width: `${site.capacity}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider ${site.status === 'OPERATIONAL' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                }`}>
-                {site.status}
-              </span>
-              <button
-                onClick={() => handleDeleteSite(site.id)}
-                className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
-              >
-                Decommission
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Site Modal */}
       {isModalOpen && (
@@ -177,29 +221,18 @@ export const SiteManagement: React.FC = () => {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Capacity (%)</label>
-                  <input
-                    type="number"
-                    value={formData.capacity || 0}
-                    onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                    className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assigned Manager</label>
-                  <select
-                    value={formData.managerId || ''}
-                    onChange={e => setFormData({ ...formData, managerId: e.target.value })}
-                    className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
-                  >
-                    <option value="">Unassigned</option>
-                    {users.filter(u => u.role === 'SITE_MANAGER').map(u => (
-                      <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assigned Manager</label>
+                <select
+                  value={formData.managerId || ''}
+                  onChange={e => setFormData({ ...formData, managerId: e.target.value })}
+                  className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                >
+                  <option value="">Unassigned</option>
+                  {Array.isArray(users) && users.filter(u => u.role === 'SITE_MANAGER').map(u => (
+                    <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
+                  ))}
+                </select>
               </div>
 
               <button

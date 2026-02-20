@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Loader2, CheckCircle, Store, Lock, FileText, MapPin } from 'lucide-react';
+import { X, Mail, Loader2, CheckCircle, Store, FileText, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateEmail } from '@/utils/validation.utils';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addSupplierRequest } from '@/store/mockDataSlice';
+import { usersService } from '@/api';
 
 interface BecomeVendorModalProps {
   isOpen: boolean;
@@ -12,13 +11,9 @@ interface BecomeVendorModalProps {
 }
 
 export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, onClose }) => {
-  const dispatch = useAppDispatch();
-  const { sites } = useAppSelector((state) => state.mockData);
-
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [description, setDescription] = useState('');
-  const [targetBranch, setTargetBranch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -31,7 +26,7 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
       return;
     }
 
-    if (!password || !description || !targetBranch) {
+    if (!phone || !description) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -39,17 +34,11 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
     setIsSubmitting(true);
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      dispatch(addSupplierRequest({
-        id: `req-${Date.now()}`,
+      await usersService.submitVendorRequest({
         email,
-        description,
-        targetBranch,
-        status: 'PENDING',
-        requestedDate: new Date().toISOString().split('T')[0]
-      }));
+        phone,
+        description
+      });
 
       setIsSuccess(true);
       toast.success("Vendor request submitted!", {
@@ -59,13 +48,12 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
       setTimeout(() => {
         setIsSuccess(false);
         setEmail('');
-        setPassword('');
+        setPhone('');
         setDescription('');
-        setTargetBranch('');
         onClose();
       }, 3000);
-    } catch (error) {
-      toast.error('Failed to send vendor information. Please try again.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send vendor information. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -74,9 +62,8 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
   const handleClose = () => {
     if (!isSubmitting) {
       setEmail('');
-      setPassword('');
+      setPhone('');
       setDescription('');
-      setTargetBranch('');
       setIsSuccess(false);
       onClose();
     }
@@ -139,35 +126,18 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Desired Password</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                       <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
                         <input
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+250..."
                           className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:border-[#2E8B2E] outline-none transition-all font-medium text-sm"
                           required
                           disabled={isSubmitting}
                         />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Preferred Branch</label>
-                      <div className="relative group">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
-                        <select
-                          value={targetBranch}
-                          onChange={(e) => setTargetBranch(e.target.value)}
-                          className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:border-[#2E8B2E] outline-none transition-all font-bold text-sm"
-                          required
-                          disabled={isSubmitting}
-                        >
-                          <option value="">Select Branch</option>
-                          {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
                       </div>
                     </div>
 

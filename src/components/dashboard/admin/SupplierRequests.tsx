@@ -1,30 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Calendar, MapPin, UserCheck, UserPlus } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { approveSupplierRequest, rejectSupplierRequest } from '@/store/mockDataSlice';
+import { Check, X, Calendar, MapPin, UserCheck, UserPlus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { usersService } from '@/api';
+
+interface VendorRequest {
+  id: string;
+  email: string;
+  phone: string;
+  description: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
 
 export const SupplierRequests: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { supplierRequests, sites } = useAppSelector((state) => state.mockData);
+  const [requests, setRequests] = useState<VendorRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getSiteName = (id: string) => sites.find(s => s.id === id)?.name || 'Central Hub';
-
-  const handleApprove = (id: string, email: string) => {
-    dispatch(approveSupplierRequest(id));
-    toast.success(`Supplier approved: ${email}`, {
-      description: "A new supplier account has been automatically created.",
-    });
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const reqs = await usersService.getVendorRequests();
+      setRequests(reqs as VendorRequest[]);
+    } catch (error: any) {
+      toast.error('Failed to fetch vendor requests');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (id: string) => {
-    dispatch(rejectSupplierRequest(id));
-    toast.error("Supplier request rejected");
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleReply = async (email: string, action: 'APPROVE' | 'REJECT') => {
+    const message = action === 'APPROVE'
+      ? "Thank you for your request. We have approved your application. Please proceed to registration."
+      : "Thank you for your interest. Unfortunately, we cannot approve your request at this time.";
+
+    try {
+      await usersService.replyVendorRequest({ email, message });
+      toast.success(`Vendor request ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reply to vendor request');
+    }
   };
 
-  const pendingRequests = supplierRequests.filter(r => r.status === 'PENDING');
-  const pastRequests = supplierRequests.filter(r => r.status !== 'PENDING');
+  const pendingRequests = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING') : [];
+  const pastRequests = Array.isArray(requests) ? requests.filter(r => r.status !== 'PENDING') : [];
 
   return (
     <div className="space-y-8 pb-10">
@@ -33,10 +57,15 @@ export const SupplierRequests: React.FC = () => {
         <p className="text-gray-500 text-sm">Review and approve new vendor requests</p>
       </div>
 
-      {/* Pending Requests */}
-      <div className="grid grid-cols-1 gap-6">
-        {pendingRequests.length > 0 ? (
-          pendingRequests.map((req) => (
+      {/* Pending Applications */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-[#2E8B2E] animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Fetching applications...</p>
+        </div>
+      ) : pendingRequests.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6">
+          {pendingRequests.map((req) => (
             <motion.div
               key={req.id}
               initial={{ opacity: 0, x: -20 }}
@@ -54,10 +83,10 @@ export const SupplierRequests: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3 h-3" /> {req.requestedDate}
+                      <Calendar className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3 h-3" /> {getSiteName(req.targetBranch)}
+                    <div className="flex items-center gap-1.5 text-[#2E8B2E]">
+                      <MapPin className="w-3 h-3" /> {req.phone}
                     </div>
                   </div>
                   <p className="text-sm text-gray-500 mt-2 italic leading-relaxed">
@@ -68,27 +97,27 @@ export const SupplierRequests: React.FC = () => {
 
               <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
                 <button
-                  onClick={() => handleReject(req.id)}
+                  onClick={() => handleReply(req.email, 'REJECT')}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-red-100 text-red-500 hover:bg-red-50 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all"
                 >
                   <X className="w-4 h-4" /> Reject
                 </button>
                 <button
-                  onClick={() => handleApprove(req.id, req.email)}
+                  onClick={() => handleReply(req.email, 'APPROVE')}
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#2E8B2E] text-white hover:bg-[#1a4d2e] rounded-xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-[#2E8B2E]/20"
                 >
                   <Check className="w-4 h-4" /> Approve Vendor
                 </button>
               </div>
             </motion.div>
-          ))
-        ) : (
-          <div className="bg-gray-50/50 rounded-[2.5rem] p-12 text-center border border-dashed border-gray-200">
-            <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No pending applications</p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50/50 rounded-[2.5rem] p-12 text-center border border-dashed border-gray-200">
+          <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No pending applications</p>
+        </div>
+      )}
 
       {/* Past Requests */}
       {pastRequests.length > 0 && (
@@ -108,8 +137,8 @@ export const SupplierRequests: React.FC = () => {
                 {pastRequests.map((req) => (
                   <tr key={req.id} className="text-sm">
                     <td className="px-8 py-4 font-bold text-gray-700">{req.email}</td>
-                    <td className="px-8 py-4 text-gray-500 font-medium">{getSiteName(req.targetBranch)}</td>
-                    <td className="px-8 py-4 text-gray-400 text-xs font-bold">{req.requestedDate}</td>
+                    <td className="px-8 py-4 text-gray-500 font-medium">{req.phone}</td>
+                    <td className="px-8 py-4 text-gray-400 text-xs font-bold">{new Date(req.createdAt).toLocaleDateString()}</td>
                     <td className="px-8 py-4 text-right">
                       <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${req.status === 'APPROVED' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
                         }`}>

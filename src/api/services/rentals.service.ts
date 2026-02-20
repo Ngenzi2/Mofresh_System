@@ -2,16 +2,17 @@ import apiClient, { handleApiError } from '../client';
 import type {
   RentalEntity,
   CreateRentalDto,
+  RentalStatus,
+  AssetType,
 } from '@/types/api.types';
 
 class RentalsService {
   /**
-   * Get all rentals (Admin/Site Manager)
-   * Supports filtering by siteId
+   * Request a rental
    */
-  async getRentals(params?: { siteId?: string }): Promise<RentalEntity[]> {
+  async createRental(rentalData: CreateRentalDto): Promise<RentalEntity> {
     try {
-      const response = await apiClient.get<RentalEntity[]>('/rentals', { params });
+      const response = await apiClient.post<RentalEntity>('/rentals', rentalData);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -19,11 +20,11 @@ class RentalsService {
   }
 
   /**
-   * Get all rentals for the current user
+   * Get all rentals with pagination and filtering
    */
-  async getMyRentals(): Promise<RentalEntity[]> {
+  async getRentals(params?: { siteId?: string; status?: RentalStatus; page?: number; limit?: number }): Promise<RentalEntity[]> {
     try {
-      const response = await apiClient.get<RentalEntity[]>('/rentals/my-rentals');
+      const response = await apiClient.get<RentalEntity[]>('/rentals', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -43,11 +44,13 @@ class RentalsService {
   }
 
   /**
-   * Create a new rental
+   * Get available assets by type for rental
    */
-  async createRental(rentalData: CreateRentalDto): Promise<RentalEntity> {
+  async getAvailableAssets(assetType: AssetType): Promise<any[]> {
     try {
-      const response = await apiClient.post<RentalEntity>('/rentals', rentalData);
+      const response = await apiClient.get('/rentals/available-assets', {
+        params: { assetType },
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -55,11 +58,44 @@ class RentalsService {
   }
 
   /**
-   * Terminate/Complete rental early
+   * Approve a rental request
+   */
+  async approveRental(id: string): Promise<void> {
+    try {
+      await apiClient.patch(`/rentals/${id}/approve`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Activate a rental
+   */
+  async activateRental(id: string): Promise<void> {
+    try {
+      await apiClient.patch(`/rentals/${id}/activate`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Complete a rental
    */
   async completeRental(id: string): Promise<void> {
     try {
-      await apiClient.post(`/rentals/${id}/complete`);
+      await apiClient.patch(`/rentals/${id}/complete`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Cancel a rental
+   */
+  async cancelRental(id: string): Promise<void> {
+    try {
+      await apiClient.patch(`/rentals/${id}/cancel`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }

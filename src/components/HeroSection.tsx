@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Trans } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -9,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "./button";
 
-// --- Types ---
+// Types
 interface Category {
   id: number;
   name: string;
@@ -78,19 +79,28 @@ import cli3 from "@/assets/client-2.png";
 // Farmer image
 import farmerImage from "@/assets/farmer.png";
 
+// App showcase images
+import appUser1 from "@/assets/app-user-1.png";
+import appUser2 from "@/assets/app-user-2.png";
+import appUser3 from "@/assets/app-user-3.png";
+import grass from "@/assets/grass.png";
+
+// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
+const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
+
 export const HeroSection: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  /* ---------- STATE ---------- */
+  // Component state
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [page, setPage] = useState<number>(0);
 
   const heroImages: string[] = [Hero1, Hero2, Hero3, Hero4];
 
-  /* ---------- CAROUSEL LOGIC ---------- */
+  // Auto-advance hero carousel every 5s
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -98,7 +108,7 @@ export const HeroSection: React.FC = () => {
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
-  /* ---------- DATA ---------- */
+  // Data definitions
   const categories: Category[] = [
 
     { id: 1, name: t('vegetables'), image: cat1 },
@@ -158,19 +168,18 @@ export const HeroSection: React.FC = () => {
   return (
     <div className="w-full bg-transparent transition-colors">
 
-      {/* ========== ENHANCED HERO SECTION ========== */}
-      <div className=" ">
-        <section className="w-full max-w-[1536px] mx-auto px-4 sm:px-8 lg:px-12 py-4 lg:py-6 pb-4 lg:pb-6 relative">
-          {/* problem */}
+      {/* Hero banner */}
+      <div className="w-full bg-white dark:bg-gray-900 transition-colors">
+        <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 pt-0 pb-4 lg:pb-6 relative">
           <div
-            className="relative   rounded-[40px] lg:rounded-[20px] overflow-hidden  border border-gray-200 dark:border-gray-800 transition-all duration-700"
+            className="relative rounded-[40px] lg:rounded-[20px] overflow-hidden border border-gray-200 dark:border-gray-800 transition-all duration-700"
             style={{
               backgroundImage: `url(${farmerImage})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center 15%',
-
             }}
           >
+
             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-[#2d6a4f]/20 to-transparent dark:from-black/80 dark:via-gray-900/40" />
 
             <div className="relative z-10 px-6 sm:px-12 lg:px-16 py-8 lg:py-16 flex flex-col justify-center h-full min-h-[450px] lg:min-h-[600px]">
@@ -202,7 +211,7 @@ export const HeroSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Floating Carousel Box (Bottom Right / Center on mobile) */}
+            {/* Product image carousel */}
             <div className="absolute bottom-6 right-4 lg:right-16 w-[200px] sm:w-[280px] h-[280px] sm:h-[380px] bg-white/10 backdrop-blur-md border border-white/20 rounded-[24px] lg:rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-1000 delay-300">
               <div className="relative w-full h-full">
                 {heroImages.map((img, index) => (
@@ -216,12 +225,12 @@ export const HeroSection: React.FC = () => {
                       alt={`Slide ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    {/* Gradient overlay for better text visibility if needed */}
+                    {/* Bottom gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
                 ))}
 
-                {/* Pagination Dots */}
+                {/* Slide indicators */}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                   {heroImages.map((_, index) => (
                     <button
@@ -235,41 +244,41 @@ export const HeroSection: React.FC = () => {
                 </div>
               </div>
             </div>
+
           </div>
-
-
-
-
-          {/* Three Features Below Hero */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-12 mt-8 lg:mt-12 max-w-6xl mx-auto ">
-            <div className="text-center group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Smart ColdChain')}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Real Time Monitoring')}</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Fast Delivery')}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Same Day Delivery')}</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Quality Assurance')}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Double Checked')}</p>
-            </div>
-          </div>
-
         </section>
       </div>
 
-      {/* ========== SHOP BY CATEGORY ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 ">
+
+
+
+      {/* Key features */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-12 mt-8 lg:mt-12 max-w-6xl mx-auto ">
+        <div className="text-center group">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Smart ColdChain')}</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Real Time Monitoring')}</p>
+        </div>
+        <div className="text-center group">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+          <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Fast Delivery')}</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Same Day Delivery')}</p>
+        </div>
+        <div className="text-center group">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2d6a4f] dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 transition-all group-hover:scale-110 group-hover:bg-[#9be15d]">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          </div>
+          <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg mb-2">{t('Quality Assurance')}</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('Double Checked')}</p>
+        </div>
+      </div>
+
+      {/* Shop by category */}
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-10">
           <div>
             <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d] mb-2">{t('Shop By Category')}</h2>
@@ -293,7 +302,7 @@ export const HeroSection: React.FC = () => {
         </div>
       </section>
 
-      {/* ========== FEATURED PRODUCTS ========== */}
+      {/* Featured products */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
         <div className="flex justify-between items-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{t('featuredProducts')}</h2>
@@ -335,14 +344,13 @@ export const HeroSection: React.FC = () => {
         </div>
       </section>
 
-      {/* ========== PROMOTIONAL BANNERS (AS PER IMAGE) ========== */}
-      {/* ========== PROMOTIONAL BANNERS (AS PER IMAGE) ========== */}
+      {/* Promotional banners */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-          {/* Banner 1: Main Green */}
-          <div className="lg:col-span-2 relative h-[360px] bg-gradient-to-br from-[#2E8B2E] to-[#1a5c1a] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group border border-white/10 shadow-xl">
-            {/* Design Elements */}
+          {/* Banner 1 */}
+          <div className="lg:col-span-2 relative h-[360px] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group border border-white/10 shadow-xl">
+            {/* Background accents */}
             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-black/10 rounded-full blur-2xl translate-y-1/4 -translate-x-1/4" />
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
@@ -359,12 +367,12 @@ export const HeroSection: React.FC = () => {
                 </h3>
               </div>
             </div>
-            <img src={of1} className="absolute right-0 bottom-0 w-[320px] lg:w-[480px] object-contain transition-transform duration-700 group-hover:scale-105" alt="Veg" />
+            <img src={of1} className="absolute -right-4 bottom-0 w-[350px] lg:w-[550px] object-contain transition-transform duration-700 group-hover:scale-105" alt="Veg" />
           </div>
 
-          {/* Banner 2: Same Green (was Black) */}
-          <div className="relative h-[360px] bg-gradient-to-bl from-[#2E8B2E] to-[#1E5D1E] rounded-[32px] overflow-hidden p-8 text-white group border border-white/10 shadow-lg">
-            {/* Design Elements */}
+          {/* Banner 2 */}
+          <div className="relative h-[360px] bg-gradient-to-bl from-[#2d6a4f] to-[#1a5c1a] rounded-[32px] overflow-hidden p-8 text-white group border border-white/10 shadow-lg">
+            {/* Background accents */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] border border-white/10 rounded-full" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] border border-white/5 rounded-full" />
 
@@ -375,12 +383,12 @@ export const HeroSection: React.FC = () => {
                 <ArrowRight className="w-6 h-6 text-white" />
               </div>
             </div>
-            <img src={of4} className="absolute left-6 bottom-6 w-[180px] transition-transform duration-500 group-hover:-translate-y-4 group-hover:rotate-6" alt="Box" />
+            <img src={of4} className="absolute left-6 bottom-6 w-[240px] transition-transform duration-500 group-hover:-translate-y-4 group-hover:rotate-6" alt="Box" />
           </div>
 
-          {/* Banner 3: Same Green (was White) */}
-          <div className="relative h-[360px] bg-gradient-to-t from-[#2E8B2E] to-[#257325] rounded-[32px] overflow-hidden p-8 text-white group border border-white/10 shadow-lg cursor-pointer" onClick={() => navigate('/login')}>
-            {/* Design Elements */}
+          {/* Banner 3 */}
+          <div className="relative h-[360px] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] rounded-[32px] overflow-hidden p-8 text-white group border border-white/10 shadow-lg cursor-pointer" onClick={() => navigate('/login')}>
+            {/* Background accents */}
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#9be15d]/20 rounded-full blur-2xl" />
 
             <div className="relative z-10 flex flex-col h-full">
@@ -392,12 +400,12 @@ export const HeroSection: React.FC = () => {
                 <span className="inline-flex items-center gap-2 text-sm font-bold border-b border-white/50 pb-1 group-hover:border-white transition-colors">Shop Now <ArrowRight className="w-4 h-4" /></span>
               </div>
             </div>
-            <img src={of2} className="absolute -right-4 bottom-0 w-[220px] transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3" alt="Meat" />
+            <img src={of2} className="absolute -right-6 bottom-0 w-[280px] transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3" alt="Meat" />
           </div>
 
-          {/* Banner 4: Same Green (was Dark Green) */}
-          <div className="lg:col-span-2 relative h-[360px] bg-gradient-to-tr from-[#1a5c1a] to-[#2E8B2E] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group border border-white/10 shadow-xl">
-            {/* Design Elements */}
+          {/* Banner 4 */}
+          <div className="lg:col-span-2 relative h-[360px] bg-gradient-to-tr from-[#2d6a4f] to-[#1a5c1a] rounded-[32px] overflow-hidden p-8 lg:p-12 text-white group border border-white/10 shadow-xl">
+            {/* Background accents */}
             <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
             <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
 
@@ -409,14 +417,16 @@ export const HeroSection: React.FC = () => {
                 <span className="text-2xl font-bold mb-2">{t('off')}</span>
               </div>
             </div>
-            <img src={of3} className="absolute right-8 top-1/2 -translate-y-1/2 w-[320px] lg:w-[400px] transition-transform duration-700 group-hover:scale-105 group-hover:rotate-2" alt="Fruits" />
+            <img src={of3} className="absolute right-4 top-1/2 -translate-y-1/2 w-[380px] lg:w-[500px] transition-transform duration-700 group-hover:scale-105 group-hover:rotate-2" alt="Fruits" />
           </div>
         </div>
       </section>
 
-      {/* ========== SUBSCRIPTION BANNER ========== */}
+      {/* Subscription / cashback banner */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-10">
-        <div className="bg-[#2E8B2E] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group border border-white/5">
+        <div className="bg-[#2d6a4f] rounded-[40px] p-10 lg:p-20 text-white relative overflow-hidden group border border-white/5">
+          {/* Imigongo pattern overlay */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
           <div className="relative z-10 max-w-2xl space-y-6">
 
             <h2 className="text-4xl font-bold leading-tight">
@@ -431,13 +441,142 @@ export const HeroSection: React.FC = () => {
         </div>
       </section>
 
-      {/* ========== HOW IT WORKS ========== */}
-      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-20">
+      {/* Experience MoFresh app */}
+      <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16 relative">
+        <div className="relative bg-gradient-to-br from-[#f0fff0] via-white to-[#e8fce8] dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-[48px] overflow-hidden border border-gray-100 dark:border-gray-700 shadow-xl min-h-[600px] lg:min-h-[700px] flex flex-col justify-center">
+
+          {/* Subtle Pattern Overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]" style={{ backgroundImage: imigongoPattern.replace('%23ffffff', '%23000000'), backgroundSize: '40px 20px' }} />
+
+          {/* Main Content Grid */}
+          <div className="relative z-20 grid grid-cols-1 lg:grid-cols-10 items-center gap-0">
+
+            {/* LEFT CHARACTER - Desktop Only */}
+            <div className="hidden lg:flex lg:col-span-3 justify-end items-end self-end pt-20">
+              <motion.img
+                initial={{ opacity: 1, x: 0 }}
+                animate={{ x: [0, 15, 0] }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                src={appUser1}
+                className="w-full max-w-[420px] xl:max-w-[480px] object-contain drop-shadow-2xl translate-y-4"
+              />
+            </div>
+
+            {/* CENTER CONTENT: Text and CTA (Responsive padding) */}
+            <div className="lg:col-span-4 text-center space-y-8 py-12 px-6">
+              <div className="inline-block px-5 py-2 rounded-full bg-[#2E8B2E]/10 border border-[#2E8B2E]/20">
+                <span className="text-[#2E8B2E] text-sm font-black tracking-widest uppercase">MoFresh Online</span>
+              </div>
+
+              <h2 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white leading-[0.95] tracking-tighter">
+                {t('appShowcaseTitle')}
+              </h2>
+
+              <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+                {t('appShowcaseDesc')}
+              </p>
+
+              <div className="pt-4">
+                <Link to="/register" className="group bg-[#2E8B2E] hover:bg-[#257325] text-white font-bold text-lg px-12 h-16 rounded-2xl inline-flex items-center gap-3 transition-all hover:scale-105 shadow-xl shadow-green-900/20">
+                  {t('getStartedFree')} <ArrowRight className="w-6 h-6" />
+                </Link>
+              </div>
+            </div>
+
+            {/* RIGHT CHARACTER - Desktop Only */}
+            <div className="hidden lg:flex lg:col-span-3 justify-start items-end self-end relative h-[550px]">
+              {/* Secondary App UI - slides in from right */}
+              <motion.img
+                initial={{ opacity: 1, x: 0, rotate: -8 }}
+                animate={{ x: [0, -10, 0] }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                src={appUser2}
+                className="absolute bottom-0 left-0 w-[300px] xl:w-[340px] object-contain drop-shadow-2xl z-0"
+              />
+              {/* Highlight Dashboard Preview - slides in from right with delay */}
+              <motion.img
+                initial={{ opacity: 1, x: 0, rotate: 5 }}
+                animate={{ x: [0, 20, 0] }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                src={appUser3}
+                className="absolute bottom-10 left-24 w-[340px] xl:w-[400px] object-contain drop-shadow-2xl z-10"
+              />
+            </div>
+
+            {/* MOBILE CHARACTERS: Optimized for small screens */}
+            <div className="flex lg:hidden flex-col items-center justify-end w-full px-4 overflow-hidden pt-10 pb-8">
+              <div className="relative flex items-end justify-center w-full h-[350px]">
+                <motion.img
+                  initial={{ opacity: 1, x: 0 }}
+                  animate={{ x: [0, 8, 0] }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  src={appUser1}
+                  className="w-[140px] object-contain drop-shadow-xl z-0 -mr-16 translate-y-8"
+                  alt=""
+                />
+                <motion.img
+                  initial={{ opacity: 1, x: 0 }}
+                  animate={{ x: [-5, 5, -5] }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  src={appUser2}
+                  className="w-[160px] object-contain drop-shadow-xl z-10 -mr-16 translate-y-4"
+                  alt=""
+                />
+                <motion.img
+                  initial={{ opacity: 1, x: 0 }}
+                  animate={{ x: [0, -8, 0] }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  src={appUser3}
+                  className="w-[180px] object-contain drop-shadow-xl z-20 translate-y-6"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* THE GRASS BOTTOM */}
+          <div
+            className="absolute bottom-0 left-0 w-full h-24 md:h-32 pointer-events-none z-30"
+            style={{
+              backgroundImage: `url(${grass})`,
+              backgroundRepeat: 'repeat-x',
+              backgroundSize: 'auto 100%',
+              backgroundPosition: 'bottom center',
+            }}
+          />
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-20 scroll-mt-24">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl lg:text-5xl font-black dark:text-white">
             {t(' HOW ')} <span className="text-[#2E8B2E]">{t('heroTitle6')}</span> {t('WORKS')}
           </h2>
-
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {steps.map((step) => {
@@ -456,43 +595,43 @@ export const HeroSection: React.FC = () => {
         </div>
       </section>
 
-      {/* ========== TESTIMONIALS SLIDER ========== */}
+      {/* Testimonials */}
       <section
         className="py-12 md:py-24 relative overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,.9), rgba(0,0,0,.9)), url(${cli1})`,
+          backgroundImage: `linear-gradient(rgba(11,61,46,.92), rgba(11,61,46,.92)), url(${cli1})`,
           backgroundSize: "cover",
           backgroundAttachment: "fixed",
         }}
       >
+        {/* Imigongo pattern overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
         <div className="max-w-6xl mx-auto px-6 overflow-hidden">
-          {/* -------- SLIDER CONTAINER -------- */}
+          {/* Slider track */}
           <div
             className="flex transition-transform duration-1000 ease-in-out"
             style={{ transform: `translateX(-${page * 100}%)` }}
           >
             {groups.map((group, i) => (
-              // -------- EACH SLIDE --------
               <div
                 key={i}
                 className="w-full flex-shrink-0 grid md:grid-cols-2 gap-6 md:gap-10 px-0 sm:px-2 md:px-4"
               >
-                {group.map((t) => (
-                  // -------- EACH TESTIMONIAL CARD --------
+                {group.map((testimonial) => (
                   <div
-                    key={t.id}
+                    key={testimonial.id}
                     className="bg-white/5 backdrop-blur-lg p-6 md:p-10 rounded-[24px] md:rounded-[40px] text-white border border-white/10"
                   >
-                    <p className="text-base md:text-lg italic mb-6 md:mb-8 leading-relaxed">"{t.text}"</p>
+                    <p className="text-base md:text-lg italic mb-6 md:mb-8 leading-relaxed">"{testimonial.text}"</p>
                     <div className="flex items-center gap-4 md:gap-6">
                       <img
-                        src={t.avatar}
+                        src={testimonial.avatar}
                         className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-[#2E8B2E]"
-                        alt={t.author}
+                        alt={testimonial.author}
                       />
                       <div>
-                        <h4 className="font-black text-lg md:text-xl">{t.author}</h4>
-                        <p className="text-[#2E8B2E] font-medium text-sm md:text-base">{t.role}</p>
+                        <h4 className="font-black text-lg md:text-xl">{testimonial.author}</h4>
+                        <p className="text-[#2E8B2E] font-medium text-sm md:text-base">{testimonial.role}</p>
                       </div>
                     </div>
                   </div>
@@ -502,8 +641,6 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
       </section>
-
-
     </div>
   );
 };
