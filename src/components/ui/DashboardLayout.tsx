@@ -111,6 +111,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { name: 'Dashboard', icon: LayoutDashboard },
           { name: 'Hub Inventory', icon: Package },
           { name: 'Asset Control', icon: Wrench },
+          { name: 'Vendor Requests', icon: UserPlus },
           { name: 'Reports', icon: FileText },
           { name: 'Settings', icon: SettingsIcon },
         ];

@@ -15,6 +15,7 @@ import { updateUser } from '@/store/authSlice';
 import { reportsService, rentalsService } from '@/api';
 import { HubInventory } from './site/HubInventory';
 import { AssetControl } from './site/AssetControl';
+import { SupplierRequests } from './admin/SupplierRequests';
 import { toast } from 'sonner';
 import { RefreshCw } from 'lucide-react';
 import type { MockSite } from '@/store/mockDataSlice';
@@ -148,6 +149,8 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
         return <HubInventory />;
       case 'Asset Control':
         return <AssetControl />;
+      case 'Vendor Requests':
+        return <SupplierRequests />;
       case 'Maintenance':
         return <div className="p-12 text-center text-gray-400">Maintenance scheduling coming soon...</div>;
       case 'Reports':
