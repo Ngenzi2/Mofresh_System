@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+<<<<<<< HEAD
 import { X, Mail, Loader2, CheckCircle, Store, FileText, Phone } from 'lucide-react';
+=======
+import { X, Mail, Loader2, CheckCircle, Store, FileText, MapPin } from 'lucide-react';
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 import { toast } from 'sonner';
 import { validateEmail } from '@/utils/validation.utils';
 import { usersService } from '@/api';
@@ -128,7 +132,11 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                       <div className="relative group">
+<<<<<<< HEAD
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
+=======
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
                         <input
                           type="tel"
                           value={phone}

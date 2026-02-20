@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Calendar, MapPin, UserCheck, UserPlus, Loader2, Mail, Send } from 'lucide-react';
+=======
+import { motion } from 'framer-motion';
+import { Check, X, Calendar, MapPin, UserCheck, UserPlus, Loader2 } from 'lucide-react';
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 import { toast } from 'sonner';
 import { usersService } from '@/api';
 
@@ -12,6 +17,7 @@ interface VendorRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdAt: string;
 }
+<<<<<<< HEAD
 
 interface ReplyModalProps {
   isOpen: boolean;
@@ -117,11 +123,14 @@ const ReplyModal: React.FC<ReplyModalProps> = ({ isOpen, onClose, onSubmit, emai
     </AnimatePresence>
   );
 };
+=======
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 
 export const SupplierRequests: React.FC = () => {
   const [requests, setRequests] = useState<VendorRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+<<<<<<< HEAD
   // Modal State
   const [replyModal, setReplyModal] = useState<{
     isOpen: boolean;
@@ -133,6 +142,8 @@ export const SupplierRequests: React.FC = () => {
     action: 'APPROVE'
   });
 
+=======
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -143,6 +154,7 @@ export const SupplierRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
+<<<<<<< HEAD
   };
 
   useEffect(() => {
@@ -168,6 +180,25 @@ export const SupplierRequests: React.FC = () => {
     } catch (error: any) {
       toast.error(error.message || 'Failed to reply to vendor request');
       throw error;
+=======
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleReply = async (email: string, action: 'APPROVE' | 'REJECT') => {
+    const message = action === 'APPROVE'
+      ? "Thank you for your request. We have approved your application. Please proceed to registration."
+      : "Thank you for your interest. Unfortunately, we cannot approve your request at this time.";
+
+    try {
+      await usersService.replyVendorRequest({ email, message });
+      toast.success(`Vendor request ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reply to vendor request');
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
     }
   };
 
@@ -235,13 +266,21 @@ export const SupplierRequests: React.FC = () => {
 
               <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
                 <button
+<<<<<<< HEAD
                   onClick={() => openReplyModal(req.email, 'REJECT')}
+=======
+                  onClick={() => handleReply(req.email, 'REJECT')}
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 border border-red-100 text-red-500 hover:bg-red-50 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all"
                 >
                   <X className="w-4 h-4" /> Reject
                 </button>
                 <button
+<<<<<<< HEAD
                   onClick={() => openReplyModal(req.email, 'APPROVE')}
+=======
+                  onClick={() => handleReply(req.email, 'APPROVE')}
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
                   className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#2E8B2E] text-white hover:bg-[#1a4d2e] rounded-xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-[#2E8B2E]/20"
                 >
                   <Check className="w-4 h-4" /> Approve Vendor

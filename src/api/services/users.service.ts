@@ -18,6 +18,7 @@ import type {
 
 class UsersService {
   /**
+<<<<<<< HEAD
    * Register a new user (Unified endpoint: /api/v1/users/register)
    */
   async register(userData: any): Promise<UserEntity> {
@@ -34,6 +35,19 @@ class UsersService {
     }
   }
 
+=======
+   * Register a new user (Generic)
+   */
+  async register(userData: any): Promise<UserEntity> {
+    try {
+      const response = await apiClient.post<UserEntity>('/users/register', userData);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
   /**
    * Register a new personal client
    */
@@ -159,7 +173,11 @@ class UsersService {
    */
   async getVendorRequests(): Promise<(VendorRequestDto & { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED'; createdAt: string })[]> {
     try {
+<<<<<<< HEAD
       const response = await apiClient.get<any>('/users/vendor-requests');
+=======
+      const response = await apiClient.get<any>('/users/vendor-request');
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
       if (response.data?.data && Array.isArray(response.data.data)) {
         return response.data.data;
       }

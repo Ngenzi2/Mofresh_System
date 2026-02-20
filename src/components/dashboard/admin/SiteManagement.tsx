@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -17,14 +18,33 @@ export const SiteManagement: React.FC = () => {
   const [sites, setSites] = useState<SiteEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+=======
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, MapPin, Check, ExternalLink, X, Users, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { sitesService, usersService } from '@/api';
+import type { SiteEntity, UserEntity } from '@/types/api.types';
+
+export const SiteManagement: React.FC = () => {
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [users, setUsers] = useState<UserEntity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<SiteEntity | null>(null);
   const [formData, setFormData] = useState<Partial<SiteEntity>>({
+<<<<<<< HEAD
     name: "",
     location: "",
     managerId: "",
+=======
+    name: '',
+    location: '',
+    managerId: '',
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
   });
 
   const fetchSites = async () => {
@@ -32,14 +52,32 @@ export const SiteManagement: React.FC = () => {
       const data = await sitesService.getAllSites();
       setSites(data);
     } catch (error: any) {
+<<<<<<< HEAD
       toast.error("Failed to fetch sites");
+=======
+      toast.error('Failed to fetch sites');
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await usersService.getAllUsers();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      toast.error('Failed to fetch users');
+      setUsers([]);
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
     }
   };
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
+<<<<<<< HEAD
       await fetchSites();
+=======
+      await Promise.all([fetchSites(), fetchUsers()]);
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
       setLoading(false);
     };
     init();
@@ -51,11 +89,19 @@ export const SiteManagement: React.FC = () => {
       setFormData({
         name: site.name,
         location: site.location,
+<<<<<<< HEAD
         managerId: site.managerId || "",
       });
     } else {
       setEditingSite(null);
       setFormData({ name: "", location: "" });
+=======
+        managerId: site.managerId || '',
+      });
+    } else {
+      setEditingSite(null);
+      setFormData({ name: '', location: '', managerId: '' });
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
     }
     setIsModalOpen(true);
   };
@@ -80,12 +126,17 @@ export const SiteManagement: React.FC = () => {
         await sitesService.createSite({
           name: formData.name!,
           location: formData.location!,
+<<<<<<< HEAD
+=======
+          managerId: formData.managerId || undefined,
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
         });
         toast.success(`Site created: ${formData.name}`);
       }
       fetchSites();
       setIsModalOpen(false);
     } catch (error: any) {
+<<<<<<< HEAD
       toast.error(error.message || "Failed to save site");
     }
   };
@@ -106,6 +157,27 @@ export const SiteManagement: React.FC = () => {
     (s: SiteEntity) =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.location.toLowerCase().includes(searchTerm.toLowerCase()),
+=======
+      toast.error(error.message || 'Failed to save site');
+    }
+  };
+
+  const handleDeleteSite = async (id: string) => {
+    if (confirm('Are you sure you want to delete this site?')) {
+      try {
+        await sitesService.deleteSite(id);
+        toast.success('Site deleted');
+        fetchSites();
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete site');
+      }
+    }
+  };
+
+  const filteredSites = sites.filter((s: SiteEntity) =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.location.toLowerCase().includes(searchTerm.toLowerCase())
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
   );
 
   return (
@@ -141,23 +213,32 @@ export const SiteManagement: React.FC = () => {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Loader2 className="w-10 h-10 text-[#1a4d2e] animate-spin" />
+<<<<<<< HEAD
           <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">
             Loading sites...
           </p>
+=======
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading sites...</p>
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredSites.map((site) => (
+<<<<<<< HEAD
             <div
               key={site.id}
               className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all"
             >
+=======
+            <div key={site.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all">
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-green-50 text-[#38a169] rounded-2xl flex items-center justify-center">
                     <MapPin className="w-7 h-7" />
                   </div>
                   <div>
+<<<<<<< HEAD
                     <h3 className="text-xl font-black text-gray-900">
                       {site.name}
                     </h3>
@@ -181,10 +262,21 @@ export const SiteManagement: React.FC = () => {
                   >
                     <Trash2 className="w-5 h-5 text-gray-400 hover:text-red-600" />
                   </button>
+=======
+                    <h3 className="text-xl font-black text-gray-900">{site.name}</h3>
+                    <p className="text-sm font-bold text-gray-400">{site.location}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleOpenModal(site)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                    <ExternalLink className="w-5 h-5 text-gray-400 hover:text-[#1a4d2e]" />
+                  </button>
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
                 </div>
               </div>
 
               <div className="mb-6">
+<<<<<<< HEAD
                 <div className="flex justify-between items-center text-xs mb-1.5"></div>
               </div>
 
@@ -194,6 +286,26 @@ export const SiteManagement: React.FC = () => {
                 >
                   OPERATIONAL
                 </span>
+=======
+                <div className="flex justify-between items-center text-xs mb-1.5">
+                  <span className="font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Users className="w-3 h-3 text-[#ffb703]" />
+                    {users.find(u => u.id === site.managerId)?.firstName || 'Unassigned'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider bg-green-50 text-green-600`}>
+                  OPERATIONAL
+                </span>
+                <button
+                  onClick={() => handleDeleteSite(site.id)}
+                  className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                >
+                  Decommission
+                </button>
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
               </div>
             </div>
           ))}
@@ -246,7 +358,23 @@ export const SiteManagement: React.FC = () => {
                   required
                 />
               </div>
+<<<<<<< HEAD
               {editingSite && <div className="space-y-2"></div>}
+=======
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assigned Manager</label>
+                <select
+                  value={formData.managerId || ''}
+                  onChange={e => setFormData({ ...formData, managerId: e.target.value })}
+                  className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                >
+                  <option value="">Unassigned</option>
+                  {Array.isArray(users) && users.filter(u => u.role === 'SITE_MANAGER').map(u => (
+                    <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
+                  ))}
+                </select>
+              </div>
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 
               <button
                 type="submit"

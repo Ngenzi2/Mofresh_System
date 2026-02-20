@@ -36,8 +36,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       {/* Overlay */}
       <div className="fixed inset-0 z-10 bg-black/40 backdrop-blur-[2px] transition-all duration-500" />
 
+<<<<<<< HEAD
       {/* Auth modal - Full Page */}
       <div className="relative z-20 min-h-screen flex items-stretch justify-center">
+=======
+      {/* Auth modal */}
+      <div className="relative z-20 min-h-screen flex items-center justify-center p-4 lg:p-8">
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -45,7 +50,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           className="w-full flex flex-col lg:flex-row bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300"
         >
           {/* Left panel — branding with Imigongo pattern */}
+<<<<<<< HEAD
           <div className="hidden lg:flex w-[45%] xl:w-[40%] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-20 flex-col justify-center text-white overflow-hidden">
+=======
+          <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-16 flex-col justify-center text-white overflow-hidden">
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
             {/* Imigongo pattern overlay */}
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
             {/* Background accents */}

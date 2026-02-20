@@ -2,7 +2,11 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { authService, usersService } from '@/api';
 import type { UserEntity } from '@/types/api.types';
+<<<<<<< HEAD
 import { UserRole, AccountType } from '@/types/api.types';
+=======
+import { UserRole } from '@/types/api.types';
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
 
 // Map backend roles to frontend roles
 const mapBackendRole = (role: UserRole): 'BUYER' | 'SITE_MANAGER' | 'ADMIN' | 'SUPPLIER' => {
@@ -195,6 +199,7 @@ export const registerUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+<<<<<<< HEAD
       const payload: any = {
         email,
         firstName,
@@ -213,6 +218,31 @@ export const registerUser = createAsyncThunk(
       } else if (accountType === 'personal') {
         payload.accountType = AccountType.PERSONAL;
         payload.nationalIdDocument = nationalIdDocument;
+=======
+      if (accountType === 'personal') {
+        await usersService.registerPersonalClient({
+          email,
+          firstName,
+          lastName,
+          phone,
+          password,
+          siteId,
+          nationalIdDocument,
+        });
+      } else {
+        await usersService.registerBusinessClient({
+          email,
+          firstName,
+          lastName,
+          phone,
+          businessName: businessName!,
+          tinNumber: tinNumber!,
+          businessCertificateDocument: businessCertificateDocument!,
+          password,
+          siteId,
+          nationalIdDocument,
+        });
+>>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
       }
 
       await usersService.register(payload);
