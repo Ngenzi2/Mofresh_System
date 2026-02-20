@@ -45,9 +45,11 @@ export const ContactPage = () => {
   return (
     <div className="bg-white dark:bg-gray-900 transition-colors selection:bg-[#9be15d] overflow-x-hidden">
 
-      {/* ========== HERO SECTION ========== */}
+      {/* Hero section */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-6 lg:py-8">
         <div className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden bg-[#2d6a4f] py-20 lg:py-32 border border-white/10">
+          {/* Imigongo pattern overlay */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`, backgroundSize: '100px 50px' }} />
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#9be15d] opacity-10 rounded-full blur-[120px] -mr-40 -mt-40" />
           <div className="relative z-10 text-center px-6">
             <motion.span
@@ -69,7 +71,7 @@ export const ContactPage = () => {
         </div>
       </section>
 
-      {/* ========== CONTACT CONTENT ========== */}
+      {/* Contact form and info */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
 
@@ -183,7 +185,7 @@ export const ContactPage = () => {
         </div>
       </section>
 
-      {/* ========== LIVE MAP: MOFRESH HUB ========== */}
+      {/* Map section */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 pb-24">
         <div className="relative h-[600px] w-full rounded-[56px] overflow-hidden border-8 border-white dark:border-gray-800">
           <iframe

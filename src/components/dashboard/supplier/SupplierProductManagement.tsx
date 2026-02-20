@@ -1,40 +1,60 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Package, ImageIcon } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-  addProduct, updateProduct, deleteProduct,
-  type MockProduct
-} from '@/store/mockDataSlice';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit2, Trash2, X, Package, ImageIcon, Loader2 } from 'lucide-react';
+import { useAppSelector } from '@/store/hooks';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { productsService, sitesService } from '@/api';
+import type { ProductEntity, SiteEntity } from '@/types/api.types';
 
 export const SupplierProductManagement: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { products, categories, sites } = useAppSelector((state) => state.mockData);
   const { user } = useAppSelector((state) => state.auth);
 
+  const [products, setProducts] = useState<ProductEntity[]>([]);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<MockProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductEntity | null>(null);
 
-  const [formData, setFormData] = useState<Partial<MockProduct>>({
+  const [formData, setFormData] = useState<Partial<ProductEntity>>({
     name: '',
-    price: 0,
-    stock: 0,
-    categoryId: '',
-    status: 'ACTIVE',
+    sellingPricePerUnit: 0,
+    quantityKg: 0,
+    category: 'Vegetables',
+    isActive: true,
     imageUrl: '',
     siteId: '',
-    description: ''
+    description: '',
+    unit: 'kg'
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Filter products to only show those belonging to this supplier
-  const supplierProducts = products.filter(p => p.supplierId === user?.id && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [allProds, allSites] = await Promise.all([
+        productsService.getAllProducts(),
+        sitesService.getAllSites()
+      ]);
+      // Filter products for this supplier
+      setProducts(allProds.filter(p => p.supplierId === user?.id));
+      setSites(allSites);
+    } catch (error: any) {
+      toast.error('Failed to fetch data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleOpenModal = (product?: MockProduct) => {
+  useEffect(() => {
+    fetchData();
+  }, [user?.id]);
+
+  const supplierProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const handleOpenModal = (product?: ProductEntity) => {
     if (product) {
       setEditingProduct(product);
       setFormData(product);
@@ -43,14 +63,15 @@ export const SupplierProductManagement: React.FC = () => {
       setEditingProduct(null);
       setFormData({
         name: '',
-        price: 0,
-        stock: 0,
-        categoryId: categories[0]?.id || '',
-        status: 'ACTIVE',
+        sellingPricePerUnit: 0,
+        quantityKg: 0,
+        category: 'Vegetables',
+        isActive: true,
         imageUrl: '',
         siteId: sites[0]?.id || '',
         description: '',
-        supplierId: user?.id
+        supplierId: user?.id,
+        unit: 'kg'
       });
       setImagePreview(null);
     }
@@ -70,28 +91,47 @@ export const SupplierProductManagement: React.FC = () => {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.categoryId || !formData.siteId) {
+    if (!formData.name || !formData.category || !formData.siteId) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (editingProduct) {
-      dispatch(updateProduct({ ...editingProduct, ...formData } as MockProduct));
-      toast.success('Product updated successfully');
-    } else {
-      dispatch(addProduct({
-        id: `p-${Date.now()}`,
-        ...formData,
-        supplierId: user?.id
-      } as MockProduct));
-      toast.success('Product listed in marketplace');
+    try {
+      if (editingProduct) {
+        await productsService.updateProduct(editingProduct.id, {
+          ...formData,
+          price: undefined,
+          image: undefined
+        } as any);
+        toast.success('Product updated successfully');
+      } else {
+        await productsService.createProduct({
+          ...formData,
+          supplierId: user?.id
+        } as any);
+        toast.success('Product listed in marketplace');
+      }
+      fetchData();
+      setIsModalOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save product');
     }
-    setIsModalOpen(false);
   };
 
-  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'General';
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this listing?')) {
+      try {
+        await productsService.deleteProduct(id);
+        toast.success('Product deleted');
+        fetchData();
+      } catch (error: any) {
+        toast.error('Failed to delete product');
+      }
+    }
+  };
+
   const getSiteName = (id: string) => sites.find(s => s.id === id)?.name || 'Central';
 
   return (
@@ -120,67 +160,80 @@ export const SupplierProductManagement: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {supplierProducts.map(product => (
-          <motion.div
-            key={product.id}
-            layout
-            className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden group hover:border-[#38a169]/30 transition-all hover:shadow-xl hover:shadow-gray-200/50"
-          >
-            <div className="h-48 bg-gray-50 relative overflow-hidden">
-              {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-                  <Package className="w-12 h-12" />
-                  <span className="text-[10px] font-black uppercase tracking-widest mt-2">No Image</span>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-[#2E8B2E] animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading Products...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {supplierProducts.map(product => (
+            <motion.div
+              key={product.id}
+              layout
+              className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden group hover:border-[#38a169]/30 transition-all hover:shadow-xl hover:shadow-gray-200/50"
+            >
+              <div className="h-48 bg-gray-50 relative overflow-hidden">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                    <Package className="w-12 h-12" />
+                    <span className="text-[10px] font-black uppercase tracking-widest mt-2">No Image</span>
+                  </div>
+                )}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button onClick={() => handleOpenModal(product)} className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-600 rounded-xl transition-all shadow-sm">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(product.id)} className="p-2 bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-500 rounded-xl transition-all shadow-sm">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button onClick={() => handleOpenModal(product)} className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-600 rounded-xl transition-all shadow-sm">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button onClick={() => dispatch(deleteProduct(product.id))} className="p-2 bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-500 rounded-xl transition-all shadow-sm">
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <div className="flex justify-between items-start">
-                  <h3 className="font-black text-gray-900 text-lg leading-tight">{product.name}</h3>
-                  <span className="text-sm font-black text-[#1a4d2e]">{product.price.toLocaleString()} Rwf</span>
+              <div className="p-6 space-y-4">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-black text-gray-900 text-lg leading-tight">{product.name}</h3>
+                    <span className="text-sm font-black text-[#1a4d2e]">{(product.sellingPricePerUnit || 0).toLocaleString()} Rwf</span>
+                  </div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{product.category}</p>
                 </div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{getCategoryName(product.categoryId)}</p>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-gray-400">Inventory Presence</span>
-                  <span className={product.stock < 50 ? 'text-red-500' : 'text-green-600'}>{product.stock} units left</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-gray-400">Inventory Presence</span>
+                    <span className={product.quantityKg < 50 ? 'text-red-500' : 'text-green-600'}>{product.quantityKg} kg available</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${product.quantityKg < 50 ? 'bg-orange-400' : 'bg-[#38a169]'}`}
+                      style={{ width: `${Math.min((product.quantityKg / 1000) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${product.stock < 50 ? 'bg-orange-400' : 'bg-[#38a169]'}`}
-                    style={{ width: `${Math.min((product.stock / 500) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
 
-              <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Package className="w-3 h-3 text-gray-400" />
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{getSiteName(product.siteId || '')}</span>
+                <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-3 h-3 text-gray-400" />
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{getSiteName(product.siteId || '')}</span>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${product.isActive ? 'bg-green-50 text-[#38a169]' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                    {product.isActive ? 'ACTIVE' : 'INACTIVE'}
+                  </span>
                 </div>
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${product.status === 'ACTIVE' ? 'bg-green-50 text-[#38a169]' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                  {product.status}
-                </span>
               </div>
+            </motion.div>
+          ))}
+          {supplierProducts.length === 0 && (
+            <div className="col-span-full py-20 text-center bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100">
+              <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No products listed in your marketplace catalog</p>
             </div>
-          </motion.div>
-        ))}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Product List Modal */}
       <AnimatePresence>
@@ -216,11 +269,15 @@ export const SupplierProductManagement: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
                     <select
-                      value={formData.categoryId}
-                      onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                      value={formData.category}
+                      onChange={e => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#38a169]/20 outline-none font-bold"
                     >
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="Vegetables">Vegetables</option>
+                      <option value="Fruits">Fruits</option>
+                      <option value="Grains">Grains</option>
+                      <option value="Dairy">Dairy</option>
+                      <option value="Tubers">Tubers</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -230,6 +287,7 @@ export const SupplierProductManagement: React.FC = () => {
                       onChange={e => setFormData({ ...formData, siteId: e.target.value })}
                       className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#38a169]/20 outline-none font-bold"
                     >
+                      <option value="">Select Hub</option>
                       {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
@@ -240,17 +298,17 @@ export const SupplierProductManagement: React.FC = () => {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Price (Rwf)</label>
                     <input
                       type="number"
-                      value={formData.price}
-                      onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                      value={formData.sellingPricePerUnit || 0}
+                      onChange={e => setFormData({ ...formData, sellingPricePerUnit: Number(e.target.value) })}
                       className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#38a169]/20 outline-none font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Stock Level</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Stock Level (kg)</label>
                     <input
                       type="number"
-                      value={formData.stock}
-                      onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+                      value={formData.quantityKg || 0}
+                      onChange={e => setFormData({ ...formData, quantityKg: Number(e.target.value) })}
                       className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#38a169]/20 outline-none font-bold"
                     />
                   </div>

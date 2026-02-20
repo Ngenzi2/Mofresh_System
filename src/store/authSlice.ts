@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { authService, usersService } from '@/api';
 import type { UserEntity } from '@/types/api.types';
-import { UserRole, ClientAccountType } from '@/types/api.types';
+import { UserRole } from '@/types/api.types';
 
 // Map backend roles to frontend roles
 const mapBackendRole = (role: UserRole): 'BUYER' | 'SITE_MANAGER' | 'ADMIN' | 'SUPPLIER' => {
@@ -193,23 +193,30 @@ export const registerUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // Transform to backend format
-      const userData = {
-        email,
-        password,
-        firstName,
-        lastName,
-        phone,
-        role: UserRole.CLIENT,
-        clientAccountType: accountType.toUpperCase() as ClientAccountType,
-        tinNumber,
-        businessName,
-        nationalIdDocument,
-        businessCertificateDocument,
-        siteId,
-      };
-
-      await usersService.register(userData);
+      if (accountType === 'personal') {
+        await usersService.registerPersonalClient({
+          email,
+          firstName,
+          lastName,
+          phone,
+          password,
+          siteId,
+          nationalIdDocument,
+        });
+      } else {
+        await usersService.registerBusinessClient({
+          email,
+          firstName,
+          lastName,
+          phone,
+          businessName: businessName!,
+          tinNumber: tinNumber!,
+          businessCertificateDocument: businessCertificateDocument!,
+          password,
+          siteId,
+          nationalIdDocument,
+        });
+      }
 
       // Return email for OTP verification
       return { email };

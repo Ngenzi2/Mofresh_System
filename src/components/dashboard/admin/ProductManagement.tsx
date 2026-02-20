@@ -1,115 +1,116 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Package, LayoutGrid } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import React, { useState, useEffect } from 'react';
 import {
-  addProduct, updateProduct, deleteProduct,
-  addCategory, updateCategory, deleteCategory,
-  type MockProduct, type MockCategory
-} from '@/store/mockDataSlice';
+  Search, Plus, Edit2, Trash2, X, Package, LayoutGrid, Loader2
+} from 'lucide-react';
+import { productsService, usersService } from '@/api';
+import type { ProductEntity, UserEntity } from '@/types/api.types';
 import { toast } from 'sonner';
 
 export const ProductManagement: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { products, categories, users } = useAppSelector((state) => state.mockData);
-
-  const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
+  const [products, setProducts] = useState<ProductEntity[]>([]);
+  const [suppliers, setSuppliers] = useState<UserEntity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [prods, allUsers] = await Promise.all([
+        productsService.getAllProducts(),
+        usersService.getAllUsers()
+      ]);
+      setProducts(prods);
+      setSuppliers(allUsers.filter(u => u.role === 'SUPPLIER'));
+    } catch (error: any) {
+      toast.error('Failed to fetch data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Use unique categories from products as a fallback if no category service
+  const categoriesList = Array.from(new Set(products.map(p => p.category))).map((cat, index) => ({
+    id: `cat-${index}`,
+    name: cat,
+    description: `All ${cat} related products`
+  }));
 
   // Product Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<MockProduct | null>(null);
-  const [productForm, setProductForm] = useState<Partial<MockProduct>>({
-    status: 'ACTIVE',
-    price: 0,
-    stock: 0,
-  });
+  const [editingProduct, setEditingProduct] = useState<ProductEntity | null>(null);
+  const [productForm, setProductForm] = useState<Partial<ProductEntity>>({});
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
   const productImageInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Category Modal State
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<MockCategory | null>(null);
-  const [categoryForm, setCategoryForm] = useState<Partial<MockCategory>>({});
-
-  // Handlers for Products
-  const handleOpenProductModal = (product?: MockProduct) => {
+  const handleOpenProductModal = (product?: ProductEntity) => {
     if (product) {
       setEditingProduct(product);
       setProductForm(product);
       setProductImagePreview(product.imageUrl || null);
     } else {
       setEditingProduct(null);
-      setProductForm({ name: '', categoryId: categories[0]?.id || '', price: 0, stock: 0, supplierId: users.find(u => u.role === 'SUPPLIER')?.id || '', status: 'ACTIVE' });
+      setProductForm({
+        name: '',
+        category: categoriesList[0]?.name || 'Vegetables',
+        sellingPricePerUnit: 0,
+        quantityKg: 0,
+        supplierId: suppliers[0]?.id || '',
+        description: '',
+        unit: 'kg'
+      });
       setProductImagePreview(null);
     }
     setIsProductModalOpen(true);
   };
 
-  const handleProductImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProductImagePreview(base64String);
-        setProductForm(prev => ({ ...prev, imageUrl: base64String }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.categoryId || !productForm.supplierId) {
+    if (!productForm.name || !productForm.category || !productForm.supplierId) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (editingProduct) {
-      dispatch(updateProduct({ ...editingProduct, ...productForm } as MockProduct));
-      toast.success('Product updated');
-    } else {
-      dispatch(addProduct({ id: `p-${Date.now()}`, ...productForm } as MockProduct));
-      toast.success('Product added');
+    try {
+      if (editingProduct) {
+        await productsService.updateProduct(editingProduct.id, {
+          ...productForm,
+          price: undefined, // Cleanup compatibility props if present
+          image: undefined
+        } as any);
+        toast.success('Product updated');
+      } else {
+        await productsService.createProduct(productForm as any);
+        toast.success('Product added');
+      }
+      fetchData();
+      setIsProductModalOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save product');
     }
-    setIsProductModalOpen(false);
   };
 
-  // Handlers for Categories
-  const handleOpenCategoryModal = (category?: MockCategory) => {
-    if (category) {
-      setEditingCategory(category);
-      setCategoryForm(category);
-    } else {
-      setEditingCategory(null);
-      setCategoryForm({ name: '', description: '' });
+  const handleDeleteProduct = async (id: string) => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      try {
+        await productsService.deleteProduct(id);
+        toast.success('Product deleted');
+        fetchData();
+      } catch (error: any) {
+        toast.error('Failed to delete product');
+      }
     }
-    setIsCategoryModalOpen(true);
   };
 
-  const handleSaveCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!categoryForm.name) {
-      toast.error('Name is required');
-      return;
-    }
+  const filteredProducts = products.filter((p: ProductEntity) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredCategories = categoriesList.filter((c: any) => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    if (editingCategory) {
-      dispatch(updateCategory({ ...editingCategory, ...categoryForm } as MockCategory));
-      toast.success('Category updated');
-    } else {
-      dispatch(addCategory({ id: `c-${Date.now()}`, ...categoryForm } as MockCategory));
-      toast.success('Category added');
-    }
-    setIsCategoryModalOpen(false);
-  };
-
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'Unknown';
   const getSupplierName = (id: string) => {
-    const s = users.find(u => u.id === id);
+    const s = suppliers.find((u: UserEntity) => u.id === id);
     return s ? `${s.firstName} ${s.lastName}` : 'Unknown';
   };
 
@@ -121,7 +122,7 @@ export const ProductManagement: React.FC = () => {
           <p className="text-gray-500 text-sm">Manage the marketplace catalog and categories</p>
         </div>
         <button
-          onClick={() => activeTab === 'PRODUCTS' ? handleOpenProductModal() : handleOpenCategoryModal()}
+          onClick={() => activeTab === 'PRODUCTS' ? handleOpenProductModal() : toast.info('Category management is handled via products.')}
           className="flex items-center gap-2 bg-[#1a4d2e] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#143d24] transition-colors shadow-lg shadow-[#1a4d2e]/20"
         >
           <Plus className="w-4 h-4" /> {activeTab === 'PRODUCTS' ? 'Add Product' : 'Add Category'}
@@ -156,7 +157,12 @@ export const ProductManagement: React.FC = () => {
         />
       </div>
 
-      {activeTab === 'PRODUCTS' ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-[#1a4d2e] animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading Marketplace...</p>
+        </div>
+      ) : activeTab === 'PRODUCTS' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map(product => (
             <div key={product.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all">
@@ -171,14 +177,14 @@ export const ProductManagement: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-black text-gray-900">{product.name}</h3>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{getCategoryName(product.categoryId)}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{product.category}</p>
                   </div>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => handleOpenProductModal(product)} className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg">
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button onClick={() => dispatch(deleteProduct(product.id))} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg">
+                  <button onClick={() => handleDeleteProduct(product.id)} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -186,11 +192,11 @@ export const ProductManagement: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium">Price</span>
-                  <span className="font-black text-[#1a4d2e]">{product.price.toLocaleString()} Rwf</span>
+                  <span className="font-black text-[#1a4d2e]">{(product.sellingPricePerUnit || 0).toLocaleString()} Rwf</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium">Stock</span>
-                  <span className={`font-black ${product.stock < 50 ? 'text-red-500' : 'text-gray-900'}`}>{product.stock} units</span>
+                  <span className={`font-black ${product.quantityKg < 50 ? 'text-red-500' : 'text-gray-900'}`}>{product.quantityKg} kg</span>
                 </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-gray-50">
                   <span className="text-gray-500 font-medium text-xs uppercase tracking-tighter">Supplier</span>
@@ -211,16 +217,13 @@ export const ProductManagement: React.FC = () => {
                   </div>
                   <h3 className="font-black text-gray-900">{cat.name}</h3>
                 </div>
-                <button onClick={() => handleOpenCategoryModal(cat)} className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg">
-                  <Edit2 className="w-4 h-4" />
-                </button>
               </div>
               <p className="text-sm text-gray-500 line-clamp-2">{cat.description}</p>
               <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  {products.filter(p => p.categoryId === cat.id).length} Products
+                  {products.filter((p: ProductEntity) => p.category === cat.name).length} Products
                 </span>
-                <button onClick={() => dispatch(deleteCategory(cat.id))} className="text-red-400 hover:text-red-600">
+                <button disabled className="text-gray-300">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -254,21 +257,26 @@ export const ProductManagement: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Category</label>
                   <select
-                    value={productForm.categoryId}
-                    onChange={e => setProductForm({ ...productForm, categoryId: e.target.value })}
+                    value={productForm.category || ''}
+                    onChange={e => setProductForm({ ...productForm, category: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
                   >
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="Vegetables">Vegetables</option>
+                    <option value="Fruits">Fruits</option>
+                    <option value="Grains">Grains</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Tubers">Tubers</option>
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Supplier</label>
                   <select
-                    value={productForm.supplierId}
+                    value={productForm.supplierId || ''}
                     onChange={e => setProductForm({ ...productForm, supplierId: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
                   >
-                    {users.filter(u => u.role === 'SUPPLIER').map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+                    <option value="">Select Supplier</option>
+                    {suppliers.map((u: UserEntity) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
                   </select>
                 </div>
               </div>
@@ -277,17 +285,17 @@ export const ProductManagement: React.FC = () => {
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Price (Rwf)</label>
                   <input
                     type="number"
-                    value={productForm.price}
-                    onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                    value={productForm.sellingPricePerUnit || 0}
+                    onChange={e => setProductForm({ ...productForm, sellingPricePerUnit: Number(e.target.value) })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Stock</label>
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Stock (kg)</label>
                   <input
                     type="number"
-                    value={productForm.stock}
-                    onChange={e => setProductForm({ ...productForm, stock: Number(e.target.value) })}
+                    value={productForm.quantityKg || 0}
+                    onChange={e => setProductForm({ ...productForm, quantityKg: Number(e.target.value) })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
                   />
                 </div>
@@ -315,7 +323,18 @@ export const ProductManagement: React.FC = () => {
                 <input
                   type="file"
                   ref={productImageInputRef}
-                  onChange={handleProductImageChange}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const base64String = reader.result as string;
+                        setProductImagePreview(base64String);
+                        setProductForm(prev => ({ ...prev, imageUrl: base64String }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                   className="hidden"
                   accept="image/*"
                 />
@@ -330,53 +349,6 @@ export const ProductManagement: React.FC = () => {
               </div>
               <button type="submit" className="w-full mt-4 py-3 bg-[#1a4d2e] text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-[#1a4d2e]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                 Save Product
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] p-8 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-gray-900">{editingCategory ? 'Edit Category' : 'Add New Category'}</h3>
-              <button onClick={() => setIsCategoryModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            <form onSubmit={handleSaveCategory} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Category Name</label>
-                <input
-                  type="text"
-                  value={categoryForm.name || ''}
-                  onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Description</label>
-                <textarea
-                  value={categoryForm.description || ''}
-                  onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all h-24 resize-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Image URL</label>
-                <input
-                  type="text"
-                  value={categoryForm.imageUrl || ''}
-                  onChange={e => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium"
-                  placeholder="https://images.unsplash.com/..."
-                />
-              </div>
-              <button type="submit" className="w-full mt-4 py-3 bg-[#1a4d2e] text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-[#1a4d2e]/20 transition-all">
-                Save Category
               </button>
             </form>
           </div>

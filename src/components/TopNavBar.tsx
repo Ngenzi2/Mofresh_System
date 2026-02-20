@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 
 const navItems = [
   { label: "Home", to: "/" },
+  { label: "How it works", to: "/#how-it-works" },
   { label: "About", to: "/about" },
   { label: "Our services", to: "/OurImpact" },
   { label: "Featured Product", to: "/programs" },
@@ -23,7 +24,7 @@ export const TopNavBar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full h-[70px] sm:h-[80px] bg-background">
-      {/* ===== Mobile / Tablet ===== */}
+      {/* Mobile nav */}
       <div className="flex md:hidden items-center justify-between px-4 sm:px-6 h-full">
         <div className="flex items-center gap-2">
           <img
@@ -75,7 +76,7 @@ export const TopNavBar = () => {
         </Sheet>
       </div>
 
-      {/* ===== Desktop ===== */}
+      {/* Desktop nav */}
       <div className="hidden md:flex justify-center h-full">
         <NavigationMenu className="flex items-center gap-8 lg:gap-12 xl:gap-20 h-full px-4 lg:px-8">
           <img

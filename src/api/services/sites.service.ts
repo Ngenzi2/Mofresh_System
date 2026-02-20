@@ -11,8 +11,11 @@ class SitesService {
    */
   async getAllSites(): Promise<SiteEntity[]> {
     try {
-      const response = await apiClient.get<SiteEntity[]>('/sites');
-      return response.data;
+      const response = await apiClient.get<any>('/sites');
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }

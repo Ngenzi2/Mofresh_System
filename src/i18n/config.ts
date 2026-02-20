@@ -141,6 +141,7 @@ const resources = {
       emailAddressLabel: 'Email Address',
 
       // How it Works Steps
+      howMofreshWorksTitle: 'How MoFresh Works',
       step1Title: 'Direct Sourcing',
       step1Desc: 'We buy high-quality produce directly from local farmers.',
       step2Title: 'Cold Storage',
@@ -149,6 +150,14 @@ const resources = {
       step3Desc: 'Fresh produce is sold to local markets and individuals.',
       step4Title: 'Equipment Rentals',
       step4Desc: 'Rent our portable cold boxes for your transportation needs.',
+
+      // App showcase section
+      appShowcaseTitle: 'Fresh Groceries, One Click Away',
+      appShowcaseDesc: 'Browse, order, and track your fresh produce online — from farm to your doorstep in record time.',
+      appFeature1: 'Order Online',
+      appFeature2: 'Cold Storage',
+      appFeature3: 'Track Delivery',
+      getStartedFree: 'Get Started Free',
 
       // Categories
       vegetables: 'Vegetables',
@@ -480,6 +489,7 @@ const resources = {
       emailAddressLabel: 'Adresse e-mail',
 
       // How it Works Steps
+      howMofreshWorksTitle: 'Comment fonctionne MoFresh',
       step1Title: 'Approvisionnement Direct',
       step1Desc: 'Nous achetons des produits de haute qualité directement auprès des agriculteurs locaux.',
       step2Title: 'Stockage Frigorifique',
@@ -488,6 +498,14 @@ const resources = {
       step3Desc: 'Les produits frais sont vendus aux marchés locaux et aux particuliers.',
       step4Title: 'Location d\'Équipement',
       step4Desc: 'Louez nos boîtes frigorifiques portables pour vos besoins de transport.',
+
+      // App showcase section
+      appShowcaseTitle: 'Produits Frais, en Un Clic',
+      appShowcaseDesc: 'Parcourez, commandez et suivez vos produits frais en ligne — de la ferme à votre porte en un temps record.',
+      appFeature1: 'Commander en Ligne',
+      appFeature2: 'Stockage Froid',
+      appFeature3: 'Suivre la Livraison',
+      getStartedFree: 'Commencer Gratuitement',
 
       // Categories
       "Shop By Category": "Acheter par catégorie",
@@ -779,6 +797,7 @@ const resources = {
       emailAddressLabel: 'Aderesi ya Imeri',
 
       // How it Works Steps
+      howMofreshWorksTitle: 'Uko MoFresh Ikora',
       ' HOW ': "UBURYO",
       'WORKS': "IKORA",
       step1Title: 'Gugura ku Muhinzi',
@@ -789,6 +808,14 @@ const resources = {
       step3Desc: 'Umusaruro mushya ugurishwa mu masoko n\'abantu ku giti cyabo.',
       step4Title: 'Ubukode bw\'Ibikoresho',
       step4Desc: 'Kodesha amasanduku yacu akonje agendanwa ku bwawe.',
+
+      // App showcase section
+      appShowcaseTitle: 'Ibiribwa Bishya, Ukanda Rimwe',
+      appShowcaseDesc: 'Reba, utumize, kandi ukurikirane ibiribwa byawe bishya kuri interineti — kuva ku murima kugeza mu rugo rwawe.',
+      appFeature1: 'Gutumiza Kuri Internet',
+      appFeature2: 'Kubika mu Bukonje',
+      appFeature3: 'Gukurikirana Iyoherezwa',
+      getStartedFree: 'Tangira Ubuntu',
 
       // Categories
       "Shop By Category": "Gura hagendewe ku byiciro",

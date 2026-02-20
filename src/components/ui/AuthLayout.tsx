@@ -2,7 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/Logo.png';
-import Home from '@/pages/Home'; // Assuming this is your landing page component
+import Home from '@/pages/Home';
+
+// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
+const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -22,19 +25,18 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   return (
     <div className="relative min-h-screen w-full overflow-hidden font-sans bg-white dark:bg-black transition-colors duration-300">
 
-      {/* 1. BACKGROUND LAYER - The Home Page blurred */}
+      {/* Blurred Home page background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="opacity-40 blur-[10px] scale-105 brightness-90">
           <Home />
         </div>
-        {/* Dark mode overlay for better integration */}
         <div className="absolute inset-0 bg-black/20 dark:bg-black/60 mix-blend-overlay" />
       </div>
 
-      {/* 2. OVERLAY LAYER - Darkens the background for readability */}
+      {/* Overlay */}
       <div className="fixed inset-0 z-10 bg-black/40 backdrop-blur-[2px] transition-all duration-500" />
 
-      {/* 3. CONTENT LAYER - The Auth Modal */}
+      {/* Auth modal */}
       <div className="relative z-20 min-h-screen flex items-center justify-center p-4 lg:p-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -42,16 +44,18 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full max-w-5xl bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] flex flex-col lg:flex-row min-h-[700px] border border-transparent dark:border-gray-800 transition-colors duration-300"
         >
-          {/* LEFT PANEL - Green Branding */}
-          <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#2E8B2E] to-[#1a5c1a] relative p-16 flex-col justify-center text-white overflow-hidden">
-            {/* Decorative Elements */}
+          {/* Left panel — branding with Imigongo pattern */}
+          <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-16 flex-col justify-center text-white overflow-hidden">
+            {/* Imigongo pattern overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
+            {/* Background accents */}
             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-black/10 rounded-full blur-2xl translate-y-1/4 -translate-x-1/4 pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
 
-            {/* Circles from design */}
-            <div className="absolute top-12 left-12 w-32 h-32 rounded-full border-[3px] border-white/10" />
-            <div className="absolute -bottom-20 -right-10 w-80 h-80 rounded-full bg-white/5" />
+            {/* Imigongo diamond accents */}
+            <div className="absolute top-12 left-12 w-8 h-8 bg-[#9be15d]/20 rotate-45 pointer-events-none" />
+            <div className="absolute top-12 left-24 w-4 h-4 bg-[#9be15d]/15 rotate-45 pointer-events-none" />
+            <div className="absolute -bottom-20 -right-10 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
 
             <div className="relative z-10">
               <h1 className="text-[56px] font-black leading-[0.95] tracking-tighter mb-8 uppercase drop-shadow-sm">
@@ -63,9 +67,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             </div>
           </div>
 
-          {/* RIGHT PANEL - Form */}
+          {/* Right panel — form */}
           <div className="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col items-center justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
-            {/* Logo Section */}
             <div className="mb-10 text-center">
               <div className="inline-block p-2 mb-4 rounded-xl bg-gray-50 dark:bg-white/5">
                 <img src={logo} alt="MoFresh" className="h-12 w-auto mx-auto" />
@@ -74,12 +77,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
               <p className="text-gray-400 dark:text-gray-500 text-sm font-bold uppercase tracking-widest">{subtitle}</p>
             </div>
 
-            {/* Form Content */}
             <div className="w-full max-w-md">
               {children}
             </div>
 
-            {/* Footer Navigation */}
             <div className="mt-12 w-full text-center">
               <Link
                 to="/"

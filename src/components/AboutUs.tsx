@@ -7,15 +7,18 @@ import farmerImage from "@/assets/AboutHarvest.jpg";
 import basketImage from "@/assets/AbtHarvestInBox.jpeg";
 import teamImage from "@/assets/Hero.jpg";
 
+// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
+const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
+
 function AboutPage() {
   return (
     <div className="bg-white dark:bg-gray-900 transition-colors selection:bg-[#9be15d] selection:text-[#2d6a4f] overflow-x-hidden">
-      
-      {/* ========== PREMIUM HERO SECTION - SYNCED WITH CONTACT PAGE ========== */}
+
+      {/* Hero section */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-6 lg:py-8">
-        <div className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden min-h-[500px] lg:min-h-[600px] shadow-2xl flex items-center">
-          {/* Background Image with Zoom Animation */}
-          <motion.div 
+        <div className="relative rounded-[40px] lg:rounded-[56px] overflow-hidden bg-[#2d6a4f] py-24 lg:py-36 border border-white/10 shadow-2xl flex items-center">
+          {/* Background image */}
+          <motion.div
             initial={{ scale: 1.2 }}
             animate={{ scale: 1 }}
             transition={{ duration: 2, ease: "easeOut" }}
@@ -26,10 +29,12 @@ function AboutPage() {
               backgroundPosition: 'center',
             }}
           />
-          {/* Brand Overlay Gradients */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-[#2d6a4f]/80 to-transparent opacity-90" />
+          {/* Brand overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B3D2E] via-[#0B3D2E]/80 to-transparent opacity-90" />
+          {/* Imigongo pattern overlay */}
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#9be15d] opacity-20 rounded-full blur-[120px] -mr-20 -mt-20" />
-          
+
           <div className="relative z-10 px-8 lg:px-24 max-w-5xl">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -44,7 +49,7 @@ function AboutPage() {
                 Growing the <br />
                 <span className="text-[#9be15d] italic">Future</span> of Agri.
               </h1>
-              
+
               <nav className="flex items-center gap-3 text-white/50 font-bold pt-4 text-sm uppercase tracking-widest">
                 <Link to="/" className="hover:text-[#9be15d] transition-colors">Home</Link>
                 <span className="opacity-30">/</span>
@@ -55,14 +60,14 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* ========== STORY SECTION - DYNAMIC IMAGE COMPOSITION ========== */}
+      {/* Story section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-center">
-          
+
           {/* Left Side: Image Collage */}
           <div className="lg:col-span-6 relative">
             <div className="grid grid-cols-2 gap-4 lg:gap-8">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -71,23 +76,23 @@ function AboutPage() {
                 <div className="rounded-[32px] lg:rounded-[48px] overflow-hidden shadow-2xl h-[300px] lg:h-[450px] border-4 border-white dark:border-gray-800">
                   <img src={farmerImage} className="w-full h-full object-cover transition-transform hover:scale-110 duration-700" alt="Farmer" />
                 </div>
-                {/* Visual Accent */}
+                {/* Accent block */}
                 <div className="bg-[#2d6a4f] rounded-[32px] p-8 text-white shadow-xl aspect-square flex flex-col justify-center items-center text-center group">
                   <Leaf className="text-[#9be15d] w-12 h-12 mb-4 group-hover:rotate-12 transition-transform" />
                   <span className="text-4xl font-black text-[#9be15d]">100%</span>
                   <p className="text-xs font-bold uppercase tracking-widest opacity-70">Organic Focus</p>
                 </div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: -40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 className="space-y-4 lg:space-y-8"
               >
                 <div className="bg-[#9be15d] rounded-[32px] p-8 flex flex-col items-center justify-center text-center aspect-square shadow-xl">
-                    <Rocket className="w-16 h-16 text-[#2d6a4f] mb-4 animate-bounce" />
-                    <p className="text-[#2d6a4f] font-black leading-tight">Fastest Farm-to-Fork Logistics</p>
+                  <Rocket className="w-16 h-16 text-[#2d6a4f] mb-4 animate-bounce" />
+                  <p className="text-[#2d6a4f] font-black leading-tight">Fastest Farm-to-Fork Logistics</p>
                 </div>
                 <div className="rounded-[32px] lg:rounded-[48px] overflow-hidden shadow-2xl h-[300px] lg:h-[400px] border-4 border-white dark:border-gray-800">
                   <img src={basketImage} className="w-full h-full object-cover transition-transform hover:scale-110 duration-700" alt="Produce" />
@@ -135,12 +140,12 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* ========== VALUES SECTION - MATCHING CARDS ========== */}
+      {/* Values section */}
       <section className="max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Vision Card */}
-          <motion.div 
+          <motion.div
             whileHover={{ y: -10 }}
             className="bg-white dark:bg-gray-800 p-12 rounded-[48px] shadow-xl border border-gray-100 dark:border-gray-700 flex flex-col justify-between group"
           >
@@ -155,8 +160,8 @@ function AboutPage() {
             </div>
           </motion.div>
 
-          {/* History Card - Dark Mode Primary */}
-          <motion.div 
+          {/* History card */}
+          <motion.div
             whileHover={{ y: -10 }}
             className="bg-[#2d6a4f] p-12 rounded-[48px] shadow-2xl text-white relative overflow-hidden flex flex-col justify-between"
           >
@@ -173,21 +178,21 @@ function AboutPage() {
             <div className="relative z-10 pt-8 text-[#9be15d] font-black text-4xl">Since 2024</div>
           </motion.div>
 
-          {/* Team CTA Card */}
+          {/* CTA card */}
           <motion.div
             whileHover={{ y: -10 }}
             className="relative rounded-[48px] overflow-hidden shadow-2xl group min-h-[400px] flex flex-col justify-end p-12"
           >
             <img src={teamImage} className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Team" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#2d6a4f] via-[#2d6a4f]/20 to-transparent" />
-            
+
             <div className="relative z-10 space-y-6">
               <h2 className="text-4xl font-black text-white leading-tight">
                 Fresh produce. <br />
                 <span className="text-[#9be15d]">Better markets.</span>
               </h2>
               <Link to="/contact" className="inline-flex items-center gap-3 bg-white text-[#2d6a4f] px-8 py-4 rounded-2xl font-black hover:bg-[#9be15d] transition-all group/btn">
-                Contact Us 
+                Contact Us
                 <Phone className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />
               </Link>
             </div>

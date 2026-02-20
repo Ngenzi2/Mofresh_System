@@ -1,9 +1,11 @@
 // API Types based on Mofresh Backend API
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
   SITE_MANAGER = 'SITE_MANAGER',
   SUPPLIER = 'SUPPLIER',
   CLIENT = 'CLIENT',
+  VENDOR = 'VENDOR',
 }
 
 export enum ClientAccountType {
@@ -21,7 +23,6 @@ export enum PaymentStatus {
   PENDING = 'PENDING',
   SUCCESSFUL = 'SUCCESSFUL',
   FAILED = 'FAILED',
-  PAID = 'PAID',
 }
 
 export enum AuditAction {
@@ -33,6 +34,31 @@ export enum AuditAction {
   PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
   LOGIN = 'LOGIN',
   LOGOUT = 'LOGOUT',
+}
+
+export enum PowerType {
+  GRID = 'GRID',
+  SOLAR = 'SOLAR',
+  HYBRID = 'HYBRID',
+}
+
+export enum AssetType {
+  COLD_BOX = 'COLD_BOX',
+  COLD_PLATE = 'COLD_PLATE',
+  TRICYCLE = 'TRICYCLE',
+  COLD_ROOM = 'COLD_ROOM',
+}
+
+export enum AssetStatus {
+  AVAILABLE = 'AVAILABLE',
+  RENTED = 'RENTED',
+  MAINTENANCE = 'MAINTENANCE',
+  RETIRED = 'RETIRED',
+}
+
+export enum MovementType {
+  IN = 'IN',
+  OUT = 'OUT',
 }
 
 // Auth Types
@@ -84,31 +110,94 @@ export interface UserEntity {
   role: UserRole;
   siteId: string | null;
   isActive: boolean;
-  clientAccountType: ClientAccountType | null;
-  businessName: string | null;
-  tinNumber: string | null;
-  businessCertificateDocument: string | null;
-  nationalIdDocument: string | null;
-  profilePicture: string | null;
+  clientAccountType?: ClientAccountType;
+  businessName?: string;
+  tinNumber?: string;
+  businessCertificateDocument?: string | null;
+  nationalIdDocument?: string | null;
+  profilePicture?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
 }
 
-export interface CreateUserDto {
+export interface PaymentEntity {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod: string;
+  transactionReference?: string;
+  createdAt: string;
+}
+
+export interface RevenueReportFilters {
+  siteId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UnpaidInvoicesFilters {
+  siteId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RegisterClientPersonalDto {
   email: string;
-  password?: string;
   firstName: string;
   lastName: string;
   phone: string;
-  role: UserRole;
+  password: string;
   siteId?: string;
-  clientAccountType?: ClientAccountType;
-  businessName?: string;
-  tinNumber?: string;
-  businessCertificateDocument?: File;
   nationalIdDocument?: File;
-  avatar?: File;
+}
+
+export interface RegisterClientBusinessDto {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  businessName: string;
+  tinNumber: string;
+  businessCertificateDocument: File;
+  password: string;
+  siteId?: string;
+  nationalIdDocument?: File;
+}
+
+export interface RegisterSupplierDto {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  siteId: string;
+  businessName: string;
+  tinNumber: string;
+  businessCertificateDocument: File;
+  nationalIdDocument: File;
+  password?: string;
+}
+
+export interface RegisterSiteManagerDto {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  siteId: string;
+  password: string;
+}
+
+export interface VendorRequestDto {
+  email: string;
+  phone: string;
+  description: string;
+}
+
+export interface ReplyVendorRequestDto {
+  email: string;
+  message: string;
 }
 
 export interface UpdateUserDto {
@@ -118,13 +207,6 @@ export interface UpdateUserDto {
   isActive?: boolean;
   role?: UserRole;
   password?: string;
-  siteId?: string;
-  clientAccountType?: ClientAccountType;
-  businessName?: string;
-  tinNumber?: string;
-  businessCertificateDocument?: File;
-  nationalIdDocument?: File;
-  avatar?: File;
 }
 
 // Site Types
@@ -148,6 +230,177 @@ export interface UpdateSiteDto {
   name?: string;
   location?: string;
   managerId?: string;
+}
+
+// Infrastructure (ColdRoom) Types
+export interface ColdRoomEntity {
+  id: string;
+  name: string;
+  siteId: string;
+  totalCapacityKg: number;
+  usedCapacityKg: number;
+  temperatureMin: number;
+  temperatureMax: number;
+  powerType: PowerType;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreateColdRoomDto {
+  name: string;
+  siteId: string;
+  totalCapacityKg: number;
+  temperatureMin: number;
+  temperatureMax: number;
+  powerType: PowerType;
+}
+
+export interface ColdRoomOccupancy {
+  totalCapacityKg: number;
+  usedCapacityKg: number;
+  availableKg: number;
+  occupancyPercentage: number;
+  canAcceptMore: boolean;
+}
+
+// Logistics (Cold Assets) Types
+export interface TricycleEntity {
+  id: string;
+  plateNumber: string;
+  siteId: string;
+  capacity: string;
+  category: string;
+  imageUrl?: string;
+  status: AssetStatus;
+}
+
+export interface ColdBoxEntity {
+  id: string;
+  identificationNumber: string;
+  sizeOrCapacity: string;
+  siteId: string;
+  location: string;
+  imageUrl?: string;
+  status: AssetStatus;
+}
+
+export interface ColdPlateEntity {
+  id: string;
+  identificationNumber: string;
+  coolingSpecification: string;
+  siteId: string;
+  imageUrl?: string;
+  status: AssetStatus;
+}
+
+export interface CreateTricycleDto {
+  plateNumber: string;
+  siteId: string;
+  capacity: string;
+  category: string;
+  imageUrl?: string;
+}
+
+export interface CreateColdBoxDto {
+  identificationNumber: string;
+  sizeOrCapacity: string;
+  siteId: string;
+  location: string;
+  imageUrl?: string;
+}
+
+export interface CreateColdPlateDto {
+  identificationNumber: string;
+  coolingSpecification: string;
+  siteId: string;
+  imageUrl?: string;
+}
+
+// Product Types
+export interface ProductEntity {
+  id: string;
+  name: string;
+  category: string;
+  quantityKg: number;
+  unit: string;
+  supplierId: string;
+  coldRoomId: string;
+  siteId: string;
+  sellingPricePerUnit: number;
+  price?: number; // Component Compatibility
+  imageUrl: string;
+  image?: string; // Component Compatibility
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface CreateProductDto {
+  name: string;
+  category: string;
+  quantityKg: number;
+  unit: string;
+  supplierId: string;
+  coldRoomId: string;
+  siteId: string;
+  sellingPricePerUnit: number;
+  imageUrl: string;
+  description: string;
+}
+
+export interface AdjustStockDto {
+  movementType: MovementType;
+  quantityKg: number;
+  reason: string;
+}
+
+// Stock Movement Types
+export interface StockMovementEntity {
+  id: string;
+  productId: string;
+  coldRoomId: string;
+  quantityKg: number;
+  movementType: MovementType;
+  reason: string;
+  createdAt: string;
+}
+
+export interface CreateStockMovementDto {
+  productId: string;
+  coldRoomId: string;
+  quantityKg: number;
+  movementType: MovementType;
+  reason: string;
+}
+
+// Order Types
+export enum OrderStatus {
+  REQUESTED = 'REQUESTED',
+  APPROVED = 'APPROVED',
+  INVOICED = 'INVOICED',
+  COMPLETED = 'COMPLETED',
+  REJECTED = 'REJECTED',
+}
+
+export interface CreateOrderDto {
+  deliveryAddress: string;
+  notes?: string;
+  items: { productId: string; quantityKg: number }[];
+}
+
+export interface OrderEntity {
+  id: string;
+  clientId: string;
+  siteId: string;
+  status: OrderStatus;
+  deliveryAddress: string;
+  notes: string;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Invoice Types
@@ -178,22 +431,23 @@ export interface InvoiceResponseDto {
   updatedAt: string;
 }
 
-export interface GenerateOrderInvoiceDto {
-  orderId: string;
-  dueDate?: string;
-}
-
-export interface GenerateRentalInvoiceDto {
-  rentalId: string;
-  dueDate?: string;
-}
-
 export interface MarkPaidDto {
-  paymentAmount: number;
+  paymentMethod: string;
+  reference?: string;
 }
 
 export interface VoidInvoiceDto {
   reason: string;
+}
+
+export interface GenerateOrderInvoiceDto {
+  orderId: string;
+  dueDate: string;
+}
+
+export interface GenerateRentalInvoiceDto {
+  rentalId: string;
+  dueDate: string;
 }
 
 // Payment Types
@@ -202,13 +456,38 @@ export interface InitiatePaymentDto {
   phoneNumber: string;
 }
 
-export interface PaymentEntity {
+// Rental Types
+export enum RentalStatus {
+  REQUESTED = 'REQUESTED',
+  APPROVED = 'APPROVED',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export interface CreateRentalDto {
+  assetType: AssetType;
+  coldBoxId?: string;
+  coldPlateId?: string;
+  tricycleId?: string;
+  coldRoomId?: string;
+  rentalStartDate: string;
+  rentalEndDate: string;
+  estimatedFee: number;
+  capacityNeededKg?: number;
+}
+
+export interface RentalEntity {
   id: string;
-  invoiceId: string;
-  amount: number;
-  status: PaymentStatus;
-  transactionRef: string;
-  phoneNumber: string;
+  clientId: string;
+  assetType: AssetType;
+  status: RentalStatus;
+  rentalStartDate: string;
+  rentalEndDate: string;
+  estimatedFee: number;
+  image?: string; // Component Compatibility
+  assetName?: string; // Component Compatibility
+  hubLocation?: string; // Component Compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -235,111 +514,17 @@ export interface AuditLogEntity {
 }
 
 // Report Types
-export interface RevenueReportFilters {
-  startDate?: string;
-  endDate?: string;
-  siteId?: string;
+export interface RevenueReportResponseDto {
+  totalRevenue: number;
+  productSales: number;
+  rentalIncome: number;
+  bySite?: Record<string, number>;
 }
 
-export interface UnpaidInvoicesFilters {
-  siteId?: string;
-  overdue?: boolean;
-  page?: number;
-  limit?: number;
-}
-
-// Product Types
-export interface ProductEntity {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  stockQuantity: number;
-  image: string;
-  category: string;
-  supplierId: string;
-  discount?: number;
-  rating?: number;
-  badge?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateProductDto {
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  stockQuantity: number;
-  category: string;
-  image?: File;
-}
-
-// Order Types
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-}
-
-export interface OrderItemEntity {
-  id: string;
-  orderId: string;
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  product?: ProductEntity;
-}
-
-export interface OrderEntity {
-  id: string;
-  clientId: string;
-  status: OrderStatus;
-  totalAmount: number;
-  items: OrderItemEntity[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateOrderDto {
-  items: { productId: string; quantity: number }[];
-}
-
-// Rental Types
-export enum RentalStatus {
-  ACTIVE = 'ACTIVE',
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  OVERDUE = 'OVERDUE',
-}
-
-export interface RentalEntity {
-  id: string;
-  clientId: string;
-  assetName: string; // e.g., "Smart Box 50L"
-  hubLocation: string;
-  startDate: string;
-  endDate: string;
-  status: RentalStatus;
-  totalPrice: number;
-  image?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateRentalDto {
-  assetName: string;
-  hubLocation: string;
-  startDate: string;
-  endDate: string;
-  quantity: number;
+export interface UnpaidInvoicesReportDto {
+  totalUnpaidAmount: number;
+  count: number;
+  invoices: InvoiceResponseDto[];
 }
 
 // API Response wrapper
