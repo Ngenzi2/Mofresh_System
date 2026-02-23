@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { verifyOtp, resendOtp } from '@/store/authSlice';
@@ -7,39 +7,20 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { AuthLayout } from '@/components/ui/AuthLayout';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/input-otp';
 
 export default function VerifyOTP() {
   const { t } = useTranslation();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState('');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isLoading, otpEmail } = useAppSelector((state) => state.auth);
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const otpString = otp.join('');
 
-    if (otpString.length === 6) {
-      const result = await dispatch(verifyOtp({ otp: otpString }));
+    if (otp.length === 6) {
+      const result = await dispatch(verifyOtp({ otp }));
 
       if (verifyOtp.fulfilled.match(result)) {
         toast.success(t('verificationSuccess') || 'Verified!');
@@ -59,7 +40,7 @@ export default function VerifyOTP() {
   const handleResendOtp = async () => {
     try {
       await dispatch(resendOtp());
-      setOtp(['', '', '', '', '', '']);
+      setOtp('');
       toast.success(t('newCodeSent') || 'New code sent!');
     } catch (error) {
       toast.error(t('resendFailed') || 'Failed to resend code');
@@ -83,20 +64,24 @@ export default function VerifyOTP() {
 
         <form onSubmit={handleSubmit} className="space-y-8 w-full">
           {/* OTP Inputs */}
-          <div className="flex justify-between gap-2 sm:gap-3">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                id={`otp-${index}`}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-full h-14 sm:h-16 text-center text-2xl font-black bg-gray-50/50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-2xl focus:ring-4 focus:ring-[#2E8B2E]/10 focus:border-[#2E8B2E] outline-none transition-all text-gray-900 dark:text-white"
-              />
-            ))}
+          <div className="flex justify-center">
+            <InputOTP
+              maxLength={6}
+              value={otp}
+              onChange={(value) => {
+                setOtp(value);
+                if (value.length === 6 && otp.length < 6) {
+                  toast.success(t('otpFilled') || 'Verification code filled');
+                }
+              }}
+              render={({ slots }) => (
+                <InputOTPGroup className="gap-2 sm:gap-3">
+                  {slots.map((slot, index) => (
+                    <InputOTPSlot key={index} {...slot} index={index} />
+                  ))}
+                </InputOTPGroup>
+              )}
+            />
           </div>
 
           <div className="space-y-5">
@@ -104,7 +89,7 @@ export default function VerifyOTP() {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               type="submit"
-              disabled={isLoading || otp.some((digit) => !digit)}
+              disabled={isLoading || otp.length !== 6}
               className="w-full bg-[#2E8B2E] hover:bg-[#1a4d2e] text-white font-black py-4.5 rounded-2xl transition-all shadow-xl shadow-[#2E8B2E]/10 hover:shadow shadow-[#2E8B2E]/20 disabled:opacity-50 uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-2"
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('verifyIdentity') || 'Verify Access'}

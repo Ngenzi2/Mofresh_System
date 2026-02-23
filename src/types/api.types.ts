@@ -8,7 +8,7 @@ export enum UserRole {
   VENDOR = 'VENDOR',
 }
 
-export enum ClientAccountType {
+export enum AccountType {
   PERSONAL = 'PERSONAL',
   BUSINESS = 'BUSINESS',
 }
@@ -110,7 +110,7 @@ export interface UserEntity {
   role: UserRole;
   siteId: string | null;
   isActive: boolean;
-  clientAccountType?: ClientAccountType;
+  accountType?: AccountType;
   businessName?: string;
   tinNumber?: string;
   businessCertificateDocument?: string | null;

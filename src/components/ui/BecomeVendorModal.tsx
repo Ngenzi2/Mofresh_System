@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Loader2, CheckCircle, Store, FileText, MapPin } from 'lucide-react';
+import { X, Mail, Loader2, CheckCircle, Store, FileText, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateEmail } from '@/utils/validation.utils';
 import { usersService } from '@/api';
@@ -128,7 +128,7 @@ export const BecomeVendorModal: React.FC<BecomeVendorModalProps> = ({ isOpen, on
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                       <div className="relative group">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#2E8B2E]" />
                         <input
                           type="tel"
                           value={phone}

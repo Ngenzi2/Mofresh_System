@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginUser, loginMock } from '@/store/authSlice';
-import { Lock, Mail, Eye, EyeOff, Loader2, Home, Store } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Loader2, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/ui/AuthLayout';
 import { BecomeVendorModal } from '@/components/ui/BecomeVendorModal';
 import { motion } from 'framer-motion';
+import { loginUser } from '@/store/authSlice';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -145,7 +145,7 @@ export default function Login() {
         </form>
 
         {/* Demo Login Buttons */}
-        <div className="mt-8 grid grid-cols-3 gap-2">
+        {/* <div className="mt-8 grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => dispatch(loginMock({
@@ -188,7 +188,7 @@ export default function Login() {
           >
             Buyer Demo
           </button>
-        </div>
+        </div> */}
 
         <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/[0.05] flex flex-col items-center gap-3">
           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
@@ -207,13 +207,13 @@ export default function Login() {
             Become a Vendor
           </motion.button>
 
-          <Link
+          {/* <Link
             to="/"
             className="flex items-center gap-2 text-[10px] font-black text-gray-400 dark:text-gray-600 hover:text-[#2E8B2E] uppercase tracking-wider transition-all mt-1"
           >
             <Home className="w-3 h-3" />
             {t('goBackHome')}
-          </Link>
+          </Link> */}
         </div>
       </div>
 

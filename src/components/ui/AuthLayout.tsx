@@ -36,16 +36,16 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       {/* Overlay */}
       <div className="fixed inset-0 z-10 bg-black/40 backdrop-blur-[2px] transition-all duration-500" />
 
-      {/* Auth modal */}
-      <div className="relative z-20 min-h-screen flex items-center justify-center p-4 lg:p-8">
+      {/* Auth modal - Full Page */}
+      <div className="relative z-20 min-h-screen flex items-stretch justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full max-w-5xl bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] flex flex-col lg:flex-row min-h-[700px] border border-transparent dark:border-gray-800 transition-colors duration-300"
+          className="w-full flex flex-col lg:flex-row bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300"
         >
           {/* Left panel — branding with Imigongo pattern */}
-          <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-16 flex-col justify-center text-white overflow-hidden">
+          <div className="hidden lg:flex w-[45%] xl:w-[40%] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-20 flex-col justify-center text-white overflow-hidden">
             {/* Imigongo pattern overlay */}
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }} />
             {/* Background accents */}

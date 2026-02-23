@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { authService, usersService } from '@/api';
 import type { UserEntity } from '@/types/api.types';
-import { UserRole } from '@/types/api.types';
+import { UserRole, AccountType } from '@/types/api.types';
 
 // Map backend roles to frontend roles
 const mapBackendRole = (role: UserRole): 'BUYER' | 'SITE_MANAGER' | 'ADMIN' | 'SUPPLIER' => {
@@ -67,7 +67,7 @@ const transformUser = (backendUser: UserEntity): User => {
     name: `${backendUser.firstName} ${backendUser.lastName}`,
     role: mapBackendRole(backendUser.role),
     location: backendUser.siteId || null,
-    accountType: backendUser.clientAccountType?.toLowerCase() as 'personal' | 'business',
+    accountType: backendUser.accountType?.toLowerCase() as 'personal' | 'business',
     firstName: backendUser.firstName,
     lastName: backendUser.lastName,
     phone: backendUser.phone,
@@ -177,8 +177,9 @@ export const registerUser = createAsyncThunk(
       nationalIdDocument,
       businessCertificateDocument,
       siteId,
+      role = UserRole.CLIENT,
     }: {
-      accountType: 'personal' | 'business';
+      accountType?: 'personal' | 'business';
       firstName: string;
       lastName: string;
       phone: string;
@@ -189,34 +190,32 @@ export const registerUser = createAsyncThunk(
       nationalIdDocument?: File;
       businessCertificateDocument?: File;
       siteId?: string;
+      role?: UserRole;
     },
     { rejectWithValue }
   ) => {
     try {
-      if (accountType === 'personal') {
-        await usersService.registerPersonalClient({
-          email,
-          firstName,
-          lastName,
-          phone,
-          password,
-          siteId,
-          nationalIdDocument,
-        });
-      } else {
-        await usersService.registerBusinessClient({
-          email,
-          firstName,
-          lastName,
-          phone,
-          businessName: businessName!,
-          tinNumber: tinNumber!,
-          businessCertificateDocument: businessCertificateDocument!,
-          password,
-          siteId,
-          nationalIdDocument,
-        });
+      const payload: any = {
+        email,
+        firstName,
+        lastName,
+        phone,
+        password,
+        siteId,
+        role,
+      };
+
+      if (accountType === 'business') {
+        payload.accountType = AccountType.BUSINESS;
+        payload.businessName = businessName;
+        payload.tinNumber = tinNumber;
+        payload.businessCertificateDocument = businessCertificateDocument;
+      } else if (accountType === 'personal') {
+        payload.accountType = AccountType.PERSONAL;
+        payload.nationalIdDocument = nationalIdDocument;
       }
+
+      await usersService.register(payload);
 
       // Return email for OTP verification
       return { email };

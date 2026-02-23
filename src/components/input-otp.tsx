@@ -44,14 +44,16 @@ function InputOTPSlot({
   index: number;
 }) {
   const inputOTPContext = React.useContext(OTPInputContext);
-  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
+  const slot = inputOTPContext?.slots?.[index] ?? props;
+  const { char, hasFakeCaret, isActive } = slot as any;
 
   return (
     <div
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "data-[active=true]:border-ring data-[active=true]:ring-ring/50 data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40 aria-invalid:border-destructive data-[active=true]:aria-invalid:border-destructive dark:bg-input/30 border-input relative flex h-9 w-9 items-center justify-center border-y border-r text-sm bg-input-background transition-all outline-none first:rounded-l-md first:border-l last:rounded-r-md data-[active=true]:z-10 data-[active=true]:ring-[3px]",
+        "relative flex h-14 w-12 sm:h-16 sm:w-14 items-center justify-center border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.03] text-2xl font-black text-gray-900 dark:text-white transition-all rounded-xl outline-none",
+        "data-[active=true]:z-10 data-[active=true]:border-[#2E8B2E] data-[active=true]:ring-4 data-[active=true]:ring-[#2E8B2E]/10",
         className,
       )}
       {...props}
@@ -59,7 +61,7 @@ function InputOTPSlot({
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="animate-caret-blink bg-foreground h-4 w-px duration-1000" />
+          <div className="animate-caret-blink bg-[#2E8B2E] h-6 w-px duration-1000" />
         </div>
       )}
     </div>

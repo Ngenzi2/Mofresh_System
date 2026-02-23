@@ -13,9 +13,6 @@ export const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'ALL' | 'SUPPLIER' | 'CLIENT'>('ALL');
 
-  // track current user's role so we can decide visibility (SUPERADMIN sees all)
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
-
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserEntity | null>(null);
@@ -41,25 +38,7 @@ export const UserManagement: React.FC = () => {
         sitesService.getAllSites()
       ]);
 
-      // try to fetch current user's role (safely – some service names may differ)
-      let currentUser: any = null;
-      try {
-        if (typeof usersService.getCurrentUser === 'function') {
-          currentUser = await usersService.getCurrentUser();
-        } else if (typeof usersService.getProfile === 'function') {
-          currentUser = await usersService.getProfile();
-        }
-      } catch (err) {
-        // ignore – we will default to restricted view if we can't determine role
-      }
-      setCurrentUserRole(currentUser?.role ?? null);
-
-      // If current user is SUPERADMIN, show all users; otherwise restrict to CLIENT and SUPPLIER
-      const visibleUsers = (currentUser?.role === UserRole.SUPERADMIN)
-        ? usersData
-        : usersData.filter(u => u.role === UserRole.CLIENT || u.role === UserRole.SUPPLIER);
-
-      setUsers(visibleUsers);
+      setUsers(usersData);
       setSites(sitesData);
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch data');
@@ -97,7 +76,7 @@ export const UserManagement: React.FC = () => {
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email || (!editingUser && !formData.password)) {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -121,15 +100,21 @@ export const UserManagement: React.FC = () => {
         toast.success(`User updated: ${formData.firstName}`);
       } else {
         // Register User
-        await usersService.register({
+        const registrationData: any = {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
           phone: formData.phone,
-          password: formData.password,
           role: formData.role,
           siteId: formData.siteId,
-        });
+        };
+
+        // Only include password if it's not empty
+        if (formData.password.trim()) {
+          registrationData.password = formData.password;
+        }
+
+        await usersService.register(registrationData);
         toast.success(`User created: ${formData.firstName}`);
       }
       setIsModalOpen(false);
@@ -363,16 +348,16 @@ export const UserManagement: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  {editingUser ? 'New Password (Optional)' : 'Password'}
+                  {editingUser ? 'New Password (Optional)' : 'Password (Optional)'}
                 </label>
                 <input
                   type="password"
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
-                  required={!editingUser}
+                  required={false}
                   disabled={isActionLoading}
-                  placeholder={editingUser ? 'Leave blank to keep current' : '••••••••'}
+                  placeholder={editingUser ? 'Leave blank to keep current' : 'Leave blank to auto-generate'}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
