@@ -6,17 +6,15 @@ import {
   Check,
   ExternalLink,
   X,
-  Users,
   Loader2,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { sitesService, usersService } from "@/api";
-import type { SiteEntity, UserEntity } from "@/types/api.types";
+import sitesService from "@/api/services/sites.service";
+import type { SiteEntity } from "@/types/api.types";
 
 export const SiteManagement: React.FC = () => {
   const [sites, setSites] = useState<SiteEntity[]>([]);
-  const [users, setUsers] = useState<UserEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -38,20 +36,10 @@ export const SiteManagement: React.FC = () => {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const data = await usersService.getAllUsers();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (error: any) {
-      toast.error("Failed to fetch users");
-      setUsers([]);
-    }
-  };
-
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchSites(), fetchUsers()]);
+      await fetchSites();
       setLoading(false);
     };
     init();

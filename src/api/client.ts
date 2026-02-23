@@ -65,12 +65,32 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect to login
+        // Refresh failed, clear tokens
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+
+        // Only redirect to login if NOT on a public auth page
+        const publicPages = ['/login', '/register', '/vendor-registration', '/forgot-password', '/reset-password', '/verify-otp'];
+        const isPublicPage = publicPages.some(page => window.location.pathname.includes(page));
+
+        if (!isPublicPage) {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Also handle direct 401 if refresh wasn't even attempted (e.g. no refreshToken)
+    if (error.response?.status === 401 && !isAuthEndpoint) {
+      const publicPages = ['/login', '/register', '/vendor-registration', '/forgot-password', '/reset-password', '/verify-otp', '/'];
+      const isPublicPage = publicPages.some(page => window.location.pathname.endsWith(page) || window.location.pathname === page);
+
+      if (!isPublicPage) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
 

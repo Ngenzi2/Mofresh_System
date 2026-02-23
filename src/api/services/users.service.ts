@@ -18,11 +18,16 @@ import type {
 
 class UsersService {
   /**
-   * Register a new user (Generic)
+   * Register a new user (Unified endpoint: /api/v1/users/register)
    */
   async register(userData: any): Promise<UserEntity> {
     try {
-      const response = await apiClient.post<UserEntity>('/users/register', userData);
+      // If it's a multipart request (contains Files), use createFormData
+      const isMultipart = Object.values(userData).some(value => value instanceof File);
+      const payload = isMultipart ? createFormData(userData) : userData;
+      const headers = isMultipart ? { 'Content-Type': 'multipart/form-data' } : {};
+
+      const response = await apiClient.post<UserEntity>('/users/register', payload, { headers });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

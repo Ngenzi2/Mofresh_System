@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AuthLayout } from '@/components/ui/AuthLayout';
 import { authService } from '@/api';
 import { validatePassword, validateOTP } from '@/utils/validation.utils';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/input-otp';
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -90,15 +91,25 @@ export default function ResetPassword() {
                 <label className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest ml-1">
                   Verification Code (OTP)
                 </label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Enter 6-digit code"
-                  className="w-full px-4 py-4 bg-gray-50/50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 rounded-2xl focus:ring-4 focus:ring-[#2E8B2E]/10 focus:border-[#2E8B2E] outline-none transition-all text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 font-bold text-base text-center tracking-[0.5em]"
-                  maxLength={6}
-                  required
-                />
+                <div className="flex justify-center py-2">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => {
+                      setOtp(value);
+                      if (value.length === 6 && otp.length < 6) {
+                        toast.success(t('otpFilled') || 'Verification code filled');
+                      }
+                    }}
+                    render={({ slots }) => (
+                      <InputOTPGroup className="gap-2 sm:gap-3">
+                        {slots.map((slot, index) => (
+                          <InputOTPSlot key={index} {...slot} index={index} />
+                        ))}
+                      </InputOTPGroup>
+                    )}
+                  />
+                </div>
                 <p className="text-[10px] text-gray-400 dark:text-gray-600 ml-1 mt-1">
                   Enter the 6-digit code sent to {emailFromParams}
                 </p>

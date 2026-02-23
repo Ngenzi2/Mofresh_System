@@ -9,17 +9,14 @@ import {
   Phone,
   CheckCircle2,
   Loader2,
-  Building2,
-  UserCircle,
   ArrowRight,
   MapPin,
   Eye,
   EyeOff,
   Home,
-  Store,
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { AuthLayout } from "@/components/ui/AuthLayout";
 import { BecomeVendorModal } from "@/components/ui/BecomeVendorModal";
@@ -28,14 +25,12 @@ import type { SiteEntity } from "@/types/api.types";
 
 export default function Register() {
   const { t } = useTranslation();
-  const [accountType, setAccountType] = useState<'personal' | 'business'>('personal');
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [businessName, setBusinessName] = useState("");
   const [siteId, setSiteId] = useState("");
   const [sites, setSites] = useState<SiteEntity[]>([]);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -53,7 +48,9 @@ export default function Register() {
         const data = await sitesService.getAllSites();
         setSites(data);
       } catch (error) {
-        console.error("Failed to fetch sites:", error);
+        // Log error but don't crash the page
+        console.warn("Could not fetch sites. This might be a public access issue.", error);
+        // We can show a toast or a placeholder if sites are critical
       }
     };
     fetchSites();
@@ -74,13 +71,12 @@ export default function Register() {
 
     const result = await dispatch(
       registerUser({
-        accountType,
+        accountType: 'personal',
         firstName,
         lastName,
         phone,
         email,
         password,
-        businessName: accountType === 'business' ? businessName : undefined,
         siteId: siteId || undefined,
       } as any)
     );
@@ -102,33 +98,7 @@ export default function Register() {
       title={t('createNewAccount') || 'Create Account'}
       subtitle={t('joinMoFreshCommunity') || 'Join the MoFresh community today'}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-
-        {/* Account Type Selector */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setAccountType('personal')}
-            className={`flex items-center justify-center gap-2 py-3.5 px-3 rounded-2xl border-2 transition-all ${accountType === 'personal'
-              ? 'border-[#2E8B2E] bg-[#2E8B2E]/5 text-[#2E8B2E] shadow-sm'
-              : 'border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] text-gray-400 dark:text-gray-500'
-              }`}
-          >
-            <UserCircle className="w-5 h-5" />
-            <span className="font-black text-[10px] sm:text-xs uppercase tracking-widest">{t('personal') || 'Personal'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setAccountType('business')}
-            className={`flex items-center justify-center gap-2 py-3.5 px-3 rounded-2xl border-2 transition-all ${accountType === 'business'
-              ? 'border-[#2E8B2E] bg-[#2E8B2E]/5 text-[#2E8B2E] shadow-sm'
-              : 'border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] text-gray-400 dark:text-gray-500'
-              }`}
-          >
-            <Building2 className="w-5 h-5" />
-            <span className="font-black text-[10px] sm:text-xs uppercase tracking-widest">{t('business') || 'Business'}</span>
-          </button>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full max-w-lg">
 
         {/* Input Fields */}
         <div className="space-y-4">
@@ -207,33 +177,13 @@ export default function Register() {
                 <option value="" disabled className="text-gray-400">𝖲𝖾𝗅𝖾𝖼𝗍 𝗒𝗈𝗎𝗋 𝗌𝗂𝗍𝖾 𝗍𝗈 𝗌𝗍𝖺𝗋𝗍...</option>
                 {sites.map(site => (
                   <option key={site.id} value={site.id} className="text-gray-900 bg-white">
-                    {site.name} — {site.location}
+                    {site.name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <AnimatePresence>
-            {accountType === 'business' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pt-1">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">{t('businessName')}</label>
-                  <div className="relative group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 group-focus-within:text-[#2E8B2E]" />
-                    <input
-                      type="text"
-                      placeholder="𝖡𝗎𝗌𝗂𝗇𝖾𝗌𝗌 𝗇𝖺𝗆𝖾 𝗍𝗈 𝗌𝗍𝖺𝗋𝗍..."
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50/50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl focus:ring-4 focus:ring-[#2E8B2E]/10 focus:border-[#2E8B2E] outline-none transition-all text-gray-900 dark:text-white placeholder:text-gray-400 font-bold text-sm sm:text-base"
-                      required
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -323,7 +273,6 @@ export default function Register() {
             onClick={() => setShowVendorModal(true)}
             className="flex items-center gap-2 px-6 py-2.5 bg-black hover:bg-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:text-black text-white rounded-lg font-black text-[10px] uppercase tracking-wider transition-all shadow-lg shadow-black/10 dark:shadow-white/5"
           >
-            <Store className="w-3 h-3" />
             <span>{t('becomeAVendor') || 'Become a Vendor'}</span>
           </motion.button>
 
