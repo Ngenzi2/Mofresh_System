@@ -11,7 +11,7 @@ export const UserManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<'ALL' | 'SUPPLIER' | 'CLIENT'>('ALL');
+  const [filterRole, setFilterRole] = useState<'ALL' | 'SUPPLIER' | 'CLIENT' | 'SITE_MANAGER' | 'SUPER_ADMIN'>('ALL');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -156,6 +156,9 @@ export const UserManagement: React.FC = () => {
     return site ? site.name : '-';
   };
 
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isSuperAdmin = currentUser.role === 'ADMIN'; // Frontend role 'ADMIN' maps to backend 'SUPER_ADMIN'
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -163,12 +166,14 @@ export const UserManagement: React.FC = () => {
           <h2 className="text-2xl font-black text-gray-900">User Management</h2>
           <p className="text-gray-500 text-sm">Manage access and roles across the platform</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[#1a4d2e] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#143d24] transition-colors shadow-lg shadow-[#1a4d2e]/20"
-        >
-          <Plus className="w-4 h-4" /> Add User
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 bg-[#1a4d2e] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#143d24] transition-colors shadow-lg shadow-[#1a4d2e]/20"
+          >
+            <Plus className="w-4 h-4" /> Add User
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -188,9 +193,11 @@ export const UserManagement: React.FC = () => {
           onChange={(e) => setFilterRole(e.target.value as any)}
           className="px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-[#38a169]/20 shadow-sm"
         >
-          <option value="ALL">All Restricted Roles</option>
+          <option value="ALL">All Roles</option>
           <option value="SUPPLIER">Suppliers</option>
           <option value="CLIENT">Clients</option>
+          <option value="SITE_MANAGER">Site Managers</option>
+          <option value="SUPER_ADMIN">Super Admins</option>
         </select>
       </div>
 
@@ -239,9 +246,12 @@ export const UserManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider ${u.role === UserRole.SUPPLIER ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                      <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider ${u.role === UserRole.SUPPLIER ? 'bg-orange-100 text-orange-600' :
+                          u.role === UserRole.CLIENT ? 'bg-blue-100 text-blue-600' :
+                            u.role === UserRole.SITE_MANAGER ? 'bg-purple-100 text-purple-600' :
+                              'bg-red-100 text-red-600'
                         }`}>
-                        {u.role}
+                        {u.role.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-8 py-6">
@@ -371,6 +381,8 @@ export const UserManagement: React.FC = () => {
                   >
                     <option value={UserRole.CLIENT}>Client</option>
                     <option value={UserRole.SUPPLIER}>Supplier</option>
+                    <option value={UserRole.SITE_MANAGER}>Site Manager</option>
+                    <option value={UserRole.SUPER_ADMIN}>Super Admin</option>
                   </select>
                 </div>
                 <div className="space-y-1">

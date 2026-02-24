@@ -10,19 +10,14 @@ export function Footer() {
   const { t } = useTranslation();
 
   return (
-    <footer className="relative bg-[#0B3D2E] dark:bg-gray-950 text-white transition-colors overflow-hidden">
+    <footer className="relative bg-[#14281f] dark:bg-gray-950 text-white transition-colors overflow-hidden">
       {/* Imigongo chevron pattern overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ backgroundImage: imigongoPattern, backgroundSize: '40px 20px' }}
       />
 
-      {/* Top decorative Imigongo border strip */}
-      <div className="w-full h-3 bg-gradient-to-r from-[#9be15d] via-[#2E8B2E] to-[#9be15d] relative">
-        <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1200 12">
-          <path d="M0,6 L15,0 L30,6 L45,0 L60,6 L75,0 L90,6 L105,0 L120,6 L135,0 L150,6 L165,0 L180,6 L195,0 L210,6 L225,0 L240,6 L255,0 L270,6 L285,0 L300,6 L315,0 L330,6 L345,0 L360,6 L375,0 L390,6 L405,0 L420,6 L435,0 L450,6 L465,0 L480,6 L495,0 L510,6 L525,0 L540,6 L555,0 L570,6 L585,0 L600,6 L615,0 L630,6 L645,0 L660,6 L675,0 L690,6 L705,0 L720,6 L735,0 L750,6 L765,0 L780,6 L795,0 L810,6 L825,0 L840,6 L855,0 L870,6 L885,0 L900,6 L915,0 L930,6 L945,0 L960,6 L975,0 L990,6 L1005,0 L1020,6 L1035,0 L1050,6 L1065,0 L1080,6 L1095,0 L1110,6 L1125,0 L1140,6 L1155,0 L1170,6 L1185,0 L1200,6 L1185,12 L1170,6 L1155,12 L1140,6 L1125,12 L1110,6 L1095,12 L1080,6 L1065,12 L1050,6 L1035,12 L1020,6 L1005,12 L990,6 L975,12 L960,6 L945,12 L930,6 L915,12 L900,6 L885,12 L870,6 L855,12 L840,6 L825,12 L810,6 L795,12 L780,6 L765,12 L750,6 L735,12 L720,6 L705,12 L690,6 L675,12 L660,6 L645,12 L630,6 L615,12 L600,6 L585,12 L570,6 L555,12 L540,6 L525,12 L510,6 L495,12 L480,6 L465,12 L450,6 L435,12 L420,6 L405,12 L390,6 L375,12 L360,6 L345,12 L330,6 L315,12 L300,6 L285,12 L270,6 L255,12 L240,6 L225,12 L210,6 L195,12 L180,6 L165,12 L150,6 L135,12 L120,6 L105,12 L90,6 L75,12 L60,6 L45,12 L30,6 L15,12 L0,6 Z" fill="rgba(255,255,255,0.15)" />
-        </svg>
-      </div>
+ 
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 text-center sm:text-left">
@@ -96,7 +91,7 @@ export function Footer() {
         {/* Bottom bar with Imigongo diamond accent */}
         <div className="mt-14 pt-8 border-t border-white/10 dark:border-gray-800 relative">
           {/* Small diamond motif */}
-          <div className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#9be15d] rotate-45" />
+       
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-400">
             <p className="font-medium">{t('copyright')}</p>
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">

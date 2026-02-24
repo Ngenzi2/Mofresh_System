@@ -1,5 +1,6 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-require('dotenv').config();
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function listModels() {
   const genAI = new GoogleGenerativeAI(process.env.VITE_GOOGLE_AI_KEY);

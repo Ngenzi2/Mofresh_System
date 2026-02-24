@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { Lock, Mail, Eye, EyeOff, Loader2, Store } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/ui/AuthLayout';
 import { BecomeVendorModal } from '@/components/ui/BecomeVendorModal';
@@ -197,7 +197,7 @@ export default function Login() {
           </p>
 
           {/* Become a Vendor Button */}
-          <motion.button
+          {/* <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowVendorModal(true)}
@@ -205,7 +205,7 @@ export default function Login() {
           >
             <Store className="w-3 h-3" />
             Become a Vendor
-          </motion.button>
+          </motion.button> */}
 
           {/* <Link
             to="/"
