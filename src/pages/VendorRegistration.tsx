@@ -252,7 +252,7 @@ export default function VendorRegistration() {
             </div>
           </label>
           <span className="text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">
-            {t('agreeToTermsDesc') || 'I agree to the'} <Link to="/terms" className="text-[#2E8B2E] hover:text-[#1a4d2e] hover:underline">Terms</Link>
+            {t('I have read and agree to the') || ''} <Link to="/terms" className="text-[#2E8B2E] hover:text-[#1a4d2e] hover:underline">Terms and Conditions</Link>
           </span>
         </div>
 

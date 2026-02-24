@@ -217,8 +217,8 @@ export const registerUser = createAsyncThunk(
 
       await usersService.register(payload);
 
-      // Return email for OTP verification
-      return { email };
+      // Return email and role for conditional OTP verification
+      return { email, role };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -341,7 +341,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.otpEmail = action.payload.email;
-        state.otpRequired = true;
+        state.otpRequired = action.payload.role !== UserRole.CLIENT;
       })
       .addCase(registerUser.rejected, (state) => {
         state.isLoading = false;

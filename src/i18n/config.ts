@@ -102,7 +102,7 @@ const resources = {
       address: 'KG 652 St Kigali, Rwanda',
       phone: '+250 788 526 631',
       email: 'info@mofresh.rw',
-      copyright: '© 2026 MoFresh. All rights reserved.',
+      copyright: '© 2026 MoFresh. Powered by Solvit Africa.',
       privacyPolicy: 'Privacy policy',
       termsOfService: 'Terms of services',
       cookies: 'Cookies',
