@@ -36,9 +36,12 @@ class ProductsService {
   /**
    * Register a new agricultural product
    */
-  async createProduct(productData: CreateProductDto): Promise<ProductEntity> {
+  async createProduct(productData: CreateProductDto | FormData): Promise<ProductEntity> {
     try {
-      const response = await apiClient.post<ProductEntity>('/products', productData);
+      const isFormData = productData instanceof FormData;
+      const response = await apiClient.post<ProductEntity>('/products', productData, {
+        headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -48,9 +51,12 @@ class ProductsService {
   /**
    * Update product metadata
    */
-  async updateProduct(id: string, productData: Partial<CreateProductDto>): Promise<ProductEntity> {
+  async updateProduct(id: string, productData: Partial<CreateProductDto> | FormData): Promise<ProductEntity> {
     try {
-      const response = await apiClient.patch<ProductEntity>(`/products/${id}`, productData);
+      const isFormData = productData instanceof FormData;
+      const response = await apiClient.patch<ProductEntity>(`/products/${id}`, productData, {
+        headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -74,6 +80,36 @@ class ProductsService {
   async adjustStock(id: string, data: AdjustStockDto): Promise<void> {
     try {
       await apiClient.patch(`/products/${id}/adjust-stock`, data);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * List all products with site-specific filtering (Discovery)
+   */
+  async getDiscoveryProducts(siteId?: string): Promise<ProductEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/products/discovery', { params: { siteId } });
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Public: List all available products without filters
+   */
+  async getAllPublicProducts(): Promise<ProductEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/products/all/public');
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }

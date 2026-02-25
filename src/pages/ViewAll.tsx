@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { useAppDispatch } from '@/store/hooks';
 import { addToCart } from '@/store/cartSlice';
 import { useNavigate, Link } from 'react-router';
-import { Plus, Star, ChevronRight } from 'lucide-react';
+import { Plus, Star, ChevronRight, Loader2 } from 'lucide-react';
+import { productsService, sitesService } from '@/api';
+import type { ProductEntity, SiteEntity } from '@/types/api.types';
+import { ProductCategory } from '@/types/api.types';
+import { toast } from 'sonner';
 
 // Category images
 import cat1 from '@/assets/vegetables.png';
@@ -13,146 +17,78 @@ import cat2 from '@/assets/meat.png';
 import cat3 from '@/assets/fruits.png';
 import cat4 from '@/assets/freezer.png';
 
-// Product images
 import pro1 from '@/assets/brocoli.png';
-import pro2 from '@/assets/orange.png';
-import pro3 from '@/assets/freshmeat.png';
-import pro4 from '@/assets/banana.png';
-import pro5 from '@/assets/fish.png';
-import pro6 from '@/assets/pepper.png';
 
-interface Category {
-  id: number;
-  name: string;
-  image: string;
-}
-
-interface Location {
-  id: number;
-  name: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  unit: string;
-  discount: number;
-  rating: number;
-  badge: string | null;
+interface ProductDisplay extends ProductEntity {
+  badge?: string | null;
   badgeColor?: string;
-  image: string;
-  categoryId: number;
-  locationId: number;
+  rating: number;
+  unit: string;
 }
 
 function ViewAll() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [products, setProducts] = useState<ProductDisplay[]>([]);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories: Category[] = [
-    { id: 1, name: t('vegetables'), image: cat1 },
-    { id: 2, name: t('meat'), image: cat2 },
-    { id: 3, name: t('fruits'), image: cat3 },
-    { id: 4, name: t('freezingBoxes'), image: cat4 },
+  const categoryOptions = [
+    { value: ProductCategory.VEGETABLES, label: t('vegetables'), image: cat1 },
+    { value: ProductCategory.MEAT, label: t('meat'), image: cat2 },
+    { value: ProductCategory.FRESH_FRUITS, label: t('fruits'), image: cat3 },
+    { value: ProductCategory.DAIRY, label: t('dairy'), image: pro1 }, // Temporary img
+    { value: ProductCategory.MEDECINE, label: t('medecine'), image: cat4 },
   ];
 
-  const locations: Location[] = [
-    { id: 1, name: 'Kigali' },
-    { id: 2, name: 'Musanze' },
-    { id: 3, name: 'Rubavu' },
-    { id: 4, name: 'Bugesera' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [productsData, sitesData] = await Promise.all([
+          productsService.getAllPublicProducts(),
+          sitesService.getAllSites()
+        ]);
 
-  const products: Product[] = [
-    {
-      id: 1,
-      name: t('broccoli'),
-      price: 1000,
-      unit: 'Rwf/kg',
-      discount: 15,
-      rating: 4,
-      badge: t('popular'),
-      badgeColor: 'bg-yellow-400',
-      image: pro1,
-      categoryId: 1,
-      locationId: 1,
-    },
-    {
-      id: 2,
-      name: t('orange'),
-      price: 1500,
-      unit: 'Rwf/kg',
-      discount: 10,
-      rating: 5,
-      badge: null,
-      image: pro2,
-      categoryId: 3,
-      locationId: 1,
-    },
-    {
-      id: 3,
-      name: t('banana'),
-      price: 1500,
-      unit: 'Rwf/kg',
-      discount: 10,
-      rating: 4,
-      badge: null,
-      image: pro4,
-      categoryId: 3,
-      locationId: 2,
-    },
-    {
-      id: 4,
-      name: t('meatProduct'),
-      price: 1000,
-      unit: 'Rwf/kg',
-      discount: 15,
-      rating: 4,
-      badge: t('popular'),
-      badgeColor: 'bg-yellow-400',
-      image: pro3,
-      categoryId: 2,
-      locationId: 2,
-    },
-    {
-      id: 5,
-      name: t('fishProduct'),
-      price: 1300,
-      unit: 'Rwf/kg',
-      discount: 20,
-      rating: 5,
-      badge: null,
-      image: pro5,
-      categoryId: 2,
-      locationId: 3,
-    },
-    {
-      id: 6,
-      name: t('pepperProduct'),
-      price: 1000,
-      unit: 'Rwf/kg',
-      discount: 25,
-      rating: 4,
-      badge: t('popular'),
-      badgeColor: 'bg-yellow-400',
-      image: pro6,
-      categoryId: 1,
-      locationId: 4,
-    },
-  ];
+        // Add mock rating and badges for display purposes since backend doesn't have them yet
+        const displayProducts = productsData.map(p => ({
+          ...p,
+          rating: 4 + Math.floor(Math.random() * 2),
+          badge: p.quantityKg < 10 ? t('lowStock') : null,
+          badgeColor: 'bg-orange-400',
+          unit: p.unit || 'Kg'
+        }));
+
+        setProducts(displayProducts);
+        setSites(sitesData);
+      } catch (error) {
+        console.error('Failed to fetch marketplace data:', error);
+        toast.error('Failed to load marketplace data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [t]);
 
   const filteredProducts = products.filter((product) => {
-    const categoryMatch = selectedCategory === null || product.categoryId === selectedCategory;
-    const locationMatch = selectedLocation === null || product.locationId === selectedLocation;
+    const categoryMatch = selectedCategory === null || product.category === selectedCategory;
+    const locationMatch = selectedLocation === null || product.siteId === selectedLocation;
     return categoryMatch && locationMatch;
   });
 
-  const handleAddToCart = (product: Product) => {
-    dispatch(addToCart(product));
+  const handleAddToCart = (product: ProductDisplay) => {
+    dispatch(addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.sellingPricePerUnit,
+      image: product.imageUrl || pro1,
+      unit: product.unit
+    }));
     navigate('/cart');
   };
 
@@ -170,7 +106,7 @@ function ViewAll() {
               <>
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-[#2d6a4f] dark:text-[#9be15d] font-semibold">
-                  {categories.find(c => c.id === selectedCategory)?.name}
+                  {categoryOptions.find(c => c.value === selectedCategory)?.label}
                 </span>
               </>
             )}
@@ -178,7 +114,7 @@ function ViewAll() {
               <>
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-[#2d6a4f] dark:text-[#9be15d] font-semibold">
-                  {locations.find(l => l.id === selectedLocation)?.name}
+                  {sites.find(s => s.id === selectedLocation)?.name}
                 </span>
               </>
             )}
@@ -205,16 +141,16 @@ function ViewAll() {
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">All Products</span>
                     </label>
-                    {categories.map((category) => (
-                      <label key={category.id} className="flex items-center gap-3 cursor-pointer group">
+                    {categoryOptions.map((category) => (
+                      <label key={category.value} className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="radio"
                           name="category"
-                          checked={selectedCategory === category.id}
-                          onChange={() => setSelectedCategory(category.id)}
+                          checked={selectedCategory === category.value}
+                          onChange={() => setSelectedCategory(category.value)}
                           className="w-4 h-4 border-gray-300 text-[#2E8B2E] focus:ring-[#2E8B2E]"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">{category.name}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">{category.label}</span>
                       </label>
                     ))}
                   </div>
@@ -234,16 +170,16 @@ function ViewAll() {
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">All Locations</span>
                     </label>
-                    {locations.map((location) => (
-                      <label key={location.id} className="flex items-center gap-3 cursor-pointer group">
+                    {sites.map((site) => (
+                      <label key={site.id} className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="radio"
                           name="location"
-                          checked={selectedLocation === location.id}
-                          onChange={() => setSelectedLocation(location.id)}
+                          checked={selectedLocation === site.id}
+                          onChange={() => setSelectedLocation(site.id)}
                           className="w-4 h-4 border-gray-300 text-[#2E8B2E] focus:ring-[#2E8B2E]"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">{location.name}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-[#2E8B2E]">{site.name}</span>
                       </label>
                     ))}
                   </div>
@@ -259,13 +195,13 @@ function ViewAll() {
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Category</label>
                   <select
                     value={selectedCategory === null ? 'all' : selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value === 'all' ? null : Number(e.target.value))}
+                    onChange={(e) => setSelectedCategory(e.target.value === 'all' ? null : e.target.value as ProductCategory)}
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm font-bold focus:ring-2 focus:ring-[#2E8B2E]/20 outline-none transition-all"
                   >
                     <option value="all">All Products</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
+                    {categoryOptions.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
                       </option>
                     ))}
                   </select>
@@ -274,13 +210,13 @@ function ViewAll() {
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Location</label>
                   <select
                     value={selectedLocation === null ? 'all' : selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value === 'all' ? null : Number(e.target.value))}
+                    onChange={(e) => setSelectedLocation(e.target.value === 'all' ? null : e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm font-bold focus:ring-2 focus:ring-[#2E8B2E]/20 outline-none transition-all"
                   >
                     <option value="all">All Locations</option>
-                    {locations.map((location) => (
-                      <option key={location.id} value={location.id}>
-                        {location.name}
+                    {sites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name}
                       </option>
                     ))}
                   </select>
@@ -302,8 +238,15 @@ function ViewAll() {
                 )}
               </div>
 
-              {/* Products Grid */}
-              {filteredProducts.length === 0 ? (
+              {/* Loading State */}
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-gray-50/50 dark:bg-white/[0.02] rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+                  <Loader2 className="w-10 h-10 text-[#2E8B2E] animate-spin mb-4" />
+                  <p className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest text-sm">
+                    Loading Marketplace...
+                  </p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50/50 dark:bg-white/[0.02] rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
                   <p className="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest text-sm">
                     No products found matching your criteria.
@@ -319,7 +262,7 @@ function ViewAll() {
                       {/* Product Image */}
                       <div className="relative overflow-hidden aspect-square bg-gray-50 dark:bg-gray-900/50 p-4">
                         <img
-                          src={product.image}
+                          src={product.imageUrl || pro1}
                           alt={product.name}
                           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                         />
@@ -330,18 +273,13 @@ function ViewAll() {
                             {product.badge}
                           </div>
                         )}
-                        {product.discount > 0 && (
-                          <div className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg shadow-sm">
-                            -{product.discount}%
-                          </div>
-                        )}
                       </div>
 
                       {/* Product Info */}
                       <div className="flex-1 flex flex-col p-4 sm:p-5">
                         <div className="mb-2">
                           <span className="text-[10px] font-black text-[#2E8B2E] uppercase tracking-widest">
-                            {locations.find(l => l.id === product.locationId)?.name}
+                            {sites.find(s => s.id === product.siteId)?.name}
                           </span>
                           <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white mt-1 line-clamp-1">
                             {product.name}
@@ -370,10 +308,10 @@ function ViewAll() {
                         <div className="mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50 flex items-center justify-between gap-4">
                           <div>
                             <span className="text-lg font-black text-gray-900 dark:text-white">
-                              {product.price}
+                              {product.sellingPricePerUnit.toLocaleString()} Rwf
                             </span>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
-                              {product.unit}
+                              / {product.unit}
                             </span>
                           </div>
                           <button

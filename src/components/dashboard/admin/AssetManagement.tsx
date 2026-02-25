@@ -1,25 +1,121 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit2, Trash2, X, Check, Thermometer, Filter } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addAsset, updateAsset, deleteAsset, type MockAsset } from '@/store/mockDataSlice';
 import { toast } from 'sonner';
+import logisticsService from '@/api/services/logistics.service';
+import infrastructureService from '@/api/services/infrastructure.service';
+import sitesService from '@/api/services/sites.service';
+import { PowerType, type CreateColdRoomDto } from '@/types/api.types';
+import type { AssetStatus, ColdBoxEntity, ColdPlateEntity, ColdRoomEntity, SiteEntity, TricycleEntity } from '@/types/api.types';
+
+type AssetViewType = 'COLD_ROOM' | 'COLD_BOX' | 'COLD_PLATE' | 'TRICYCLE';
+
+interface AssetView {
+  id: string;
+  name: string;
+  type: AssetViewType;
+  status: AssetStatus | string;
+  siteId?: string;
+  temperature?: number;
+  health: number;
+}
 
 export const AssetManagement: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { assets, sites } = useAppSelector((state) => state.mockData);
+  const [assets, setAssets] = useState<AssetView[]>([]);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'ALL' | 'COLD_ROOM' | 'COLD_BOX' | 'COLD_PLATE' | 'TRICYCLE'>('ALL');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<MockAsset | null>(null);
-  const [formData, setFormData] = useState<Partial<MockAsset>>({
+  const [editingAsset, setEditingAsset] = useState<AssetView | null>(null);
+  const [formData, setFormData] = useState<Partial<AssetView & {
+    totalCapacityKg?: number;
+    temperatureMin?: number;
+    powerType?: PowerType;
+    image?: File;
+  }>>({
     type: 'COLD_ROOM',
-    status: 'OPERATIONAL',
+    status: 'AVAILABLE',
+    health: 100,
+    powerType: PowerType.GRID,
+    temperatureMin: 0,
+    totalCapacityKg: 0,
+  });
+
+  const mapColdRoomToAsset = (room: ColdRoomEntity): AssetView => ({
+    id: room.id,
+    name: room.name,
+    type: 'COLD_ROOM',
+    status: room.status,
+    siteId: room.siteId,
+    temperature: room.temperatureMax ?? room.temperatureMin,
     health: 100,
   });
 
-  const handleOpenModal = (asset?: MockAsset) => {
+  const mapColdBoxToAsset = (box: ColdBoxEntity): AssetView => ({
+    id: box.id,
+    name: box.identificationNumber,
+    type: 'COLD_BOX',
+    status: box.status,
+    siteId: box.siteId,
+    health: 100,
+  });
+
+  const mapColdPlateToAsset = (plate: ColdPlateEntity): AssetView => ({
+    id: plate.id,
+    name: plate.identificationNumber,
+    type: 'COLD_PLATE',
+    status: plate.status,
+    siteId: plate.siteId,
+    health: 100,
+  });
+
+  const mapTricycleToAsset = (tricycle: TricycleEntity): AssetView => ({
+    id: tricycle.id,
+    name: tricycle.plateNumber,
+    type: 'TRICYCLE',
+    status: tricycle.status,
+    siteId: tricycle.siteId,
+    health: 100,
+  });
+
+  const loadAssets = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [coldRooms, coldBoxes, coldPlates, tricycles, allSites] = await Promise.all([
+        infrastructureService.getColdRooms(),
+        logisticsService.getColdBoxes(),
+        logisticsService.getColdPlates(),
+        logisticsService.getTricycles(),
+        sitesService.getAllSites(),
+      ]);
+
+      const mappedAssets: AssetView[] = [
+        ...coldRooms.map(mapColdRoomToAsset),
+        ...coldBoxes.map(mapColdBoxToAsset),
+        ...coldPlates.map(mapColdPlateToAsset),
+        ...tricycles.map(mapTricycleToAsset),
+      ];
+
+      setAssets(mappedAssets);
+      setSites(allSites);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load assets';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadAssets();
+  }, []);
+
+  const handleOpenModal = (asset?: AssetView) => {
     if (asset) {
       setEditingAsset(asset);
       setFormData(asset);
@@ -28,40 +124,142 @@ export const AssetManagement: React.FC = () => {
       setFormData({
         name: '',
         type: 'COLD_ROOM',
-        status: 'OPERATIONAL',
+        status: 'AVAILABLE',
         health: 100,
-        temperature: -18,
+        powerType: PowerType.GRID,
+        temperatureMin: 0,
+        totalCapacityKg: 0,
       });
     }
     setIsModalOpen(true);
   };
 
-  const handleSaveAsset = (e: React.FormEvent) => {
+  const handleSaveAsset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) {
       toast.error('Please name the asset');
       return;
     }
 
-    if (editingAsset) {
-      dispatch(updateAsset({ ...editingAsset, ...formData } as MockAsset));
-      toast.success(`Asset updated: ${formData.name}`);
-    } else {
-      const newAsset: MockAsset = {
-        id: `a-${Date.now()}`,
-        lastService: new Date().toISOString().split('T')[0],
-        ...formData as any
-      };
-      dispatch(addAsset(newAsset));
-      toast.success(`Asset created: ${formData.name}`);
+    setLoading(true);
+    try {
+      const type = formData.type as AssetViewType | undefined;
+      let updated: AssetView | null = null;
+
+      if (!type) {
+        toast.error('Please choose an asset type');
+        return;
+      }
+
+      if (editingAsset) {
+        // Update existing asset via relevant API
+        if (type === 'COLD_ROOM') {
+          const dto: Partial<CreateColdRoomDto> = {
+            name: formData.name!,
+            siteId: formData.siteId || editingAsset.siteId || '',
+            totalCapacityKg: formData.totalCapacityKg ?? 0,
+            temperatureMin: formData.temperatureMin ?? 0,
+            temperatureMax: formData.temperature,
+            powerType: formData.powerType || PowerType.GRID,
+          };
+
+          const room = await infrastructureService.updateColdRoom(editingAsset.id, dto);
+          updated = mapColdRoomToAsset(room);
+        } else {
+          // For other assets, backend only supports status updates
+          const assetTypeMap: Record<string, 'tricycles' | 'boxes' | 'plates'> = {
+            COLD_BOX: 'boxes',
+            COLD_PLATE: 'plates',
+            TRICYCLE: 'tricycles'
+          };
+
+          if (formData.status && formData.status !== editingAsset.status) {
+            await logisticsService.updateAssetStatus(
+              assetTypeMap[type],
+              editingAsset.id,
+              formData.status as any
+            );
+          }
+
+          // Refresh local state (only status might have changed)
+          updated = { ...editingAsset, status: formData.status! };
+        }
+
+        if (updated) {
+          setAssets(prev => prev.map(a => (a.id === editingAsset.id ? updated! : a)));
+          toast.success(`Asset updated: ${updated.name}`);
+        }
+      } else {
+        // Create new asset
+        if (type === 'COLD_ROOM') {
+          const dto: CreateColdRoomDto = {
+            name: formData.name!,
+            siteId: formData.siteId || '',
+            totalCapacityKg: formData.totalCapacityKg ?? 0,
+            temperatureMin: formData.temperatureMin ?? 0,
+            temperatureMax: formData.temperature,
+            powerType: formData.powerType || PowerType.GRID,
+          };
+
+          const room = await infrastructureService.createColdRoom(dto);
+          updated = mapColdRoomToAsset(room);
+        } else if (type === 'COLD_BOX') {
+          const box = await logisticsService.createColdBox({
+            identificationNumber: formData.name!,
+            siteId: formData.siteId || '',
+            sizeOrCapacity: '',
+            location: '',
+          });
+          updated = mapColdBoxToAsset(box);
+        } else if (type === 'COLD_PLATE') {
+          const plate = await logisticsService.createColdPlate({
+            identificationNumber: formData.name!,
+            siteId: formData.siteId || '',
+            coolingSpecification: '',
+          });
+          updated = mapColdPlateToAsset(plate);
+        } else if (type === 'TRICYCLE') {
+          const tricycle = await logisticsService.createTricycle({
+            plateNumber: formData.name!,
+            siteId: formData.siteId || '',
+            capacity: '',
+            category: 'FRUITS_VEGETABLES',
+          });
+          updated = mapTricycleToAsset(tricycle);
+        }
+
+        if (updated) {
+          setAssets(prev => [updated!, ...prev]);
+          toast.success(`Asset created: ${updated.name}`);
+        }
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save asset';
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDeleteAsset = (id: string) => {
+  const handleDeleteAsset = async (asset: AssetView) => {
     if (confirm('Are you sure you want to delete this asset?')) {
-      dispatch(deleteAsset(id));
-      toast.success('Asset deleted');
+      try {
+        if (asset.type === 'COLD_ROOM') {
+          await infrastructureService.deleteColdRoom(asset.id);
+        } else if (asset.type === 'COLD_BOX') {
+          await logisticsService.deleteAsset('boxes', asset.id);
+        } else if (asset.type === 'COLD_PLATE') {
+          await logisticsService.deleteAsset('plates', asset.id);
+        } else if (asset.type === 'TRICYCLE') {
+          await logisticsService.deleteAsset('tricycles', asset.id);
+        }
+        setAssets(prev => prev.filter(a => a.id !== asset.id));
+        toast.success('Asset deleted');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete asset';
+        toast.error(message);
+      }
     }
   };
 
@@ -120,7 +318,13 @@ export const AssetManagement: React.FC = () => {
 
       {/* Assets Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAssets.map((asset) => (
+        {loading && (
+          <p className="text-sm text-gray-500">Loading assets from MoFresh API...</p>
+        )}
+        {error && !loading && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+        {!loading && !error && filteredAssets.map((asset) => (
           <div key={asset.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-[#38a169]/30 transition-all">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
@@ -141,7 +345,7 @@ export const AssetManagement: React.FC = () => {
                 </button>
                 <button
                   className="absolute -right-8 top-0 p-2 text-red-400 hover:text-red-600 opacity-0 group-hover/actions:opacity-100 transition-opacity"
-                  onClick={() => handleDeleteAsset(asset.id)}
+                  onClick={() => handleDeleteAsset(asset)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -226,9 +430,10 @@ export const AssetManagement: React.FC = () => {
                     onChange={e => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
                   >
-                    <option value="OPERATIONAL">Operational</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="IN_USE">In Use</option>
                     <option value="MAINTENANCE">Maintenance</option>
-                    <option value="DECOMMISSIONED">Decommissioned</option>
+                    <option value="RENTED">Rented</option>
                   </select>
                 </div>
               </div>
@@ -247,27 +452,80 @@ export const AssetManagement: React.FC = () => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Health (%)</label>
-                  <input
-                    type="number"
-                    min="0" max="100"
-                    value={formData.health}
-                    onChange={e => setFormData({ ...formData, health: Number(e.target.value) })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
-                  />
+              {formData.type === 'COLD_ROOM' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Capacity (KG)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.totalCapacityKg}
+                        onChange={e => setFormData({ ...formData, totalCapacityKg: Number(e.target.value) })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Power Type</label>
+                      <select
+                        value={formData.powerType}
+                        onChange={e => setFormData({ ...formData, powerType: e.target.value as PowerType })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                      >
+                        <option value="GRID">Grid</option>
+                        <option value="OFF_GRID">Off-Grid</option>
+                        <option value="HYBRID">Hybrid</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Min Temperature (°C)</label>
+                      <input
+                        type="number"
+                        value={formData.temperatureMin}
+                        onChange={e => setFormData({ ...formData, temperatureMin: Number(e.target.value) })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Max Temperature (°C)</label>
+                      <input
+                        type="number"
+                        value={formData.temperature}
+                        onChange={e => setFormData({ ...formData, temperature: Number(e.target.value) })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Image</label>
+                    <input
+                      type="file"
+                      onChange={e => setFormData({ ...formData, image: e.target.files?.[0] })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                      accept="image/*"
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.type !== 'COLD_ROOM' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Health (%)</label>
+                    <input
+                      type="number"
+                      min="0" max="100"
+                      value={formData.health}
+                      onChange={e => setFormData({ ...formData, health: Number(e.target.value) })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Temperature (°C)</label>
-                  <input
-                    type="number"
-                    value={formData.temperature}
-                    onChange={e => setFormData({ ...formData, temperature: Number(e.target.value) })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
-                  />
-                </div>
-              </div>
+              )}
 
               <button
                 type="submit"

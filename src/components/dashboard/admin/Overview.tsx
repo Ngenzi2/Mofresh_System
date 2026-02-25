@@ -1,24 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Box, Globe, Package, ArrowUpRight, Activity, Clock } from 'lucide-react';
-import { useAppSelector } from '@/store/hooks';
+import { TrendingUp, Box, Globe, Package, ArrowUpRight, Activity, Clock, Loader2 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, Tooltip, ResponsiveContainer,
   CartesianGrid
 } from 'recharts';
+import { reportsService, sitesService, productsService, logisticsService, infrastructureService, auditService } from '@/api';
+import type { ProductEntity, SiteEntity, RevenueReportResponseDto, AuditLogEntity } from '@/types/api.types';
 
 export const Overview: React.FC = () => {
-  const { sites, assets, products, transactions } = useAppSelector((state) => state.mockData);
+  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<RevenueReportResponseDto | null>(null);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [products, setProducts] = useState<ProductEntity[]>([]);
+  const [recentLogs, setRecentLogs] = useState<AuditLogEntity[]>([]);
+  const [assetCount, setAssetCount] = useState(0);
 
-  // Stats calculation
-  const totalRevenue = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const activeRentals = assets.filter(a => a.status === 'RENTED').length;
-  const healthScore = Math.floor(assets.reduce((sum, a) => sum + a.health, 0) / assets.length);
-  const utilizationRate = Math.floor((activeRentals / assets.length) * 100);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [rep, sts, prods, logs, rooms, boxes, plates, tricycles] = await Promise.all([
+          reportsService.getRevenueReport(),
+          sitesService.getAllSites(),
+          productsService.getAllPublicProducts(),
+          auditService.getAuditLogs(),
+          infrastructureService.getColdRooms(),
+          logisticsService.getColdBoxes(),
+          logisticsService.getColdPlates(),
+          logisticsService.getTricycles(),
+        ]);
+        setReport(rep);
+        setSites(sts);
+        setProducts(prods);
+        setRecentLogs(logs as any);
+        setAssetCount(rooms.length + boxes.length + plates.length + tricycles.length);
+      } catch (error) {
+        console.error('Failed to fetch overview data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalRevenue = report?.totalRevenue || 0;
+  const healthScore = 98; // System health placeholder
+  const utilizationRate = 65; // Utilization placeholder
 
   const stats = [
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, change: '+12.5%', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Global Assets', value: assets.length.toString(), change: '+3', icon: Box, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Total Revenue', value: `${totalRevenue.toLocaleString()} Rwf`, change: '+12.5%', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Global Assets', value: assetCount.toString(), change: '+3', icon: Box, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Site Locations', value: sites.length.toString(), change: 'Stable', icon: Globe, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Market Products', value: products.length.toString(), change: '+24', icon: Package, color: 'text-orange-600', bg: 'bg-orange-50' },
   ];
@@ -32,6 +64,15 @@ export const Overview: React.FC = () => {
     { name: 'Sat', value: 2390 },
     { name: 'Sun', value: 3490 },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-[#38a169] animate-spin mb-4" />
+        <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Quantifying System Intelligence...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-12">
@@ -158,27 +199,19 @@ export const Overview: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
-                <th className="px-8 py-4">Event</th>
-                <th className="px-8 py-4">Site</th>
-                <th className="px-8 py-4">Status</th>
+                <th className="px-8 py-4">Action</th>
+                <th className="px-8 py-4">Subject</th>
                 <th className="px-8 py-4 text-right">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {[
-                { event: 'New Site Registry', site: 'Kigali Central', status: 'Completed', time: '2m ago' },
-                { event: 'Asset Maintenance', site: 'Rubavu Hub', status: 'Pending', time: '15m ago' },
-                { event: 'Bulk Load Arrival', site: 'Musanze Depot', status: 'Processing', time: '1h ago' },
-              ].map((row, i) => (
-                <tr key={i} className="group hover:bg-gray-50/50 transition-colors">
-                  <td className="px-8 py-5 text-sm font-bold text-gray-800">{row.event}</td>
-                  <td className="px-8 py-5 text-xs font-medium text-gray-500">{row.site}</td>
-                  <td className="px-8 py-5">
-                    <span className="text-[10px] font-black uppercase bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg">
-                      {row.status}
-                    </span>
+              {recentLogs.map((log) => (
+                <tr key={log.id} className="group hover:bg-gray-50/50 transition-colors">
+                  <td className="px-8 py-5 text-sm font-bold text-gray-800">{log.action}</td>
+                  <td className="px-8 py-5 text-xs font-medium text-gray-500">{log.entityType}</td>
+                  <td className="px-8 py-5 text-xs text-right text-gray-400 font-medium">
+                    {new Date(log.timestamp).toLocaleString()}
                   </td>
-                  <td className="px-8 py-5 text-xs text-right text-gray-400 font-medium">{row.time}</td>
                 </tr>
               ))}
             </tbody>

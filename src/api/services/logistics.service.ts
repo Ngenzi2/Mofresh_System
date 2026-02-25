@@ -22,9 +22,11 @@ class LogisticsService {
     }
   }
 
-  async getTricycles(): Promise<TricycleEntity[]> {
+  async getTricycles(siteId?: string): Promise<TricycleEntity[]> {
     try {
-      const response = await apiClient.get<TricycleEntity[]>('/cold-assets/tricycles');
+      const response = await apiClient.get<TricycleEntity[]>('/cold-assets/tricycles', {
+        params: { siteId },
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -43,9 +45,11 @@ class LogisticsService {
     }
   }
 
-  async getColdBoxes(): Promise<ColdBoxEntity[]> {
+  async getColdBoxes(siteId?: string): Promise<ColdBoxEntity[]> {
     try {
-      const response = await apiClient.get<ColdBoxEntity[]>('/cold-assets/boxes');
+      const response = await apiClient.get<ColdBoxEntity[]>('/cold-assets/boxes', {
+        params: { siteId },
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -64,9 +68,11 @@ class LogisticsService {
     }
   }
 
-  async getColdPlates(): Promise<ColdPlateEntity[]> {
+  async getColdPlates(siteId?: string): Promise<ColdPlateEntity[]> {
     try {
-      const response = await apiClient.get<ColdPlateEntity[]>('/cold-assets/plates');
+      const response = await apiClient.get<ColdPlateEntity[]>('/cold-assets/plates', {
+        params: { siteId },
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

@@ -1,9 +1,5 @@
 import apiClient, { handleApiError } from '../client';
-import type {
-  ColdRoomEntity,
-  CreateColdRoomDto,
-  ColdRoomOccupancy,
-} from '@/types/api.types';
+import type { ColdRoomEntity, CreateColdRoomDto, ColdRoomOccupancy } from '@/types/api.types';
 
 class InfrastructureService {
   /**
@@ -51,6 +47,38 @@ class InfrastructureService {
     try {
       const response = await apiClient.patch<ColdRoomEntity>(`/cold-rooms/${id}`, data);
       return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * List cold rooms for discovery (filtered by site)
+   */
+  async getDiscoveryColdRooms(siteId?: string): Promise<ColdRoomEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/cold-rooms/discovery', {
+        params: siteId ? { siteId } : {},
+      });
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Public: List all cold rooms
+   */
+  async getAllPublicColdRooms(): Promise<ColdRoomEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/cold-rooms/all/public');
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }

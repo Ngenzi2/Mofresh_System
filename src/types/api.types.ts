@@ -1,11 +1,9 @@
 // API Types based on Mofresh Backend API
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'ADMIN',
   SITE_MANAGER = 'SITE_MANAGER',
   SUPPLIER = 'SUPPLIER',
   CLIENT = 'CLIENT',
-  VENDOR = 'VENDOR',
 }
 
 export enum AccountType {
@@ -21,8 +19,9 @@ export enum InvoiceStatus {
 
 export enum PaymentStatus {
   PENDING = 'PENDING',
-  SUCCESSFUL = 'SUCCESSFUL',
+  PAID = 'PAID',
   FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
 }
 
 export enum AuditAction {
@@ -38,7 +37,7 @@ export enum AuditAction {
 
 export enum PowerType {
   GRID = 'GRID',
-  SOLAR = 'SOLAR',
+  OFF_GRID = 'OFF_GRID',
   HYBRID = 'HYBRID',
 }
 
@@ -52,13 +51,22 @@ export enum AssetType {
 export enum AssetStatus {
   AVAILABLE = 'AVAILABLE',
   RENTED = 'RENTED',
+  IN_USE = 'IN_USE',
   MAINTENANCE = 'MAINTENANCE',
-  RETIRED = 'RETIRED',
 }
 
-export enum MovementType {
+export enum StockMovementType {
   IN = 'IN',
   OUT = 'OUT',
+}
+
+export enum ProductCategory {
+  VEGETABLES = 'VEGETABLES',
+  FRESH_FRUITS = 'FRESH_FRUITS',
+  MEAT = 'MEAT',
+  DAIRY = 'DAIRY',
+  MEDECINE = 'MEDECINE',
+  PHARMACEUTICAL = 'PHARMACEUTICAL',
 }
 
 // Auth Types
@@ -193,6 +201,10 @@ export interface VendorRequestDto {
   email: string;
   phone: string;
   description: string;
+  businessName?: string;
+  tinNumber?: string;
+  NationalIdDocument?: File;
+  BusinessCertificateDocument?: File;
 }
 
 export interface ReplyVendorRequestDto {
@@ -240,8 +252,10 @@ export interface ColdRoomEntity {
   totalCapacityKg: number;
   usedCapacityKg: number;
   temperatureMin: number;
-  temperatureMax: number;
+  temperatureMax: number | null;
   powerType: PowerType;
+  status: AssetStatus;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -252,8 +266,10 @@ export interface CreateColdRoomDto {
   siteId: string;
   totalCapacityKg: number;
   temperatureMin: number;
-  temperatureMax: number;
+  temperatureMax?: number;
   powerType: PowerType;
+  status?: AssetStatus;
+  image?: File;
 }
 
 export interface ColdRoomOccupancy {
@@ -321,7 +337,7 @@ export interface CreateColdPlateDto {
 export interface ProductEntity {
   id: string;
   name: string;
-  category: string;
+  category: ProductCategory;
   quantityKg: number;
   unit: string;
   supplierId: string;
@@ -352,7 +368,7 @@ export interface CreateProductDto {
 }
 
 export interface AdjustStockDto {
-  movementType: MovementType;
+  movementType: StockMovementType;
   quantityKg: number;
   reason: string;
 }
@@ -363,7 +379,7 @@ export interface StockMovementEntity {
   productId: string;
   coldRoomId: string;
   quantityKg: number;
-  movementType: MovementType;
+  movementType: StockMovementType;
   reason: string;
   createdAt: string;
 }
@@ -372,7 +388,7 @@ export interface CreateStockMovementDto {
   productId: string;
   coldRoomId: string;
   quantityKg: number;
-  movementType: MovementType;
+  movementType: StockMovementType;
   reason: string;
 }
 

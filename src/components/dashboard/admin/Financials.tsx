@@ -5,33 +5,63 @@ import {
   AreaChart, Area
 } from 'recharts';
 import { DollarSign, TrendingUp, Users, CheckCircle, Clock, ArrowUpRight } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { verifyTransaction } from '@/store/mockDataSlice';
+import type { InvoiceResponseDto, RevenueReportResponseDto, UserEntity } from '@/types/api.types';
+import { reportsService, invoicesService, usersService } from '@/api';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export const Financials: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { transactions, users, sites } = useAppSelector((state) => state.mockData);
+  const [report, setReport] = useState<RevenueReportResponseDto | null>(null);
+  const [invoices, setInvoices] = useState<InvoiceResponseDto[]>([]);
+  const [users, setUsers] = useState<UserEntity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Stats calculation
-  const totalRevenue = transactions.filter(t => t.status === 'PAID').reduce((sum, t) => sum + t.amount, 0);
-  const pendingRevenue = transactions.filter(t => t.status === 'PENDING').reduce((sum, t) => sum + t.amount, 0);
-  const totalUsersPaid = new Set(transactions.filter(t => t.status === 'PAID').map(t => t.userId)).size;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [reportData, invoicesData, usersData] = await Promise.all([
+          reportsService.getRevenueReport(),
+          invoicesService.getAllInvoices(),
+          usersService.getAllUsers()
+        ]);
+        setReport(reportData);
+        setInvoices(invoicesData);
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Failed to fetch financial data:', error);
+        toast.error('Failed to load financial records');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  // Chart Data (Mocking a timeline)
+  const totalRevenue = report?.totalRevenue || 0;
+  const productRevenue = report?.productSales || 0;
+  const rentalRevenue = report?.rentalIncome || 0;
   const revenueData = [
-    { name: 'Mon', amount: 120000 },
-    { name: 'Tue', amount: 80000 },
-    { name: 'Wed', amount: 200000 },
-    { name: 'Thu', amount: 150000 },
-    { name: 'Fri', amount: 250000 },
-    { name: 'Sat', amount: 300000 },
-    { name: 'Sun', amount: 180000 },
+    { name: 'Mon', amount: totalRevenue * 0.1 },
+    { name: 'Tue', amount: totalRevenue * 0.15 },
+    { name: 'Wed', amount: totalRevenue * 0.2 },
+    { name: 'Thu', amount: totalRevenue * 0.12 },
+    { name: 'Fri', amount: totalRevenue * 0.18 },
+    { name: 'Sat', amount: totalRevenue * 0.25 },
+    { name: 'Sun', amount: totalRevenue * 0.1 },
   ];
 
-  const handleVerify = (id: string) => {
-    dispatch(verifyTransaction(id));
-    toast.success('Payment verified by system');
+  const handleVerify = async (id: string) => {
+    try {
+      await invoicesService.markInvoicePaid(id, { paymentMethod: 'MANUAL_VERIFIED' });
+      toast.success('Payment marked as paid');
+      // Refresh invoices
+      const updated = await invoicesService.getAllInvoices();
+      setInvoices(updated);
+    } catch (error) {
+      toast.error('Failed to verify payment');
+    }
   };
 
   const getUserName = (id: string) => {
@@ -39,10 +69,14 @@ export const Financials: React.FC = () => {
     return u ? `${u.firstName} ${u.lastName}` : 'Unknown';
   };
 
-  const getSiteName = (id?: string) => {
-    if (!id) return 'Online';
-    return sites.find(s => s.id === id)?.name || 'Central';
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-[#38a169] animate-spin mb-4" />
+        <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Loading Financials...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10">
@@ -61,9 +95,9 @@ export const Financials: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Revenue', value: `${totalRevenue.toLocaleString()} Rwf`, icon: DollarSign, color: 'bg-green-500', trend: 'up' },
-          { label: 'Pending Payments', value: `${pendingRevenue.toLocaleString()} Rwf`, icon: Clock, color: 'bg-orange-500', trend: 'neutral' },
-          { label: 'Verified Buyers', value: totalUsersPaid.toString(), icon: Users, color: 'bg-blue-500', trend: 'up' },
-          { label: 'Completion Rate', value: '94%', icon: CheckCircle, color: 'bg-purple-500', trend: 'up' },
+          { label: 'Product Sales', value: `${productRevenue.toLocaleString()} Rwf`, icon: Clock, color: 'bg-orange-500', trend: 'neutral' },
+          { label: 'Rental Income', value: `${rentalRevenue.toLocaleString()} Rwf`, icon: Users, color: 'bg-blue-500', trend: 'up' },
+          { label: 'System Fees', value: '5%', icon: CheckCircle, color: 'bg-purple-500', trend: 'up' },
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -181,39 +215,39 @@ export const Financials: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="group hover:bg-gray-50 transition-colors">
+              {invoices.map((inv) => (
+                <tr key={inv.id} className="group hover:bg-gray-50 transition-colors">
                   <td className="px-10 py-6">
-                    <p className="text-xs font-black text-[#1a4d2e] mb-1">#{tx.id.toUpperCase()}</p>
-                    <p className="text-sm font-bold text-gray-800">{getUserName(tx.userId)}</p>
+                    <p className="text-xs font-black text-[#1a4d2e] mb-1">#{inv.invoiceNumber}</p>
+                    <p className="text-sm font-bold text-gray-800">{getUserName(inv.clientId)}</p>
                   </td>
                   <td className="px-10 py-6 text-sm font-medium text-gray-500">
-                    {tx.items.join(', ')}
+                    {inv.items?.length || 0} items
                   </td>
                   <td className="px-10 py-6 text-xs font-bold text-gray-400 uppercase">
-                    {getSiteName(tx.siteId)}
+                    {new Date(inv.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-10 py-6 text-sm font-black text-gray-900">
-                    {tx.amount.toLocaleString()} Rwf
+                    {inv.totalAmount.toLocaleString()} Rwf
                   </td>
                   <td className="px-10 py-6">
-                    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${tx.status === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${inv.status === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                       }`}>
-                      {tx.status}
+                      {inv.status}
                     </span>
                   </td>
                   <td className="px-10 py-6 text-right">
-                    {tx.isVerifiedByManager ? (
+                    {inv.status === 'PAID' ? (
                       <div className="flex items-center justify-end gap-2 text-green-600">
                         <CheckCircle className="w-4 h-4" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Verified</span>
                       </div>
                     ) : (
                       <button
-                        onClick={() => handleVerify(tx.id)}
+                        onClick={() => handleVerify(inv.id)}
                         className="text-[10px] font-black uppercase tracking-widest text-[#1a4d2e] hover:text-[#38a169] transition-colors"
                       >
-                        Verify Now
+                        Mark as Paid
                       </button>
                     )}
                   </td>

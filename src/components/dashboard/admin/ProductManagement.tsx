@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, Plus, Edit2, Trash2, X, Package, LayoutGrid, Loader2
 } from 'lucide-react';
-import { productsService, usersService } from '@/api';
-import type { ProductEntity, UserEntity } from '@/types/api.types';
+import { productsService, usersService, sitesService, infrastructureService } from '@/api';
+import type { ProductEntity, UserEntity, SiteEntity, ColdRoomEntity } from '@/types/api.types';
+import { ProductCategory, StockMovementType } from '@/types/api.types';
 import { toast } from 'sonner';
+import { useAppSelector } from '@/store/hooks';
 
 export const ProductManagement: React.FC = () => {
+  const { user } = useAppSelector((state) => state.auth);
   const [products, setProducts] = useState<ProductEntity[]>([]);
   const [suppliers, setSuppliers] = useState<UserEntity[]>([]);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [coldRooms, setColdRooms] = useState<ColdRoomEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CATEGORIES'>('PRODUCTS');
@@ -16,12 +21,14 @@ export const ProductManagement: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [prods, allUsers] = await Promise.all([
+      const [prods, allUsers, allSites] = await Promise.all([
         productsService.getAllProducts(),
-        usersService.getAllUsers()
+        usersService.getAllUsers(),
+        sitesService.getAllSites()
       ]);
       setProducts(prods);
       setSuppliers(allUsers.filter(u => u.role === 'SUPPLIER'));
+      setSites(allSites);
     } catch (error: any) {
       toast.error('Failed to fetch data');
     } finally {
@@ -33,19 +40,36 @@ export const ProductManagement: React.FC = () => {
     fetchData();
   }, []);
 
-  // Use unique categories from products as a fallback if no category service
-  const categoriesList = Array.from(new Set(products.map(p => p.category))).map((cat, index) => ({
-    id: `cat-${index}`,
+  // Standardized categories from enum
+  const categoriesList = Object.values(ProductCategory).map((cat) => ({
+    id: cat,
     name: cat,
-    description: `All ${cat} related products`
+    description: `All ${cat.replace('_', ' ').toLowerCase()} related products`
   }));
 
-  // Product Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductEntity | null>(null);
   const [productForm, setProductForm] = useState<Partial<ProductEntity>>({});
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const [selectedProductImage, setSelectedProductImage] = useState<File | null>(null);
   const productImageInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Stock Adjustment State
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustData, setAdjustData] = useState({
+    productId: '',
+    movementType: 'IN' as StockMovementType,
+    quantityKg: 0,
+    reason: ''
+  });
+
+  useEffect(() => {
+    if (productForm.siteId) {
+      void infrastructureService.getColdRooms(productForm.siteId).then(setColdRooms);
+    } else {
+      setColdRooms([]);
+    }
+  }, [productForm.siteId]);
 
   const handleOpenProductModal = (product?: ProductEntity) => {
     if (product) {
@@ -56,39 +80,76 @@ export const ProductManagement: React.FC = () => {
       setEditingProduct(null);
       setProductForm({
         name: '',
-        category: categoriesList[0]?.name || 'Vegetables',
+        category: ProductCategory.VEGETABLES,
         sellingPricePerUnit: 0,
         quantityKg: 0,
-        supplierId: suppliers[0]?.id || '',
+        supplierId: '',
+        siteId: user?.siteId || '',
+        coldRoomId: '',
         description: '',
         unit: 'kg'
       });
       setProductImagePreview(null);
+      setSelectedProductImage(null);
     }
     setIsProductModalOpen(true);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.category || !productForm.supplierId) {
-      toast.error('Please fill in all required fields');
+    if (!productForm.name || !productForm.category || !productForm.supplierId || !productForm.siteId || !productForm.coldRoomId) {
+      toast.error('Please fill in Name, Category, Supplier, Site and Cold Room');
       return;
     }
 
     try {
-      if (editingProduct) {
-        await productsService.updateProduct(editingProduct.id, {
-          ...productForm,
-          price: undefined, // Cleanup compatibility props if present
-          image: undefined
-        } as any);
-        toast.success('Product updated');
+      if (selectedProductImage) {
+        const formData = new FormData();
+        formData.append('name', productForm.name!);
+        formData.append('category', productForm.category!);
+        formData.append('unit', productForm.unit || 'kg');
+        formData.append('supplierId', productForm.supplierId!);
+        formData.append('coldRoomId', productForm.coldRoomId!);
+        formData.append('siteId', productForm.siteId!);
+        formData.append('sellingPricePerUnit', String(productForm.sellingPricePerUnit));
+        formData.append('description', productForm.description || '');
+        formData.append('image', selectedProductImage);
+
+        if (editingProduct) {
+          await productsService.updateProduct(editingProduct.id, formData);
+          toast.success('Product updated with new image');
+        } else {
+          formData.append('quantityKg', String(productForm.quantityKg));
+          await productsService.createProduct(formData);
+          toast.success('Product added with image');
+        }
       } else {
-        await productsService.createProduct(productForm as any);
-        toast.success('Product added');
+        // Fallback to JSON if no new image selected
+        const payload = {
+          name: productForm.name,
+          category: productForm.category,
+          quantityKg: productForm.quantityKg,
+          unit: productForm.unit || 'kg',
+          supplierId: productForm.supplierId,
+          coldRoomId: productForm.coldRoomId,
+          siteId: productForm.siteId,
+          sellingPricePerUnit: productForm.sellingPricePerUnit,
+          imageUrl: productForm.imageUrl,
+          description: productForm.description,
+        };
+
+        if (editingProduct) {
+          const { quantityKg, ...updatePayload } = payload;
+          await productsService.updateProduct(editingProduct.id, updatePayload as any);
+          toast.success('Product updated');
+        } else {
+          await productsService.createProduct(payload as any);
+          toast.success('Product added');
+        }
       }
       fetchData();
       setIsProductModalOpen(false);
+      setSelectedProductImage(null);
     } catch (error: any) {
       toast.error(error.message || 'Failed to save product');
     }
@@ -181,6 +242,12 @@ export const ProductManagement: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-1">
+                  <button onClick={() => {
+                    setAdjustData({ productId: product.id, movementType: 'IN' as StockMovementType, quantityKg: 0, reason: '' });
+                    setIsAdjustModalOpen(true);
+                  }} className="p-2 hover:bg-orange-50 text-gray-400 hover:text-orange-600 rounded-lg" title="Adjust Stock">
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
                   <button onClick={() => handleOpenProductModal(product)} className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg">
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -235,37 +302,35 @@ export const ProductManagement: React.FC = () => {
       {/* Product Modal */}
       {isProductModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] p-8 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pb-4 z-10">
               <h3 className="text-xl font-black text-gray-900">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
               <button onClick={() => setIsProductModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <form onSubmit={handleSaveProduct} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Product Name</label>
-                <input
-                  type="text"
-                  value={productForm.name || ''}
-                  onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSaveProduct} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Product Name</label>
+                  <input
+                    type="text"
+                    value={productForm.name || ''}
+                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium transition-all"
+                    required
+                  />
+                </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Category</label>
                   <select
                     value={productForm.category || ''}
-                    onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                    onChange={e => setProductForm({ ...productForm, category: e.target.value as ProductCategory })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
                   >
-                    <option value="Vegetables">Vegetables</option>
-                    <option value="Fruits">Fruits</option>
-                    <option value="Grains">Grains</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Tubers">Tubers</option>
+                    {Object.values(ProductCategory).map(cat => (
+                      <option key={cat} value={cat}>{cat.replace('_', ' ')}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -279,76 +344,180 @@ export const ProductManagement: React.FC = () => {
                     {suppliers.map((u: UserEntity) => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
                   </select>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Price (Rwf)</label>
-                  <input
-                    type="number"
-                    value={productForm.sellingPricePerUnit || 0}
-                    onChange={e => setProductForm({ ...productForm, sellingPricePerUnit: Number(e.target.value) })}
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Site / Hub</label>
+                  <select
+                    value={productForm.siteId || ''}
+                    onChange={e => setProductForm({ ...productForm, siteId: e.target.value, coldRoomId: '' })}
+                    disabled={user?.role === 'SITE_MANAGER'}
+                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold disabled:opacity-50"
+                  >
+                    <option value="">Select Site</option>
+                    {sites.map(s => <option key={s.id} value={s.id}>{s.name} ({s.location})</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Cold Room</label>
+                  <select
+                    value={productForm.coldRoomId || ''}
+                    onChange={e => setProductForm({ ...productForm, coldRoomId: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
+                    required
+                  >
+                    <option value="">Select Cold Room</option>
+                    {coldRooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Price (Rwf)</label>
+                    <input
+                      type="number"
+                      value={productForm.sellingPricePerUnit || 0}
+                      onChange={e => setProductForm({ ...productForm, sellingPricePerUnit: Number(e.target.value) })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Initial Stock (kg)</label>
+                    <input
+                      type="number"
+                      value={productForm.quantityKg || 0}
+                      disabled={!!editingProduct}
+                      onChange={e => setProductForm({ ...productForm, quantityKg: Number(e.target.value) })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Product Image</label>
+                  <div
+                    onClick={() => productImageInputRef.current?.click()}
+                    className="w-full h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all overflow-hidden relative group"
+                  >
+                    {productImagePreview ? (
+                      <>
+                        <img src={productImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <Plus className="w-8 h-8 text-white" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Package className="w-6 h-6 text-gray-400 mb-1" />
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upload from Device</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    ref={productImageInputRef}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedProductImage(file);
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setProductImagePreview(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                    accept="image/*"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Stock (kg)</label>
-                  <input
-                    type="number"
-                    value={productForm.quantityKg || 0}
-                    onChange={e => setProductForm({ ...productForm, quantityKg: Number(e.target.value) })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-bold"
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Description</label>
+                  <textarea
+                    value={productForm.description || ''}
+                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium h-32 resize-none"
                   />
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Product Image</label>
-                <div
-                  onClick={() => productImageInputRef.current?.click()}
-                  className="w-full h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all overflow-hidden relative group"
+
+              <div className="md:col-span-2 pt-4">
+                <button type="submit" className="w-full py-4 bg-[#1a4d2e] text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-[#1a4d2e]/20 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                  {editingProduct ? 'Update Product Metadata' : 'Register Agricultural Product'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Stock Modal */}
+      {isAdjustModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-gray-900">Adjust Stock Level</h3>
+              <button onClick={() => setIsAdjustModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await productsService.adjustStock(adjustData.productId, {
+                  movementType: adjustData.movementType,
+                  quantityKg: adjustData.quantityKg,
+                  reason: adjustData.reason
+                });
+                toast.success('Stock adjusted successfully');
+                setIsAdjustModalOpen(false);
+                fetchData();
+              } catch (error: any) {
+                toast.error(error.message || 'Failed to adjust stock');
+              }
+            }} className="space-y-6">
+              <div className="flex p-1 bg-gray-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setAdjustData({ ...adjustData, movementType: 'IN' as StockMovementType })}
+                  className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${adjustData.movementType === 'IN' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400'}`}
                 >
-                  {productImagePreview ? (
-                    <>
-                      <img src={productImagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Plus className="w-8 h-8 text-white" />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <Package className="w-6 h-6 text-gray-400 mb-1" />
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upload from Device</span>
-                    </>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  ref={productImageInputRef}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const base64String = reader.result as string;
-                        setProductImagePreview(base64String);
-                        setProductForm(prev => ({ ...prev, imageUrl: base64String }));
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="hidden"
-                  accept="image/*"
-                />
+                  Stock In (+)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdjustData({ ...adjustData, movementType: 'OUT' as StockMovementType })}
+                  className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${adjustData.movementType === 'OUT' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400'}`}
+                >
+                  Stock Out (-)
+                </button>
               </div>
+
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Description</label>
-                <textarea
-                  value={productForm.description || ''}
-                  onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium h-20 resize-none"
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Quantity (kg)</label>
+                <input
+                  type="number"
+                  value={adjustData.quantityKg}
+                  onChange={e => setAdjustData({ ...adjustData, quantityKg: Number(e.target.value) })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-black text-center text-2xl"
+                  required
+                  min="0.1"
+                  step="0.1"
                 />
               </div>
-              <button type="submit" className="w-full mt-4 py-3 bg-[#1a4d2e] text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-[#1a4d2e]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Save Product
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Adjustment Reason</label>
+                <textarea
+                  value={adjustData.reason}
+                  onChange={e => setAdjustData({ ...adjustData, reason: e.target.value })}
+                  placeholder="e.g., Bulk delivery, Quality audit, Return..."
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-[#38a169] rounded-xl outline-none font-medium h-24 resize-none"
+                  required
+                />
+              </div>
+
+              <button type="submit" className="w-full py-4 bg-[#1a4d2e] text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-[#1a4d2e]/20 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                Confirm {adjustData.movementType === 'IN' ? 'Addition' : 'Deduction'}
               </button>
             </form>
           </div>

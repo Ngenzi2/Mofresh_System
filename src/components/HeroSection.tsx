@@ -5,10 +5,14 @@ import { Link, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addToCart } from "@/store/cartSlice";
 
-import { ArrowRight, Star, Plus, Thermometer, Package, User, ShoppingBag, Heart } from "lucide-react";
+import {
+  ArrowRight, Star, Plus, Thermometer, Package, User, ShoppingBag, Heart, Loader2
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "./button";
+import { productsService, sitesService } from "@/api";
+import type { ProductEntity, SiteEntity } from "@/types/api.types";
 
 // Types
 interface Category {
@@ -18,7 +22,7 @@ interface Category {
 }
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   unit: string;
@@ -58,11 +62,6 @@ import cat4 from "@/assets/freezer.png";
 
 // Product images
 import pro1 from "@/assets/brocoli.png";
-import pro2 from "@/assets/orange.png";
-import pro3 from "@/assets/freshmeat.png";
-import pro4 from "@/assets/banana.png";
-import pro5 from "@/assets/fish.png";
-import pro6 from "@/assets/pepper.png";
 
 // Offer pictures 
 import of1 from "@/assets/10.png";
@@ -92,7 +91,7 @@ export const HeroSection: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   // Component state
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -136,14 +135,67 @@ export const HeroSection: React.FC = () => {
     return () => clearInterval(i);
   }, [groups.length]);
 
-  const products: Product[] = [
-    { id: 1, name: t('broccoli'), price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-black text-white", image: pro1 },
-    { id: 2, name: t('orange'), price: 1500, unit: "Rwf/kg", discount: 10, rating: 5, badge: null, image: pro2 },
-    { id: 3, name: t('banana'), price: 1500, unit: "Rwf/kg", discount: 10, rating: 4, badge: null, image: pro4 },
-    { id: 4, name: t('meatProduct'), price: 1000, unit: "Rwf/kg", discount: 15, rating: 4, badge: t('popular'), badgeColor: "bg-black text-white", image: pro3 },
-    { id: 5, name: t('fishProduct'), price: 1300, unit: "Rwf/kg", discount: 20, rating: 5, badge: null, image: pro5 },
-    { id: 6, name: t('pepperProduct'), price: 1000, unit: "Rwf/kg", discount: 25, rating: 4, badge: t('popular'), badgeColor: "bg-black text-white", image: pro6 },
-  ];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | 'ALL'>('ALL');
+
+  // Load available hubs (sites) once
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        const fetchedSites = await sitesService.getAllSites();
+        setSites(fetchedSites);
+
+        // Default selection: user's site if available, otherwise ALL
+        if (user?.siteId && fetchedSites.some(s => s.id === user.siteId)) {
+          setSelectedSiteId(user.siteId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sites:', error);
+      }
+    };
+
+    void fetchSites();
+  }, [user?.siteId]);
+
+  // Load products whenever selected site changes
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      try {
+        setLoadingProducts(true);
+
+        let liveProducts: ProductEntity[];
+        if (selectedSiteId && selectedSiteId !== 'ALL') {
+          // Use discovery endpoint to filter by site
+          liveProducts = await productsService.getDiscoveryProducts(selectedSiteId);
+        } else {
+          // Fallback to all public products
+          liveProducts = await productsService.getAllPublicProducts();
+        }
+
+        // Map ProductEntity to HeroSection's Product interface
+        const mappedProducts: Product[] = liveProducts.slice(0, 6).map((p: ProductEntity) => ({
+          id: String(p.id),
+          name: p.name,
+          price: p.sellingPricePerUnit,
+          unit: "Rwf/kg",
+          discount: 0,
+          rating: 5,
+          badge: p.quantityKg < 20 ? t('lowStock') : null,
+          image: p.imageUrl || pro1
+        }));
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    void fetchLiveProducts();
+  }, [selectedSiteId, t]);
 
   const steps: Step[] = [
     { number: "01", title: t('step1Title'), description: t('step1Desc'), icon: User },
@@ -304,43 +356,98 @@ export const HeroSection: React.FC = () => {
 
       {/* Featured products */}
       <section className="w-full max-w-[1728px] mx-auto px-4 sm:px-8 lg:px-16 py-16">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{t('featuredProducts')}</h2>
-          <Link to="/view-all" className="text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-2">{t('viewAll')} <ArrowRight className="w-5 h-5" /></Link>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-10">
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2d6a4f] dark:text-[#9be15d]">
+              {t('featuredProducts')}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              {selectedSiteId === 'ALL'
+                ? t('showingProductsAllSites', 'Showing fresh products from all MoFresh hubs')
+                : t('showingProductsForSite', {
+                    defaultValue: 'Showing fresh products stored at {{site}}',
+                    site: sites.find(s => s.id === selectedSiteId)?.name ?? '',
+                  })}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => setSelectedSiteId('ALL')}
+              className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border ${
+                selectedSiteId === 'ALL'
+                  ? 'bg-[#2d6a4f] text-white border-[#2d6a4f]'
+                  : 'bg-white text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200'
+              }`}
+            >
+              {t('allLocations', 'All Rwanda')}
+            </button>
+            {sites.map(site => (
+              <button
+                key={site.id}
+                type="button"
+                onClick={() => setSelectedSiteId(site.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border ${
+                  selectedSiteId === site.id
+                    ? 'bg-[#2d6a4f] text-white border-[#2d6a4f]'
+                    : 'bg-white text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200'
+                }`}
+              >
+                {site.name.split(' ')[0]}
+              </button>
+            ))}
+            <Link
+              to="/view-all"
+              className="ml-2 text-[#2d6a4f] dark:text-[#9be15d] font-bold flex items-center gap-1 text-xs uppercase tracking-widest"
+            >
+              {t('viewAll')} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 group relative">
-              <button
-                onClick={() => handleAddToWishlist(product)}
-                className="absolute top-4 right-4 z-10 p-2 bg-white/50 backdrop-blur-sm rounded-full hover:bg-white text-gray-500 hover:text-red-500 transition-colors"
-              >
-                <Heart className="w-5 h-5" />
-              </button>
-
-              <div className="relative h-64 overflow-hidden bg-gray-50">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                {product.badge && <div className={`absolute top-4 left-4 ${product.badgeColor} text-gray-900 px-4 py-1.5 rounded-full text-xs font-bold`}>{product.badge}</div>}
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 dark:text-white">{product.name}</h3>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-4 h-4 ${i < product.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
-                  ))}
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-2xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{product.price.toLocaleString()} Rwf</p>
-                    <p className="text-sm text-gray-500">{product.unit}</p>
-                  </div>
-                  <Button onClick={() => handleAddToCart(product)} className="w-12 h-12 rounded-full bg-[#2E8B2E] hover:bg-black transition-all">
-                    <Plus className="w-6 h-6 text-white" />
-                  </Button>
-                </div>
-              </div>
+          {loadingProducts ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="w-10 h-10 text-[#2E8B2E] animate-spin" />
+              <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Fetching Fresh Harvest...</p>
             </div>
-          ))}
+          ) : products.length > 0 ? (
+            products.map((product) => (
+              <div key={product.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-700 group relative">
+                <button
+                  onClick={() => handleAddToWishlist(product)}
+                  className="absolute top-4 right-4 z-10 p-2 bg-white/50 backdrop-blur-sm rounded-full hover:bg-white text-gray-500 hover:text-red-500 transition-colors"
+                >
+                  <Heart className="w-5 h-5" />
+                </button>
+
+                <div className="relative h-64 overflow-hidden bg-gray-50">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  {product.badge && <div className={`absolute top-4 left-4 ${product.badgeColor} text-gray-900 px-4 py-1.5 rounded-full text-xs font-bold`}>{product.badge}</div>}
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 dark:text-white">{product.name}</h3>
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < product.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-2xl font-black text-[#2d6a4f] dark:text-[#9be15d]">{product.price.toLocaleString()} Rwf</p>
+                      <p className="text-sm text-gray-500">{product.unit}</p>
+                    </div>
+                    <Button onClick={() => handleAddToCart(product)} className="w-12 h-12 rounded-full bg-[#2E8B2E] hover:bg-black transition-all">
+                      <Plus className="w-6 h-6 text-white" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-20 text-gray-500 italic">
+              No products available at the moment.
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Wrench,
   Thermometer,
@@ -13,50 +13,138 @@ import {
   RefreshCw,
   ImageIcon
 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateAsset, addAsset, deleteAsset, type MockAsset, type MockSite, type MockUser } from '@/store/mockDataSlice';
-import { updateUser } from '@/store/mockDataSlice'; // For site switching demo
+import { useAppSelector } from '@/store/hooks';
+import logisticsService from '@/api/services/logistics.service';
+import infrastructureService from '@/api/services/infrastructure.service';
+import sitesService from '@/api/services/sites.service';
+import type { AssetStatus, AssetType, ColdBoxEntity, ColdPlateEntity, ColdRoomEntity, SiteEntity, TricycleEntity } from '@/types/api.types';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+type AssetViewType = 'COLD_ROOM' | 'COLD_BOX' | 'COLD_PLATE' | 'TRICYCLE';
+
+interface AssetView {
+  id: string;
+  name: string;
+  type: AssetViewType;
+  status: AssetStatus | string;
+  siteId?: string;
+  temperature?: number;
+  health: number;
+  imageUrl?: string;
+  lastService?: string;
+}
+
 export const AssetControl: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { assets, sites } = useAppSelector((state) => state.mockData);
   const { user } = useAppSelector((state) => state.auth);
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [assets, setAssets] = useState<AssetView[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedSiteId, setSelectedSiteId] = useState<string | undefined>(user?.siteId ?? undefined);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<MockAsset | null>(null);
-  const [formData, setFormData] = useState<Partial<MockAsset>>({
+  const [editingAsset, setEditingAsset] = useState<AssetView | null>(null);
+  const [formData, setFormData] = useState<Partial<AssetView>>({
     name: '',
     type: 'COLD_ROOM',
-    status: 'OPERATIONAL',
+    status: 'AVAILABLE',
     health: 100,
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Find the site this manager is responsible for
-  const managerSite = sites.find(s => s.id === user?.siteId || s.name === user?.location);
+  const mapColdRoomToAsset = (room: ColdRoomEntity): AssetView => ({
+    id: room.id,
+    name: room.name,
+    type: 'COLD_ROOM',
+    status: 'IN_USE',
+    siteId: room.siteId,
+    temperature: room.temperatureMax ?? room.temperatureMin,
+    health: 100,
+  });
+
+  const mapColdBoxToAsset = (box: ColdBoxEntity): AssetView => ({
+    id: box.id,
+    name: box.identificationNumber,
+    type: 'COLD_BOX',
+    status: box.status,
+    siteId: box.siteId,
+    health: 100,
+    imageUrl: box.imageUrl,
+  });
+
+  const mapColdPlateToAsset = (plate: ColdPlateEntity): AssetView => ({
+    id: plate.id,
+    name: plate.identificationNumber,
+    type: 'COLD_PLATE',
+    status: plate.status,
+    siteId: plate.siteId,
+    health: 100,
+    imageUrl: plate.imageUrl,
+  });
+
+  const mapTricycleToAsset = (tricycle: TricycleEntity): AssetView => ({
+    id: tricycle.id,
+    name: tricycle.plateNumber,
+    type: 'TRICYCLE',
+    status: tricycle.status,
+    siteId: tricycle.siteId,
+    health: 100,
+    imageUrl: tricycle.imageUrl,
+  });
+
+  const managerSite = sites.find(s => s.id === (selectedSiteId ?? user?.siteId));
 
   // Filter assets to only show those belonging to THIS hub
-  const hubAssets = assets.filter(a => a.siteId === managerSite?.id);
+  const hubAssets = assets;
 
-  const handleSwitchSite = (site: MockSite) => {
-    if (!user) return;
-    dispatch(updateUser({
-      ...user,
-      siteId: site.id,
-      location: site.name,
-      status: (user as any).status || 'ACTIVE',
-      joinedDate: (user as any).joinedDate || new Date().toISOString().split('T')[0]
-    } as MockUser));
+  const loadData = async (siteId?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [allSites, coldRooms, coldBoxes, coldPlates, tricycles] = await Promise.all([
+        sitesService.getAllSites(),
+        infrastructureService.getColdRooms(siteId),
+        logisticsService.getColdBoxes(siteId),
+        logisticsService.getColdPlates(siteId),
+        logisticsService.getTricycles(siteId),
+      ]);
+
+      setSites(allSites);
+
+      const mappedAssets: AssetView[] = [
+        ...coldRooms.map(mapColdRoomToAsset),
+        ...coldBoxes.map(mapColdBoxToAsset),
+        ...coldPlates.map(mapColdPlateToAsset),
+        ...tricycles.map(mapTricycleToAsset),
+      ].filter(a => !siteId || a.siteId === siteId);
+
+      setAssets(mappedAssets);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load assets';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadData(user?.siteId ?? undefined);
+  }, [user?.siteId]);
+
+  const handleSwitchSite = (site: SiteEntity) => {
+    setSelectedSiteId(site.id);
+    void loadData(site.id);
     toast.info(`Switched context to ${site.name}`, {
-      description: "Demo mode: Manager's assigned site updated."
+      description: 'Showing assets for selected site from API.',
     });
   };
 
-  const handleOpenModal = (asset?: MockAsset) => {
+  const handleOpenModal = (asset?: AssetView) => {
     if (asset) {
       setEditingAsset(asset);
       setFormData(asset);
@@ -90,36 +178,123 @@ export const AssetControl: React.FC = () => {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!managerSite) return;
 
-    if (editingAsset) {
-      dispatch(updateAsset({ ...editingAsset, ...formData } as MockAsset));
-      toast.success("Asset updated successfully");
-    } else {
-      const newAsset: MockAsset = {
-        ...(formData as any),
-        id: `a-${Date.now()}`,
-        siteId: managerSite.id,
-      };
-      dispatch(addAsset(newAsset));
-      toast.success("New asset added to hub");
+    try {
+      const type = formData.type as AssetType | undefined;
+      if (!type) {
+        toast.error('Please choose an asset type');
+        return;
+      }
+
+      let updated: AssetView | null = null;
+
+      if (editingAsset) {
+        if (type === 'COLD_ROOM') {
+          const dto = {
+            name: formData.name || editingAsset.name,
+            siteId: managerSite.id,
+            totalCapacityKg: 0,
+            temperatureMin: 0,
+            temperatureMax: formData.temperature ?? undefined,
+          };
+          const room = await infrastructureService.updateColdRoom(editingAsset.id, dto);
+          updated = mapColdRoomToAsset(room);
+        }
+      } else {
+        if (type === 'COLD_ROOM') {
+          const dto = {
+            name: formData.name || '',
+            siteId: managerSite.id,
+            totalCapacityKg: 0,
+            temperatureMin: 0,
+            temperatureMax: formData.temperature ?? 0,
+            powerType: 'GRID',
+          };
+          const room = await infrastructureService.createColdRoom(dto as any);
+          updated = mapColdRoomToAsset(room);
+        } else if (type === 'COLD_BOX') {
+          const box = await logisticsService.createColdBox({
+            identificationNumber: formData.name || '',
+            siteId: managerSite.id,
+            sizeOrCapacity: '',
+            location: managerSite.location,
+            imageUrl: formData.imageUrl,
+          });
+          updated = mapColdBoxToAsset(box);
+        } else if (type === 'COLD_PLATE') {
+          const plate = await logisticsService.createColdPlate({
+            identificationNumber: formData.name || '',
+            siteId: managerSite.id,
+            coolingSpecification: '',
+            imageUrl: formData.imageUrl,
+          });
+          updated = mapColdPlateToAsset(plate);
+        } else if (type === 'TRICYCLE') {
+          const tricycle = await logisticsService.createTricycle({
+            plateNumber: formData.name || '',
+            siteId: managerSite.id,
+            capacity: '',
+            category: 'FRUITS_VEGETABLES',
+            imageUrl: formData.imageUrl,
+          });
+          updated = mapTricycleToAsset(tricycle);
+        }
+      }
+
+      if (updated) {
+        setAssets(prev =>
+          editingAsset ? prev.map(a => (a.id === editingAsset.id ? updated! : a)) : [updated!, ...prev],
+        );
+      }
+
+      toast.success(editingAsset ? 'Asset updated successfully' : 'New asset added to hub');
+      setIsModalOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save asset';
+      toast.error(message);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (asset: AssetView) => {
     if (window.confirm("Are you sure you want to decommission this asset?")) {
-      dispatch(deleteAsset(id));
-      toast.error("Asset decommissioned");
+      try {
+        if (asset.type === 'COLD_ROOM') {
+          await infrastructureService.deleteColdRoom(asset.id);
+        } else if (asset.type === 'COLD_BOX') {
+          await logisticsService.deleteAsset('boxes', asset.id);
+        } else if (asset.type === 'COLD_PLATE') {
+          await logisticsService.deleteAsset('plates', asset.id);
+        } else if (asset.type === 'TRICYCLE') {
+          await logisticsService.deleteAsset('tricycles', asset.id);
+        }
+        setAssets(prev => prev.filter(a => a.id !== asset.id));
+        toast.error('Asset decommissioned');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete asset';
+        toast.error(message);
+      }
     }
   };
 
-  const toggleStatus = (asset: MockAsset) => {
-    const newStatus = asset.status === 'MAINTENANCE' ? 'OPERATIONAL' : 'MAINTENANCE';
-    dispatch(updateAsset({ ...asset, status: newStatus }));
-    toast.success(`${asset.name} is now ${newStatus}`);
+  const toggleStatus = async (asset: AssetView) => {
+    const newStatus = asset.status === 'MAINTENANCE' ? 'AVAILABLE' : 'MAINTENANCE' as any;
+    try {
+      if (asset.type === 'TRICYCLE') {
+        await logisticsService.updateAssetStatus('tricycles', asset.id, newStatus);
+      } else if (asset.type === 'COLD_BOX') {
+        await logisticsService.updateAssetStatus('boxes', asset.id, newStatus);
+      } else if (asset.type === 'COLD_PLATE') {
+        await logisticsService.updateAssetStatus('plates', asset.id, newStatus);
+      }
+      setAssets(prev => prev.map(a => (a.id === asset.id ? { ...a, status: newStatus } : a)));
+      toast.success(`${asset.name} is now ${newStatus}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update status';
+      toast.error(message);
+    }
   };
 
   return (
@@ -162,7 +337,13 @@ export const AssetControl: React.FC = () => {
       {/* Asset Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence>
-          {hubAssets.map(asset => {
+          {loading && (
+            <p className="text-sm text-gray-500">Loading assets from MoFresh API...</p>
+          )}
+          {error && !loading && (
+            <p className="text-sm text-red-500">{error}</p>
+          )}
+          {!loading && !error && hubAssets.map(asset => {
             const Icon = asset.type === 'TRICYCLE' ? Truck : Box;
             return (
               <motion.div
@@ -190,7 +371,7 @@ export const AssetControl: React.FC = () => {
                       <button onClick={() => handleOpenModal(asset)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition-colors">
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => handleDelete(asset.id)} className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors">
+                      <button onClick={() => handleDelete(asset)} className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
