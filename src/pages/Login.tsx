@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginUser, loginMock } from '@/store/authSlice';
+import { loginUser } from '@/store/authSlice';
 import { Lock, Mail, Eye, EyeOff, Loader2, Home, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/components/ui/AuthLayout';
@@ -143,52 +143,6 @@ export default function Login() {
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('logIn')}
           </motion.button>
         </form>
-
-        {/* Demo Login Buttons */}
-        <div className="mt-8 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => dispatch(loginMock({
-              id: 'admin-1',
-              email: 'admin@mofresh.rw',
-              name: 'Super Admin',
-              role: 'ADMIN',
-              location: 'Kigali HQ',
-              isActive: true
-            }))}
-            className="p-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border border-purple-200"
-          >
-            Admin Demo
-          </button>
-          <button
-            type="button"
-            onClick={() => dispatch(loginMock({
-              id: 'manager-1',
-              email: 'manager@mofresh.rw',
-              name: 'Site Manager',
-              role: 'SITE_MANAGER',
-              location: 'Kigali Central',
-              isActive: true
-            }))}
-            className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border border-blue-200"
-          >
-            Manager Demo
-          </button>
-          <button
-            type="button"
-            onClick={() => dispatch(loginMock({
-              id: 'buyer-1',
-              email: 'client@gmail.com',
-              name: 'John Doe',
-              role: 'BUYER',
-              location: 'Kalisimbi',
-              isActive: true
-            }))}
-            className="p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors border border-green-200"
-          >
-            Buyer Demo
-          </button>
-        </div>
 
         <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/[0.05] flex flex-col items-center gap-3">
           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
