@@ -4,6 +4,7 @@ export enum UserRole {
   SITE_MANAGER = 'SITE_MANAGER',
   SUPPLIER = 'SUPPLIER',
   CLIENT = 'CLIENT',
+  VENDOR = 'VENDOR',
 }
 
 export enum AccountType {
@@ -219,6 +220,9 @@ export interface UpdateUserDto {
   isActive?: boolean;
   role?: UserRole;
   password?: string;
+  avatar?: File;
+  businessCertificateDocument?: File;
+  nationalIdDocument?: File;
 }
 
 // Site Types

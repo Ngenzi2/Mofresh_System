@@ -7,6 +7,7 @@ import { AuthLayout } from '@/components/ui/AuthLayout';
 import { BecomeVendorModal } from '@/components/ui/BecomeVendorModal';
 import { motion } from 'framer-motion';
 import { loginUser } from '@/store/authSlice';
+import { toast } from 'sonner';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -48,7 +49,9 @@ export default function Login() {
     setError('');
 
     if (!email || !password) {
-      setError(t('pleaseFillAllFields') || 'Please fill in all fields');
+      const msg = t('pleaseFillAllFields') || 'Please fill in all fields';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -56,10 +59,14 @@ export default function Login() {
       const result = await dispatch(loginUser({ email: email.trim(), password }));
       if (loginUser.rejected.match(result)) {
         const backendError = result.payload as string;
-        setError(backendError || t('invalidCredentials') || 'Invalid email or password');
+        const msg = backendError || t('invalidCredentials') || 'Invalid email or password';
+        setError(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setError(t('errorOccurred') || 'An error occurred. Please try again.');
+      const msg = t('errorOccurred') || 'An error occurred. Please try again.';
+      setError(msg);
+      toast.error(msg);
     }
   };
 

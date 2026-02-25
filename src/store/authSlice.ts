@@ -36,6 +36,7 @@ interface User {
   isActive?: boolean;
   profilePicture?: string | null;
   siteId?: string | null;
+  siteName?: string;
 }
 
 interface AuthState {
@@ -77,6 +78,7 @@ const transformUser = (backendUser: UserEntity): User => {
     isActive: backendUser.isActive,
     profilePicture: backendUser.profilePicture,
     siteId: backendUser.siteId || null,
+    siteName: (backendUser as any).site?.name,
   };
 };
 
@@ -282,6 +284,12 @@ const authSlice = createSlice({
       localStorage.setItem('user', JSON.stringify(action.payload));
       localStorage.setItem('accessToken', 'mock-jwt-token');
     },
+    updateSiteName: (state, action: PayloadAction<string>) => {
+      if (state.user) {
+        state.user.siteName = action.payload;
+        localStorage.setItem('user', JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -376,5 +384,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearAuth, setOtpEmail, loginMock } = authSlice.actions;
+export const { clearAuth, setOtpEmail, loginMock, updateSiteName } = authSlice.actions;
 export default authSlice.reducer;

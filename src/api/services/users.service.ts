@@ -176,7 +176,11 @@ class UsersService {
    */
   async updateUser(id: string, userData: UpdateUserDto): Promise<UserEntity> {
     try {
-      const response = await apiClient.patch<UserEntity>(`/users/${id}`, userData);
+      const isMultipart = Object.values(userData).some(value => value instanceof File);
+      const payload = isMultipart ? createFormData(userData) : userData;
+      const headers = isMultipart ? { 'Content-Type': 'multipart/form-data' } : {};
+
+      const response = await apiClient.patch<UserEntity>(`/users/${id}`, payload, { headers });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

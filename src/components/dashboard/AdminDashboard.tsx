@@ -7,6 +7,8 @@ import { ProductManagement } from './admin/ProductManagement';
 import { Financials } from './admin/Financials';
 import { SupplierRequests } from './admin/SupplierRequests';
 
+import { AdminSettings } from './admin/AdminSettings';
+
 interface AdminDashboardProps {
   activeNav: string;
 }
@@ -34,7 +36,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeNav }) => 
       case 'Reports':
         return <div className="p-12 text-center text-gray-400">Global system reports coming soon...</div>;
       case 'Settings':
-        return <div className="p-12 text-center text-gray-400 font-bold uppercase tracking-widest">Admin system settings coming soon...</div>;
+        return <AdminSettings />;
       default:
         return <Overview />;
     }

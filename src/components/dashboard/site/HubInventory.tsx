@@ -6,14 +6,16 @@ import {
   Package,
   ArrowRightLeft,
   Plus,
-  MoreVertical,
   Loader2,
+  Edit3,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/hooks';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productsService, sitesService } from '@/api';
-import type { ProductEntity, SiteEntity, MovementType } from '@/types/api.types';
+import type { ProductEntity, SiteEntity, StockMovementType } from '@/types/api.types';
 
 export const HubInventory: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -26,6 +28,20 @@ export const HubInventory: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'MOVEMENTS'>('PRODUCTS');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
+
+  // Product Modal State
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductEntity | null>(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    category: '',
+    quantityKg: 0,
+    unit: '',
+    sellingPricePerUnit: 0,
+    supplierId: '',
+    coldRoomId: '',
+  });
 
   const fetchData = async () => {
     try {
@@ -59,7 +75,7 @@ export const HubInventory: React.FC = () => {
 
   const handleStockUpdate = async (product: ProductEntity, adjustment: number) => {
     try {
-      const type: MovementType = adjustment > 0 ? 'IN' as MovementType : 'OUT' as MovementType;
+      const type: StockMovementType = adjustment > 0 ? 'IN' as StockMovementType : 'OUT' as StockMovementType;
       await productsService.adjustStock(product.id, {
         movementType: type,
         quantityKg: Math.abs(adjustment),
@@ -70,6 +86,68 @@ export const HubInventory: React.FC = () => {
       fetchData(); // Refresh data
     } catch (error: any) {
       toast.error(error.message || 'Failed to update stock');
+    }
+  };
+
+  const handleOpenProductModal = (product?: ProductEntity) => {
+    if (product) {
+      setEditingProduct(product);
+      setProductForm({
+        name: product.name,
+        description: product.description || '',
+        category: product.category,
+        quantityKg: product.quantityKg,
+        unit: product.unit,
+        sellingPricePerUnit: product.sellingPricePerUnit,
+        supplierId: product.supplierId,
+        coldRoomId: product.coldRoomId || '',
+      });
+    } else {
+      setEditingProduct(null);
+      setProductForm({
+        name: '',
+        description: '',
+        category: '',
+        quantityKg: 0,
+        unit: 'KG',
+        sellingPricePerUnit: 0,
+        supplierId: user?.id || '',
+        coldRoomId: '',
+      });
+    }
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingProduct) {
+        await productsService.updateProduct(editingProduct.id, productForm);
+        toast.success('Product updated successfully');
+      } else {
+        await productsService.createProduct({
+          ...productForm,
+          siteId: user?.siteId || '',
+          imageUrl: '',
+        });
+        toast.success('Product added successfully');
+      }
+      await fetchData();
+      setIsProductModalOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save product');
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      await productsService.deleteProduct(productId);
+      toast.success('Product deleted successfully');
+      await fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete product');
     }
   };
 
@@ -90,7 +168,10 @@ export const HubInventory: React.FC = () => {
           <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all shadow-sm">
             <ArrowRightLeft className="w-4 h-4" /> Stock Movement
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-[#38a169] text-white rounded-xl font-bold text-sm hover:bg-[#2f855a] transition-all shadow-lg shadow-green-900/20">
+          <button
+            onClick={() => handleOpenProductModal()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#38a169] text-white rounded-xl font-bold text-sm hover:bg-[#2f855a] transition-all shadow-lg shadow-green-900/20"
+          >
             <Plus className="w-4 h-4" /> Add Product
           </button>
         </div>
@@ -205,9 +286,22 @@ export const HubInventory: React.FC = () => {
                             <span className="text-sm text-gray-600">RF {(p.sellingPricePerUnit || 0).toLocaleString()}/kg</span>
                           </td>
                           <td className="px-8 py-5 text-right">
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400">
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenProductModal(p)}
+                                className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-gray-400 hover:text-blue-600"
+                                title="Edit Product"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(p.id)}
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors text-gray-400 hover:text-red-600"
+                                title="Delete Product"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -273,6 +367,140 @@ export const HubInventory: React.FC = () => {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Product Modal */}
+      <AnimatePresence>
+        {isProductModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsProductModalOpen(false)}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 sticky top-0 z-10">
+                <div>
+                  <h2 className="text-2xl font-black text-gray-900 leading-tight">
+                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  </h2>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                    {managerSite?.name || 'Your Hub'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProduct} className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Product Name *</label>
+                  <input
+                    required
+                    type="text"
+                    value={productForm.name}
+                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                    className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                    placeholder="e.g. Fresh Tomatoes"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Description</label>
+                  <textarea
+                    value={productForm.description}
+                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                    className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800 resize-none"
+                    rows={3}
+                    placeholder="Product description..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category *</label>
+                    <input
+                      required
+                      type="text"
+                      value={productForm.category}
+                      onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                      className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                      placeholder="Vegetables, Fruits, etc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Unit *</label>
+                    <select
+                      required
+                      value={productForm.unit}
+                      onChange={e => setProductForm({ ...productForm, unit: e.target.value })}
+                      className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                    >
+                      <option value="">Select...</option>
+                      <option value="KG">Kilogram (KG)</option>
+                      <option value="LITRE">Litre (L)</option>
+                      <option value="PIECE">Piece</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Quantity (kg) *</label>
+                    <input
+                      required
+                      type="number"
+                      step="0.01"
+                      value={productForm.quantityKg}
+                      onChange={e => setProductForm({ ...productForm, quantityKg: parseFloat(e.target.value) })}
+                      className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                      placeholder="100"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Price per Unit (Rwf) *</label>
+                    <input
+                      required
+                      type="number"
+                      step="0.01"
+                      value={productForm.sellingPricePerUnit}
+                      onChange={e => setProductForm({ ...productForm, sellingPricePerUnit: parseFloat(e.target.value) })}
+                      className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#38a169] transition-all font-bold text-gray-800"
+                      placeholder="1500"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsProductModalOpen(false)}
+                    className="flex-1 py-4 border border-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-4 bg-[#38a169] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#2f855a] transition-all shadow-lg shadow-green-900/20"
+                  >
+                    {editingProduct ? 'Update Product' : 'Add Product'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

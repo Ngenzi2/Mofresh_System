@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { productsService, sitesService } from '@/api';
 import type { ProductEntity, SiteEntity } from '@/types/api.types';
+import { ProductCategory } from '@/types/api.types';
 
 export const SupplierProductManagement: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -20,7 +21,7 @@ export const SupplierProductManagement: React.FC = () => {
     name: '',
     sellingPricePerUnit: 0,
     quantityKg: 0,
-    category: 'Vegetables',
+    category: ProductCategory.VEGETABLES,
     isActive: true,
     imageUrl: '',
     siteId: '',
@@ -65,7 +66,7 @@ export const SupplierProductManagement: React.FC = () => {
         name: '',
         sellingPricePerUnit: 0,
         quantityKg: 0,
-        category: 'Vegetables',
+        category: ProductCategory.VEGETABLES,
         isActive: true,
         imageUrl: '',
         siteId: sites[0]?.id || '',
@@ -270,14 +271,13 @@ export const SupplierProductManagement: React.FC = () => {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
                     <select
                       value={formData.category}
-                      onChange={e => setFormData({ ...formData, category: e.target.value })}
+                      onChange={e => setFormData({ ...formData, category: e.target.value as ProductCategory })}
                       className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[#38a169]/20 outline-none font-bold"
                     >
-                      <option value="Vegetables">Vegetables</option>
-                      <option value="Fruits">Fruits</option>
-                      <option value="Grains">Grains</option>
-                      <option value="Dairy">Dairy</option>
-                      <option value="Tubers">Tubers</option>
+                      <option value={ProductCategory.VEGETABLES}>Vegetables</option>
+                      <option value={ProductCategory.FRESH_FRUITS}>Fruits</option>
+                      <option value={ProductCategory.DAIRY}>Dairy</option>
+                      <option value={ProductCategory.MEAT}>Meat</option>
                     </select>
                   </div>
                   <div className="space-y-2">

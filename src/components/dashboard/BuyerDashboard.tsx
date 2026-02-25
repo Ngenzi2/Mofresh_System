@@ -10,6 +10,7 @@ import {
   Mail,
   Camera,
   Save,
+  Lock,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { updateUser } from '@/store/authSlice';
@@ -34,10 +35,13 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
     nationalId: null as File | null,
     businessCert: null as File | null,
     profilePicture: null as File | null,
+    newPassword: '',
+    confirmPassword: '',
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const passwordRef = React.useRef<HTMLDivElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'nationalId' | 'businessCert' | 'profilePicture') => {
     const file = e.target.files?.[0] || null;
@@ -55,6 +59,19 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
 
     setIsSaving(true);
     try {
+      if (formData.newPassword) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          toast.error('Passwords do not match');
+          setIsSaving(false);
+          return;
+        }
+        if (formData.newPassword.length < 8) {
+          toast.error('Password must be at least 8 characters');
+          setIsSaving(false);
+          return;
+        }
+      }
+
       await dispatch(updateUser({
         id: user.id,
         userData: {
@@ -64,8 +81,11 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
           nationalIdDocument: formData.nationalId || undefined,
           businessCertificateDocument: formData.businessCert || undefined,
           avatar: formData.profilePicture || undefined,
+          password: formData.newPassword || undefined,
         }
       })).unwrap();
+
+      setFormData(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error(error || 'Failed to update profile');
@@ -380,12 +400,41 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({ activeNav }) => 
                       />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">New Password</label>
+                    <div className="relative" ref={passwordRef}>
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="password"
+                        placeholder="Leave blank to keep current"
+                        value={formData.newPassword}
+                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Confirm New Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#38a169]/30 focus:bg-white rounded-2xl text-sm font-bold text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
                 </form>
 
                 <div className="pt-6 border-t border-gray-50">
                   <h4 className="text-sm font-black text-gray-900 mb-4">Account Security</h4>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="flex-1 py-3 px-6 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-sm transition-colors border border-gray-100">
+                    <button
+                      onClick={() => passwordRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                      className="flex-1 py-3 px-6 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-sm transition-colors border border-gray-100"
+                    >
                       Change Password
                     </button>
                     <button className="flex-1 py-3 px-6 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm transition-colors border border-red-100/50">

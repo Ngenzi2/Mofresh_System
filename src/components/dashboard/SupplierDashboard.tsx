@@ -10,6 +10,7 @@ import {
   User,
   Camera,
   MapPin,
+  Lock,
 } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateUser } from '@/store/authSlice';
@@ -34,10 +35,13 @@ export const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ activeNav 
     phone: user?.phone || '',
     location: user?.location || 'Kigali, Rwanda',
     profilePicture: null as File | null,
+    newPassword: '',
+    confirmPassword: '',
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const passwordRef = React.useRef<HTMLDivElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -55,15 +59,31 @@ export const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ activeNav 
 
     setIsSaving(true);
     try {
+      if (formData.newPassword) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          toast.error('Passwords do not match');
+          setIsSaving(false);
+          return;
+        }
+        if (formData.newPassword.length < 8) {
+          toast.error('Password must be at least 8 characters');
+          setIsSaving(false);
+          return;
+        }
+      }
+
       await dispatch(updateUser({
         id: user.id,
         userData: {
           firstName: formData.firstName,
           lastName: formData.lastName,
           phone: formData.phone,
-          avatar: formData.profilePicture || undefined, // Using 'avatar' based on plan
+          avatar: formData.profilePicture || undefined,
+          password: formData.newPassword || undefined,
         }
       })).unwrap();
+
+      setFormData(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error(error || 'Failed to update profile');
@@ -295,6 +315,35 @@ export const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ activeNav 
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-2">New Password</label>
+                      <div className="relative" ref={passwordRef}>
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                        <input
+                          type="password"
+                          placeholder="Leave blank to keep current"
+                          value={formData.newPassword}
+                          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                          className="w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-2xl border-none outline-none focus:ring-2 focus:ring-green-500/20 dark:text-white font-medium transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-2">Confirm Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                        <input
+                          type="password"
+                          placeholder="Confirm new password"
+                          value={formData.confirmPassword}
+                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                          className="w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-2xl border-none outline-none focus:ring-2 focus:ring-green-500/20 dark:text-white font-medium transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
                     disabled={isSaving}
@@ -319,7 +368,10 @@ export const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ activeNav 
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-700/50 rounded-3xl hover:bg-gray-100 transition-all border border-transparent hover:border-orange-500/20">
+                <button
+                  onClick={() => passwordRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-700/50 rounded-3xl hover:bg-gray-100 transition-all border border-transparent hover:border-orange-500/20"
+                >
                   <span className="font-bold text-sm dark:text-white">Change Password</span>
                   <ChevronRight size={20} className="text-gray-400" />
                 </button>
