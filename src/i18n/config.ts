@@ -137,7 +137,7 @@ const resources = {
       mofreshHub: 'MoFresh Off-Grid Hub',
       yourMessage: 'Your Message',
       fullName: 'Full Name',
-      fullNamePlaceholder: 'John Doe',
+      fullNamePlaceholder: 'MUNEZERO Aline',
       emailAddressLabel: 'Email Address',
 
       // How it Works Steps
