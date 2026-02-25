@@ -58,6 +58,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const cartCount = useAppSelector((state) =>
@@ -128,7 +129,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       default:
         return [
           { name: 'Dashboard', icon: LayoutDashboard },
-          { name: 'My Rentals', icon: Box },
+          { 
+            name: 'Rentals', 
+            icon: Box,
+            submenu: [
+              { name: 'Available Rentals', icon: Box },
+              { name: 'My Rentals', icon: Box }
+            ]
+          },
           { name: 'Marketplace', icon: Store },
           { name: 'Orders', icon: Package },
           { name: 'Invoice', icon: CreditCard },
@@ -175,7 +183,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Navigation */}
       <nav className="flex-1 px-0 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {navItems.map((item: any) => {
           const Icon = item.icon;
           const getRolePrefix = (role: string) => {
             switch (role) {
@@ -191,29 +199,87 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             (slug === 'dashboard' && (window.location.pathname === `/${rolePrefix}` || window.location.pathname === `/${rolePrefix}/`)) ||
             (slug !== 'dashboard' && window.location.pathname.startsWith(`/${rolePrefix}/${slug}`));
 
+          const isSubmenuOpen = openSubmenus.has(item.name);
+          const hasSubmenu = item.submenu && item.submenu.length > 0;
+
           return (
-            <button
-              key={item.name}
-              onClick={() => navigate(itemPath)}
-              className={`w-full flex items-center gap-4 px-8 py-4 transition-all relative group ${isActive
-                ? 'bg-white/10 text-white'
-                : 'text-white/60 hover:bg-white/5 hover:text-white'
-                }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute left-0 top-0 bottom-0 w-1 bg-[#ffb703] shadow-[0_0_10px_rgba(255,183,3,0.5)]"
-                />
-              )}
-              <Icon
-                className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 text-[#ffb703]' : 'group-hover:scale-110'
+            <div key={item.name}>
+              <button
+                onClick={() => {
+                  if (hasSubmenu) {
+                    const newOpenSubmenus = new Set(openSubmenus);
+                    if (newOpenSubmenus.has(item.name)) {
+                      newOpenSubmenus.delete(item.name);
+                    } else {
+                      newOpenSubmenus.add(item.name);
+                    }
+                    setOpenSubmenus(newOpenSubmenus);
+                  } else {
+                    navigate(itemPath);
+                  }
+                }}
+                className={`w-full flex items-center gap-4 px-8 py-4 transition-all relative group ${isActive || isSubmenuOpen
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
                   }`}
-              />
-              <span className={`text-sm tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>
-                {item.name}
-              </span>
-            </button>
+              >
+                {(isActive || isSubmenuOpen) && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-[#ffb703] shadow-[0_0_10px_rgba(255,183,3,0.5)]"
+                  />
+                )}
+                <Icon
+                  className={`w-5 h-5 transition-transform ${isActive || isSubmenuOpen ? 'scale-110 text-[#ffb703]' : 'group-hover:scale-110'
+                    }`}
+                />
+                <span className={`text-sm tracking-wide flex-1 text-left ${isActive || isSubmenuOpen ? 'font-bold' : 'font-medium'}`}>
+                  {item.name}
+                </span>
+                {hasSubmenu && (
+                  <ChevronDown 
+                    className={`w-4 h-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`} 
+                  />
+                )}
+              </button>
+
+              {/* Submenu */}
+              {hasSubmenu && (
+                <AnimatePresence>
+                  {isSubmenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-1 py-2 px-4">
+                        {item.submenu.map((subitem: any) => {
+                          const subslug = subitem.name.toLowerCase().replace(/\s+/g, '-');
+                          const subitemPath = `/${rolePrefix}/${slug}/${subslug}`;
+                          const isSubitemActive = window.location.pathname === subitemPath;
+
+                          return (
+                            <button
+                              key={subitem.name}
+                              onClick={() => navigate(subitemPath)}
+                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${isSubitemActive
+                                ? 'bg-[#ffb703]/20 text-[#ffb703] font-bold'
+                                : 'text-white/60 hover:bg-white/5 hover:text-white'
+                                }`}
+                            >
+                              <div className={`w-1.5 h-1.5 rounded-full ${isSubitemActive ? 'bg-[#ffb703]' : 'bg-white/20'}`} />
+                              {subitem.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+            </div>
           );
         })}
       </nav>
