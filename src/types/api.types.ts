@@ -110,11 +110,7 @@ export interface UserEntity {
   role: UserRole;
   siteId: string | null;
   isActive: boolean;
-<<<<<<< HEAD
   accountType?: AccountType;
-=======
-  clientAccountType?: ClientAccountType;
->>>>>>> ee8aa43 (feat: Integrate real backend APIs for Product & Inventory management and enhance productsService)
   businessName?: string;
   tinNumber?: string;
   businessCertificateDocument?: string | null;
@@ -479,6 +475,8 @@ export interface CreateRentalDto {
   rentalEndDate: string;
   estimatedFee: number;
   capacityNeededKg?: number;
+  siteId?: string;
+  clientId?: string;
 }
 
 export interface RentalEntity {
