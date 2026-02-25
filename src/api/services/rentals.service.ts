@@ -15,19 +15,22 @@ class RentalsService {
       const response = await apiClient.post<RentalEntity>('/rentals', rentalData);
       return response.data;
     } catch (error) {
-      throw new Error(handleApiError(error));
+      throw error; // rethrow raw so callers can extract the real API error message
     }
   }
 
   /**
    * Get all rentals with pagination and filtering
    */
-  async getRentals(params?: { siteId?: string; status?: RentalStatus; page?: number; limit?: number }): Promise<RentalEntity[]> {
+  async getRentals(params?: { clientId?: string; siteId?: string; status?: RentalStatus; page?: number; limit?: number }): Promise<RentalEntity[]> {
     try {
-      const response = await apiClient.get<RentalEntity[]>('/rentals', { params });
-      return response.data;
+      const response = await apiClient.get<any>('/rentals', { params });
+      // Backend may wrap in { data: [...] }
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
     } catch (error) {
-      throw new Error(handleApiError(error));
+      throw error; // rethrow raw so callers can inspect status code
     }
   }
 
