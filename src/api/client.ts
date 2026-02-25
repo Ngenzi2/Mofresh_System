@@ -121,6 +121,14 @@ export const handleApiError = (error: unknown): string => {
   return 'An unexpected error occurred';
 };
 
+// Helper to get HTTP status from an axios error (returns 0 if not an axios error)
+export const getApiErrorStatus = (error: unknown): number => {
+  if (axios.isAxiosError(error)) {
+    return (error as AxiosError).response?.status ?? 0;
+  }
+  return 0;
+};
+
 // Helper function to create FormData for file uploads
 export const createFormData = (data: Record<string, any>): FormData => {
   const formData = new FormData();
