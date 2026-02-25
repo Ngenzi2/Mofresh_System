@@ -24,8 +24,40 @@ class LogisticsService {
 
   async getTricycles(): Promise<TricycleEntity[]> {
     try {
-      const response = await apiClient.get<TricycleEntity[]>('/cold-assets/tricycles');
-      return response.data;
+      const response = await apiClient.get<any>('/cold-assets/tricycles');
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Public tricycle listing — no auth required.
+   * Uses: GET /api/v1/cold-assets/tricycles/public
+   */
+  async getPublicTricycles(): Promise<TricycleEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/cold-assets/tricycles/public');
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Public tricycle listing without filters — no auth required.
+   * Uses: GET /api/v1/cold-assets/tricycles/all/public
+   */
+  async getAllPublicTricycles(): Promise<TricycleEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/cold-assets/tricycles/all/public');
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }
