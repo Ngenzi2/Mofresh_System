@@ -73,6 +73,7 @@ export const SiteManagement: React.FC = () => {
   };
 
   const handleSaveSite = async (e: React.FormEvent) => {
+  const handleSaveSite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.location) {
       toast.error("Please fill in all required fields");

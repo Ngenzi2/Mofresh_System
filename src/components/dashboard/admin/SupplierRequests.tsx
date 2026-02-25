@@ -173,6 +173,8 @@ export const SupplierRequests: React.FC = () => {
 
   const pendingRequests = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING') : [];
   const pastRequests = Array.isArray(requests) ? requests.filter(r => r.status !== 'PENDING') : [];
+  const pendingRequests = Array.isArray(requests) ? requests.filter(r => r.status === 'PENDING') : [];
+  const pastRequests = Array.isArray(requests) ? requests.filter(r => r.status !== 'PENDING') : [];
 
   return (
     <div className="space-y-8 pb-10">
@@ -181,6 +183,15 @@ export const SupplierRequests: React.FC = () => {
         <p className="text-gray-500 text-sm">Review and approve new vendor requests</p>
       </div>
 
+      {/* Pending Applications */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-[#2E8B2E] animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Fetching applications...</p>
+        </div>
+      ) : pendingRequests.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6">
+          {pendingRequests.map((req) => (
       {/* Pending Applications */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -208,7 +219,10 @@ export const SupplierRequests: React.FC = () => {
                   <div className="flex flex-wrap gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}
+                      <Calendar className="w-3 h-3" /> {new Date(req.createdAt).toLocaleDateString()}
                     </div>
+                    <div className="flex items-center gap-1.5 text-[#2E8B2E]">
+                      <MapPin className="w-3 h-3" /> {req.phone}
                     <div className="flex items-center gap-1.5 text-[#2E8B2E]">
                       <MapPin className="w-3 h-3" /> {req.phone}
                     </div>
@@ -242,6 +256,14 @@ export const SupplierRequests: React.FC = () => {
           <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No pending applications</p>
         </div>
       )}
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50/50 rounded-[2.5rem] p-12 text-center border border-dashed border-gray-200">
+          <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No pending applications</p>
+        </div>
+      )}
 
       {/* Past Requests */}
       {pastRequests.length > 0 && (
@@ -261,6 +283,8 @@ export const SupplierRequests: React.FC = () => {
                 {pastRequests.map((req) => (
                   <tr key={req.id} className="text-sm">
                     <td className="px-8 py-4 font-bold text-gray-700">{req.email}</td>
+                    <td className="px-8 py-4 text-gray-500 font-medium">{req.phone}</td>
+                    <td className="px-8 py-4 text-gray-400 text-xs font-bold">{new Date(req.createdAt).toLocaleDateString()}</td>
                     <td className="px-8 py-4 text-gray-500 font-medium">{req.phone}</td>
                     <td className="px-8 py-4 text-gray-400 text-xs font-bold">{new Date(req.createdAt).toLocaleDateString()}</td>
                     <td className="px-8 py-4 text-right">
