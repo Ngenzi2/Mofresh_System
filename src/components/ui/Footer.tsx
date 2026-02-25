@@ -89,7 +89,6 @@ export function Footer() {
               <a href="#" className="hover:text-[#9be15d] transition-colors">{t('cookies')}</a>
             </div>
           </div>
-        </div>
       </div>
     </footer>
   );
