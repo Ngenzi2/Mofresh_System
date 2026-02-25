@@ -27,6 +27,8 @@ import {
   DollarSign,
   UserPlus,
   LayoutGrid,
+  User,
+  Snowflake,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './ThemeProvider';
@@ -129,17 +131,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       default:
         return [
           { name: 'Dashboard', icon: LayoutDashboard },
-          { 
-            name: 'Rentals', 
-            icon: Box,
-            submenu: [
-              { name: 'Available Rentals', icon: Box },
-              { name: 'My Rentals', icon: Box }
-            ]
-          },
           { name: 'Marketplace', icon: Store },
           { name: 'Orders', icon: Package },
+          { name: 'Rentals', icon: Box },
           { name: 'Invoice', icon: CreditCard },
+          { name: 'Profile', icon: User },
           { name: 'Settings', icon: SettingsIcon },
         ];
     }
@@ -237,8 +233,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   {item.name}
                 </span>
                 {hasSubmenu && (
-                  <ChevronDown 
-                    className={`w-4 h-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`} 
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
                   />
                 )}
               </button>
