@@ -23,10 +23,27 @@ class InfrastructureService {
    */
   async getColdRooms(siteId?: string): Promise<ColdRoomEntity[]> {
     try {
-      const response = await apiClient.get<ColdRoomEntity[]>('/cold-rooms', {
+      const response = await apiClient.get<any>('/cold-rooms', {
         params: siteId ? { siteId } : {},
       });
-      return response.data;
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Discover available cold rooms — public, no auth required.
+   * Uses: GET /api/v1/cold-rooms/discovery
+   */
+  async discoverColdRooms(): Promise<ColdRoomEntity[]> {
+    try {
+      const response = await apiClient.get<any>('/cold-rooms/discovery');
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }
