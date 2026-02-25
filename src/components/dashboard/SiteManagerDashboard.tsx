@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -9,44 +9,58 @@ import {
   Mail,
   Camera,
   Save,
+  Loader2,
+  TrendingUp,
+  Activity,
+  DollarSign,
+  BarChart3,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { updateUser } from '@/store/authSlice';
-import { reportsService, rentalsService } from '@/api';
+import { 
+  reportsService, 
+  rentalsService, 
+  sitesService, 
+  logisticsService,
+} from '@/api';
 import { HubInventory } from './site/HubInventory';
 import { AssetControl } from './site/AssetControl';
+import { OrdersManagement } from './site/OrdersManagement';
+import { RentalsManagement } from './site/RentalsManagement';
 import { SupplierRequests } from './admin/SupplierRequests';
 import { toast } from 'sonner';
-import { RefreshCw } from 'lucide-react';
-import type { MockSite } from '@/store/mockDataSlice';
+import type { SiteEntity } from '@/types/api.types';
 
 interface SiteManagerDashboardProps {
   activeNav: string;
+  setActiveNav?: (nav: string) => void;
 }
 
-export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ activeNav }) => {
+export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ activeNav, setActiveNav }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { sites } = useAppSelector((state) => state.mockData);
 
-  const handleSwitchSite = (site: MockSite) => {
-    if (!user) return;
-    dispatch(updateUser({
-      id: user.id,
-      userData: {
-        siteId: site.id,
-        location: site.name
-      }
-    }));
-    toast.success(`Switched to ${site.name} Control`);
-  };
+  const [sites, setSites] = useState<SiteEntity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    revenue: 0,
+    totalAssets: 0,
+    activeRentals: 0,
+    pendingMaintenance: 0,
+  });
+
+  // Asset breakdown for visualization
+  const [assetBreakdown, setAssetBreakdown] = useState({
+    coldBoxes: 0,
+    coldPlates: 0,
+    tricycles: 0,
+  });
 
   // Settings Form State
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     phone: user?.phone || '',
-    location: user?.location || 'Kigali, Rwanda',
     nationalId: null as File | null,
     businessCert: null as File | null,
     profilePicture: null as File | null,
@@ -54,6 +68,68 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.profilePicture || null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Fetch dashboard data from backend
+  const fetchDashboardData = async () => {
+    if (!user?.siteId) return;
+
+    try {
+      setLoading(true);
+      const [revenueData, rentals, boxes, plates, tricycles] = await Promise.all([
+        reportsService.getRevenueReport({ siteId: user.siteId }).catch(() => ({ totalRevenue: 0 })),
+        rentalsService.getRentals({ siteId: user.siteId, status: 'ACTIVE' as any }).catch(() => []),
+        logisticsService.getColdBoxes().catch(() => []),
+        logisticsService.getColdPlates().catch(() => []),
+        logisticsService.getTricycles().catch(() => []),
+      ]);
+
+      const revenue = (revenueData as any)?.totalRevenue || (revenueData as any)?.data?.totalRevenue || 0;
+      const rentalsList = Array.isArray(rentals) ? rentals : (rentals as any)?.data || [];
+      
+      // Filter assets by site
+      const siteBoxes = boxes.filter((b: any) => b.siteId === user.siteId);
+      const sitePlates = plates.filter((p: any) => p.siteId === user.siteId);
+      const siteTricycles = tricycles.filter((t: any) => t.siteId === user.siteId);
+      
+      const totalAssets = siteBoxes.length + sitePlates.length + siteTricycles.length;
+      const maintenanceAssets = [
+        ...siteBoxes.filter((b: any) => b.status === 'MAINTENANCE'),
+        ...sitePlates.filter((p: any) => p.status === 'MAINTENANCE'),
+        ...siteTricycles.filter((t: any) => t.status === 'MAINTENANCE'),
+      ].length;
+
+      setDashboardStats({
+        revenue,
+        totalAssets,
+        activeRentals: rentalsList.length,
+        pendingMaintenance: maintenanceAssets,
+      });
+
+      setAssetBreakdown({
+        coldBoxes: siteBoxes.length,
+        coldPlates: sitePlates.length,
+        tricycles: siteTricycles.length,
+      });
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        const sitesList = await sitesService.getAllSites();
+        setSites(sitesList);
+      } catch (error) {
+        console.error('Error fetching sites:', error);
+      }
+    };
+    
+    fetchSites();
+    fetchDashboardData();
+  }, [user?.siteId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'nationalId' | 'businessCert' | 'profilePicture') => {
     const file = e.target.files?.[0] || null;
@@ -90,58 +166,8 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
     }
   };
 
-  const [siteStats, setSiteStats] = useState({
-    revenue: '0 Rwf',
-    assets: '0',
-    rentals: '0',
-    maintenance: '0'
-  });
-
-  React.useEffect(() => {
-    const fetchSiteData = async () => {
-      // Logic to determine siteId. 
-      // If user.location *is* the siteId (as hinted in previous code), use it.
-      // Or if user.siteId exists (it should based on UserEntity).
-      const siteId = user?.siteId;
-
-      if (!siteId) return;
-
-      try {
-        const [revenueRes, rentalsRes] = await Promise.all([
-          reportsService.getRevenueReport({ siteId }),
-          rentalsService.getRentals({ siteId }).catch(() => [])
-        ]);
-
-        const revenueData = (revenueRes as any)?.data || revenueRes || {};
-        const rentalsList = Array.isArray(rentalsRes) ? rentalsRes : (rentalsRes as any)?.data || [];
-
-        const activeRentals = rentalsList.filter((r: any) => r.status === 'ACTIVE').length;
-
-        // For Assets and Maintenance, we might need other endpoints not yet fully clear (e.g. products/assets endpoint)
-        // For now we will keep them separate or mock them if API is missing, 
-        // but we DID create productsService. Let's assume some products are assets?
-        // Let's just update what we can: Revenue and Rentals.
-
-        setSiteStats(prev => ({
-          ...prev,
-          revenue: `${revenueData.totalRevenue?.toLocaleString() || 0} Rwf`,
-          rentals: activeRentals.toString(),
-          // assets: '...', // Need asset API
-          // maintenance: '...' // Need maintenance API
-        }));
-      } catch (error) {
-        console.error('Error fetching site manager data:', error);
-      }
-    };
-
-    fetchSiteData();
-  }, [user?.siteId, user?.location]);
-
-  const stats = [
-    { label: 'Total Assets', value: siteStats.assets, icon: Box, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Active Rentals', value: siteStats.rentals, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Pending Maintenance', value: siteStats.maintenance, icon: Wrench, color: 'text-orange-600', bg: 'bg-orange-50' },
-  ];
+  // Find the site this manager is responsible for
+  const managerSite = sites.find(s => s.id === user?.siteId);
 
   const renderContent = () => {
     switch (activeNav) {
@@ -149,12 +175,20 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
         return <HubInventory />;
       case 'Asset Control':
         return <AssetControl />;
+      case 'Orders':
+        return <OrdersManagement />;
+      case 'Rentals':
+        return <RentalsManagement />;
       case 'Vendor Requests':
         return <SupplierRequests />;
-      case 'Maintenance':
-        return <div className="p-12 text-center text-gray-400">Maintenance scheduling coming soon...</div>;
       case 'Reports':
-        return <div className="p-12 text-center text-gray-400">Site Performance Reports coming soon...</div>;
+        return (
+          <div className="text-center py-20">
+            <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Reports Coming Soon</h3>
+            <p className="text-gray-500">Advanced analytics and reporting features will be available here</p>
+          </div>
+        );
       case 'Settings':
         return (
           <div className="max-w-4xl space-y-8">
@@ -204,7 +238,7 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-gray-900">{user?.firstName} {user?.lastName}</h3>
-                  <p className="text-sm font-bold text-[#38a169] uppercase tracking-widest">{user?.location} Hub Manager</p>
+                  <p className="text-sm font-bold text-[#38a169] uppercase tracking-widest">Site Manager</p>
                 </div>
                 <div className="w-full pt-6 border-t border-gray-50 flex flex-col gap-4">
                   <div className="flex items-center gap-3 text-sm text-gray-500">
@@ -292,137 +326,210 @@ export const SiteManagerDashboard: React.FC<SiteManagerDashboardProps> = ({ acti
       case 'Dashboard':
       default:
         return (
-          <div className="space-y-8">
-            {/* Demo Site Selector */}
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-3xl p-6 mb-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600">
-                    <RefreshCw className="w-6 h-6 animate-spin-slow" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-blue-900 dark:text-blue-300 uppercase tracking-widest">Demo: Site Selector</h3>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">Pick any hub to view its real-time dashboard</p>
-                  </div>
+          <div className="space-y-6">
+            {/* Modern Header with Gradient */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#1a4d2e] via-[#2a6d3e] to-[#38a169] rounded-3xl p-8 shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 className="text-4xl font-black text-white leading-tight mb-2">
+                    {managerSite?.name || 'Site'} Control Center
+                  </h1>
+                  <p className="text-white/80 text-lg">Real-time operations dashboard</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {sites.map(site => (
-                    <button
-                      key={site.id}
-                      onClick={() => handleSwitchSite(site)}
-                      className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${user?.siteId === site.id
-                        ? 'bg-[#1a4d2e] text-white shadow-lg'
-                        : 'bg-white/80 dark:bg-gray-800/80 text-gray-500 hover:bg-white hover:text-blue-600 border border-blue-100 dark:border-blue-900/50'
-                        }`}
-                    >
-                      {site.name.split(' ')[0]} Hub
-                    </button>
-                  ))}
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/20">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" />
+                  <span className="text-sm font-black uppercase tracking-widest text-white">System Online</span>
                 </div>
               </div>
             </div>
 
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 leading-tight">
-                  {user?.location || 'Local'} <span className="text-[#38a169]">Hub Control</span>
-                </h1>
-                <p className="text-gray-500 mt-1">Real-time overview of local operations and assets</p>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="w-12 h-12 text-[#38a169] animate-spin" />
+                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading Dashboard...</p>
               </div>
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Local Hub Online</span>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {stats.map((stat, idx) => {
-                const Icon = stat.icon;
-                return (
+            ) : (
+              <>
+                {/* Enhanced Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Revenue Card */}
                   <motion.div
-                    key={idx}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center justify-between group hover:border-[#38a169]/30 transition-colors"
+                    transition={{ delay: 0 }}
+                    className="col-span-1 lg:col-span-2 bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden group hover:scale-[1.02] transition-transform"
                   >
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                      <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
-                    </div>
-                    <div className={`w-12 h-12 ${stat.bg} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                      <Icon className={`w-6 h-6 ${stat.color}`} />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform" />
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                          <DollarSign className="w-6 h-6" />
+                        </div>
+                        <TrendingUp className="w-5 h-5 text-white/70" />
+                      </div>
+                      <p className="text-white/80 text-sm font-bold uppercase tracking-widest mb-1">Total Revenue</p>
+                      <h3 className="text-4xl font-black mb-2">{dashboardStats.revenue.toLocaleString()} <span className="text-2xl">Rwf</span></h3>
+                      <p className="text-white/70 text-sm">Current period performance</p>
                     </div>
                   </motion.div>
-                );
-              })}
-            </div>
 
-            {/* Hub Monitoring Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Asset Health */}
-              <div className="lg:col-span-2 bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                  <h3 className="text-xl font-black text-gray-900">Asset Status</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="flex items-center gap-2 text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Operational
-                    </span>
-                    <span className="flex items-center gap-2 text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase">
-                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full" /> Maintenance
-                    </span>
+                  {/* Assets Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Box className="w-6 h-6 text-green-600" />
+                      </div>
+                      <Activity className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Assets</p>
+                    <h3 className="text-3xl font-black text-gray-900 mb-2">{dashboardStats.totalAssets}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-bold">Active</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Rentals Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Truck className="w-6 h-6 text-blue-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Active Rentals</p>
+                    <h3 className="text-3xl font-black text-gray-900 mb-2">{dashboardStats.activeRentals}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold">Ongoing</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Maintenance Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Wrench className="w-6 h-6 text-orange-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Maintenance</p>
+                    <h3 className="text-3xl font-black text-gray-900 mb-2">{dashboardStats.pendingMaintenance}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded-full font-bold">Pending</span>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Asset Breakdown Visualization */}
+                  <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-2xl font-black text-gray-900">Asset Distribution</h3>
+                        <p className="text-gray-500 text-sm">Current inventory breakdown</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveNav?.('Asset Control')}
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-all"
+                      >
+                        View All
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                          <Box className="w-8 h-8 text-white" />
+                        </div>
+                        <p className="text-2xl font-black text-gray-900 mb-1">{assetBreakdown.coldBoxes}</p>
+                        <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Cold Boxes</p>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                        <div className="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                          <Box className="w-8 h-8 text-white" />
+                        </div>
+                        <p className="text-2xl font-black text-gray-900 mb-1">{assetBreakdown.coldPlates}</p>
+                        <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Cold Plates</p>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <div className="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                          <Truck className="w-8 h-8 text-white" />
+                        </div>
+                        <p className="text-2xl font-black text-gray-900 mb-1">{assetBreakdown.tricycles}</p>
+                        <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tricycles</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 font-medium">Total Asset Count</span>
+                        <span className="text-2xl font-black text-gray-900">{dashboardStats.totalAssets}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Quick Actions */}
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 text-white shadow-2xl">
+                    <h3 className="text-2xl font-black mb-6">Quick Actions</h3>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => setActiveNav?.('Orders')}
+                        className="w-full py-4 px-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-sm transition-all text-left flex items-center justify-between group border border-white/10"
+                      >
+                        <span>View Pending Orders</span>
+                        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </button>
+                      <button 
+                        onClick={() => setActiveNav?.('Rentals')}
+                        className="w-full py-4 px-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-sm transition-all text-left flex items-center justify-between group border border-white/10"
+                      >
+                        <span>Manage Rentals</span>
+                        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </button>
+                      <button 
+                        onClick={() => setActiveNav?.('Hub Inventory')}
+                        className="w-full py-4 px-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-sm transition-all text-left flex items-center justify-between group border border-white/10"
+                      >
+                        <span>Manage Inventory</span>
+                        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </button>
+                    </div>
+                    
+                    <button 
+                      onClick={fetchDashboardData}
+                      className="w-full mt-6 py-4 bg-white hover:bg-gray-100 text-gray-900 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <Loader2 className="w-4 h-4" />
+                      Refresh Data
+                    </button>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  {[
-                    { label: 'Cold Rooms', status: 'Optimal', count: '12/12', health: 98 },
-                    { label: 'Smart Boxes', status: 'Warning', count: '148/156', health: 85 },
-                    { label: 'Tricycles', status: 'Optimal', count: '24/25', health: 92 },
-                  ].map((item, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
-                        <span className="font-bold text-gray-700">{item.label}</span>
-                        <span className="text-xs text-gray-400 font-medium">{item.count} assets • {item.health}% health</span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${item.health}%` }}
-                          transition={{ duration: 1, delay: 0.5 + (idx * 0.1) }}
-                          className={`h-full rounded-full ${item.health > 90 ? 'bg-[#38a169]' : 'bg-[#ffb703]'}`}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Alerts */}
-              <div className="bg-[#1a4d2e] rounded-[2rem] p-8 text-white shadow-xl shadow-[#1a4d2e]/20">
-                <h3 className="text-xl font-black mb-6">Critical Alerts</h3>
-                <div className="space-y-4">
-                  {[
-                    { type: 'Maintenance', msg: 'Room 04 cooling unit service due', time: '2h ago' },
-                    { type: 'Security', msg: 'Box #482 sensor offline', time: '5h ago' },
-                    { type: 'Low Stock', msg: 'Packaging materials low in Nyagatare', time: '1d ago' },
-                  ].map((alert, idx) => (
-                    <div key={idx} className="bg-white/10 p-4 rounded-2xl border border-white/5 space-y-1 transition-colors hover:bg-white/20 cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-[#ffb703]">{alert.type}</span>
-                        <span className="text-[10px] text-white/40">{alert.time}</span>
-                      </div>
-                      <p className="text-sm font-medium text-white/90">{alert.msg}</p>
-                    </div>
-                  ))}
-                </div>
-                <button className="w-full mt-8 py-3 bg-white text-[#1a4d2e] rounded-xl font-bold text-sm hover:bg-[#ffb703] transition-colors">
-                  View All Alerts
-                </button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         );
     }

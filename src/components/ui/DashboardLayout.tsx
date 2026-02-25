@@ -109,6 +109,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       case 'SITE_MANAGER':
         return [
           { name: 'Dashboard', icon: LayoutDashboard },
+          { name: 'Orders', icon: ShoppingCart },
+          { name: 'Rentals', icon: Box },
           { name: 'Hub Inventory', icon: Package },
           { name: 'Asset Control', icon: Wrench },
           { name: 'Vendor Requests', icon: UserPlus },
@@ -142,13 +144,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const getRoleLabel = () => {
     switch (user?.role) {
       case 'ADMIN':
-        return 'Administrator';
+        return 'System Administrator';
       case 'SITE_MANAGER':
-        return `${user?.location} Manager`;
+        return 'Site Manager';
       case 'SUPPLIER':
-        return 'Supplier Profile';
+        return 'Supplier Account';
       case 'BUYER':
-        return 'Client Profile';
+        return 'Client Account';
       default:
         return 'User';
     }
@@ -164,13 +166,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-4">
           {getRoleLabel()}
         </p>
-      </div>
-
-      {/* Dashboard Label */}
-      <div className="p-8 pb-4">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-          Management Console
-        </h2>
       </div>
 
       {/* Navigation */}
@@ -265,11 +260,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-y-0 left-0 w-64 bg-[#1a4d2e] dark:bg-gray-950 text-white flex flex-col z-50 lg:hidden shadow-2xl overflow-y-auto"
           >
-            <div className="p-6 flex justify-between items-center border-b border-white/10 flex-shrink-0">
-              <img src={logo} alt="MoFresh Logo" className="h-10 w-auto object-contain" />
+            <div className="absolute top-4 right-4 z-10">
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 text-white/60 hover:text-white"
+                className="p-2 text-white/60 hover:text-white bg-white/5 rounded-lg"
               >
                 <ChevronDown className="w-6 h-6 rotate-90" />
               </button>
@@ -292,22 +286,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <LayoutDashboard className="w-6 h-6" />
             </button>
 
-            {/* Search Bar - Hidden on small mobile, compact on tablet */}
-            <div className="relative flex-1 max-w-xl hidden sm:flex items-center bg-gray-50 dark:bg-gray-700 rounded-full border border-gray-100 dark:border-gray-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#38a169]/20 transition-all">
-              <input
-                type="text"
-                placeholder="Search your dashboard..."
-                className="flex-1 pl-6 pr-4 py-2.5 bg-transparent dark:text-white outline-none text-sm placeholder:text-gray-400"
-              />
-              <button className="mr-1 p-2 bg-[#ffb703] hover:bg-[#fb8500] rounded-full text-[#1a4d2e] shadow-md transition-colors flex items-center justify-center">
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Search Bar - Only for BUYER and SUPPLIER */}
+            {user?.role && ['BUYER', 'SUPPLIER'].includes(user.role) && (
+              <>
+                <div className="relative flex-1 max-w-xl hidden sm:flex items-center bg-gray-50 dark:bg-gray-700 rounded-full border border-gray-100 dark:border-gray-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#38a169]/20 transition-all">
+                  <input
+                    type="text"
+                    placeholder="Search your dashboard..."
+                    className="flex-1 pl-6 pr-4 py-2.5 bg-transparent dark:text-white outline-none text-sm placeholder:text-gray-400"
+                  />
+                  <button className="mr-1 p-2 bg-[#ffb703] hover:bg-[#fb8500] rounded-full text-[#1a4d2e] shadow-md transition-colors flex items-center justify-center">
+                    <Search className="w-4 h-4" />
+                  </button>
+                </div>
 
-            {/* Mobile Search - Icon only for tiny screens */}
-            <button className="sm:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
-              <Search className="w-6 h-6" />
-            </button>
+                {/* Mobile Search - Icon only for tiny screens */}
+                <button className="sm:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
+                  <Search className="w-6 h-6" />
+                </button>
+              </>
+            )}
 
             {/* Utility & User Section */}
             <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
@@ -366,26 +364,31 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </AnimatePresence>
               </div>
 
-              {/* Cart - Always visible but smaller on mobile */}
-              <button
-                onClick={() => navigate('/cart')}
-                className="relative p-2 sm:p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-[#38a169]/10 hover:text-[#38a169] transition-all"
-              >
-                <ShoppingCart size={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                <AnimatePresence>
-                  {cartCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#ffb703] text-[#1a4d2e] text-[8px] sm:text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 shadow-sm"
-                    >
-                      {cartCount}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
+              {/* Cart - Only visible for BUYER and SUPPLIER */}
+              {user?.role && ['BUYER', 'SUPPLIER'].includes(user.role) && (
+                <button
+                  onClick={() => navigate('/cart')}
+                  className="relative p-2 sm:p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-[#38a169]/10 hover:text-[#38a169] transition-all"
+                >
+                  <ShoppingCart size={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <AnimatePresence>
+                    {cartCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#ffb703] text-[#1a4d2e] text-[8px] sm:text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 shadow-sm"
+                      >
+                        {cartCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              )}
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+              {/* Separator - Only show if cart is visible */}
+              {user?.role && ['BUYER', 'SUPPLIER'].includes(user.role) && (
+                <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+              )}
 
               {/* Profile - Clickable to Settings */}
               <button
@@ -394,7 +397,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               >
                 <div className="text-right hidden xl:block">
                   <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
-                    {user?.name || 'User'}
+                    {user?.firstName} {user?.lastName}
                   </p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
                     {getRoleLabel()}
