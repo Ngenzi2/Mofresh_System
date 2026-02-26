@@ -5,13 +5,6 @@ import type {
   OrderStatus,
 } from '@/types/api.types';
 
-interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 class OrdersService {
   /**
    * Create a new order

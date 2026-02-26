@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Thermometer, RefreshCw, MapPin, Zap, Battery, Sun,
+    RefreshCw, MapPin, Zap, Battery, Sun,
     AlertCircle, Snowflake, Gauge, ChevronRight,
 } from 'lucide-react';
 import { infrastructureService } from '@/api';
 import { handleApiError, getApiErrorStatus } from '@/api/client';
-import type { ColdRoomEntity, ColdRoomOccupancy } from '@/types/api.types';
+import type { ColdRoomEntity, ColdRoomOccupancy, AssetType } from '@/types/api.types';
+import { AssetType as AssetTypeEnum } from '@/types/api.types';
 import { toast } from 'sonner';
-import type { AssetType } from '@/types/api.types';
 
 interface ColdRoomCardProps {
     room: ColdRoomEntity;
@@ -186,7 +186,7 @@ const ColdRoomCard: React.FC<ColdRoomCardProps> = ({ room, idx, onRentAsset }) =
                         </button>
                         <button
                             onClick={() => onRentAsset({
-                                type: 'COLD_ROOM',
+                                type: AssetTypeEnum.COLD_ROOM,
                                 id: room.id,
                                 siteId: room.siteId,
                                 fee: 0 // Will be calculated or filled in modal

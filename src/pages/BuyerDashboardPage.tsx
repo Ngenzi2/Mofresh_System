@@ -1,6 +1,5 @@
 import { useLocation } from 'react-router-dom';
 import { DashboardLayout } from '@/components/ui/DashboardLayout';
-import React from 'react';
 import { BuyerDashboard } from '@/components/dashboard/BuyerDashboard';
 
 export default function BuyerDashboardPage() {

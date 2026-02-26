@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ShoppingBag, RefreshCw, ChevronDown, ChevronUp,
+    ShoppingBag, RefreshCw,
     MapPin, Clock, CheckCircle, XCircle, FileText,
     LockKeyhole, AlertCircle, Plus, X, ChevronLeft, ChevronRight,
-    StickyNote, Package2, Tags,
+    StickyNote, Package2,
 } from 'lucide-react';
 import { ordersService } from '@/api';
 import { handleApiError, getApiErrorStatus } from '@/api/client';
-import type { OrderEntity, OrderStatus, CreateOrderDto } from '@/types/api.types';
+import { OrderStatus } from '@/types/api.types';
+import type { OrderEntity, CreateOrderDto } from '@/types/api.types';
 import { toast } from 'sonner';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ const STATUS_CFG: Record<string, { bg: string; text: string; bar: string; icon: 
 };
 
 const ORDER_STATUSES: (OrderStatus | 'ALL')[] = [
-    'ALL', 'REQUESTED', 'APPROVED', 'INVOICED', 'COMPLETED', 'REJECTED',
+    'ALL', OrderStatus.REQUESTED, OrderStatus.APPROVED, OrderStatus.INVOICED, OrderStatus.COMPLETED, OrderStatus.REJECTED,
 ];
 
 // ── Reusable EmptyState ───────────────────────────────────────────────────────

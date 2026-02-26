@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import Logo from '@/assets/Logo.png';
 
-// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
-const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
+
 
 export function Footer() {
   const { t } = useTranslation();
@@ -81,13 +80,12 @@ export function Footer() {
           </div>
         </div>
 
-          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:items-center text-sm text-gray-400">
-            <p className="font-medium text-center md:text-left">{t('copyright')}</p>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-x-8">
-              <a href="#" className="hover:text-[#9be15d] transition-colors">{t('privacyPolicy')}</a>
-              <a href="#" className="hover:text-[#9be15d] transition-colors">{t('termsOfService')}</a>
-              <a href="#" className="hover:text-[#9be15d] transition-colors">{t('cookies')}</a>
-            </div>
+        <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between md:items-center text-sm text-gray-400 mt-10">
+          <p className="font-medium text-center md:text-left">{t('copyright')}</p>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-x-8">
+            <a href="#" className="hover:text-[#9be15d] transition-colors">{t('privacyPolicy')}</a>
+            <a href="#" className="hover:text-[#9be15d] transition-colors">{t('termsOfService')}</a>
+            <a href="#" className="hover:text-[#9be15d] transition-colors">{t('cookies')}</a>
           </div>
         </div>
       </div>

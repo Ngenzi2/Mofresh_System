@@ -187,15 +187,15 @@ const ProductDetailModal: React.FC<{
                                     },
                                     {
                                         icon: Tag,
-                                        label: 'Buying Price',
-                                        value: `${(product.buyingPricePerUnit ?? 0).toLocaleString()} Rwf`,
+                                        label: 'Price / Unit',
+                                        value: `${(product.sellingPricePerUnit ?? 0).toLocaleString()} Rwf`,
                                         color: 'text-blue-600',
                                         bg: 'bg-blue-50',
                                     },
                                     {
                                         icon: Thermometer,
                                         label: 'Storage Temp',
-                                        value: product.storageTemperature ? `${product.storageTemperature}°C` : 'Standard',
+                                        value: 'Cold Storage',
                                         color: 'text-purple-600',
                                         bg: 'bg-purple-50',
                                     },
@@ -665,8 +665,8 @@ const MarketplaceSection: React.FC = () => {
                                     key={c}
                                     onClick={() => setCategory(c)}
                                     className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${isActive
-                                            ? 'bg-[#1a4d2e] text-white shadow-md'
-                                            : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
+                                        ? 'bg-[#1a4d2e] text-white shadow-md'
+                                        : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
                                         }`}
                                 >
                                     {c !== 'All' && <CatIcon className="w-3.5 h-3.5" />}

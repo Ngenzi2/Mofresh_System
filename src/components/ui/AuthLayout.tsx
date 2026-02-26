@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import logo from '@/assets/Logo.png';
 import Home from '@/pages/Home';
 
-// Imigongo-inspired zigzag SVG pattern (Rwandan geometric art) - Premium watermark style
-const imigongoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 25 L25 0 L50 25 L75 0 L100 25 L100 50 L75 25 L50 50 L25 25 L0 50 Z' fill='none' stroke='%23ffffff' stroke-width='0.2' opacity='0.02'/%3E%3C/svg%3E")`;
+
+
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -44,8 +44,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full flex flex-col lg:flex-row bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300"
         >
-{/* Left panel — branding with Imigongo pattern */}
-<div className="hidden lg:flex w-[45%] xl:w-[40%] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-20 flex-col justify-center text-white overflow-hidden">
+          {/* Left panel — branding with Imigongo pattern */}
+          <div className="hidden lg:flex w-[45%] xl:w-[40%] bg-gradient-to-br from-[#2d6a4f] to-[#1a5c1a] relative p-20 flex-col justify-center text-white overflow-hidden">
             <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-black/10 rounded-full blur-2xl translate-y-1/4 -translate-x-1/4 pointer-events-none" />
 
             {/* Imigongo diamond accents */}
